@@ -1,8 +1,10 @@
 import os
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.models.user import UserCreate, UserLogin, UserOut, Token
 from app.services.auth_service import register_user, authenticate_user
 from app.core.security import create_access_token
+from sqlalchemy.orm import Session
+from app.core.db_deps import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -15,17 +17,17 @@ def _jwt_settings():
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
-def register(payload: UserCreate):
+def register(payload: UserCreate, db: Session = Depends(get_db)):
     try:
-        user = register_user(payload.email, payload.password, payload.displayName)
+        user = register_user(db, payload.email, payload.password, payload.displayName)
         return user
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/login", response_model=Token)
-def login(payload: UserLogin):
-    user = authenticate_user(payload.email, payload.password)
+def login(payload: UserLogin, db: Session = Depends(get_db)):
+    user = authenticate_user(db, payload.email, payload.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
