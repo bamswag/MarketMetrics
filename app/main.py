@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
-
+from app.db_models.watchlist_item import WatchlistItemDB
+from app.db_models.price_alert import PriceAlertDB
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
