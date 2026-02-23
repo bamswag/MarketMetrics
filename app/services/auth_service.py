@@ -37,7 +37,6 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[UserDB
         return None
 
     user.lastLoginAt = datetime.utcnow()
-    db.commit_toggle = True
     db.commit()
     db.refresh(user)
     return user

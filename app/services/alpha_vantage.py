@@ -21,10 +21,7 @@ def _get_api_key() -> str:
 
 
 async def fetch_top_movers() -> Dict[str, Any]:
-    """
-    Alpha Vantage endpoint: TOP_GAINERS_LOSERS
-    Returns JSON with keys like: top_gainers, top_losers, most_actively_traded (varies).
-    """
+
     params = {
         "function": "TOP_GAINERS_LOSERS",
         "apikey": _get_api_key(),
@@ -38,11 +35,11 @@ async def fetch_top_movers() -> Dict[str, Any]:
 
     data = resp.json()
 
-    # Common Alpha Vantage error shapes
+
     if "Error Message" in data:
         raise AlphaVantageError(data["Error Message"])
     if "Information" in data:
-        # Often rate limit / plan message
+
         raise AlphaVantageError(data["Information"])
     if "Note" in data:
         raise AlphaVantageError(data["Note"])

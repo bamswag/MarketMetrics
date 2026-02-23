@@ -19,7 +19,11 @@ def _jwt_settings():
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     try:
-        user = register_user(db, payload.email, payload.password, payload.displayName)
+        raw_password = payload.password
+        if hasattr(raw_password, "get_secret_value"):
+            raw_password = raw_password.get_secret_value()
+
+        user = register_user(db, payload.email, raw_password, payload.displayName)
         return user
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -36,7 +40,7 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
     secret, algorithm, expires = _jwt_settings()
     token = create_access_token(
-        data={"sub": user["email"]},
+        data={"sub": user.email},
         secret=secret,
         algorithm=algorithm,
         expires_minutes=expires,
