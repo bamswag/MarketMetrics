@@ -1,22 +1,56 @@
-import os
-import requests
+from __future__ import annotations
 
-ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+from datetime import date, datetime
+from typing import Dict, List, Tuple
 
-def get_top_movers_alpha_vantage():
+import httpx
+
+from app.services.alpha_vantage import BASE_URL, _get_api_key, AlphaVantageError
+
+
+async def fetch_daily_close_series(symbol: str) -> List[Tuple[date, float]]:
     """
-    Alpha Vantage has a TOP_GAINERS_LOSERS endpoint.
-    Returns raw JSON.
+    Returns list of (date, close) sorted ascending.
     """
-    if not ALPHA_VANTAGE_KEY:
-        raise RuntimeError("Missing ALPHA_VANTAGE_API_KEY in environment variables")
-
-    url = "https://www.alphavantage.co/query"
     params = {
-        "function": "TOP_GAINERS_LOSERS",
-        "apikey": ALPHA_VANTAGE_KEY,
+        "function": "TIME_SERIES_DAILY_ADJUSTED",
+        "symbol": symbol,
+        "outputsize": "full",
+        "apikey": _get_api_key(),
     }
 
-    r = requests.get(url, params=params, timeout=20)
-    r.raise_for_status()
-    return r.json()
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.get(BASE_URL, params=params)
+
+    if resp.status_code != 200:
+        raise AlphaVantageError(f"Alpha Vantage HTTP {resp.status_code}")
+
+    data = resp.json()
+
+    # Handle AV special responses
+    if "Error Message" in data:
+        raise AlphaVantageError(data["Error Message"])
+    if "Information" in data:
+        raise AlphaVantageError(data["Information"])
+    if "Note" in data:
+        raise AlphaVantageError(data["Note"])
+
+    ts = data.get("Time Series (Daily)")
+    if not ts:
+        raise AlphaVantageError("Missing 'Time Series (Daily)' in Alpha Vantage response")
+
+    series: List[Tuple[date, float]] = []
+    for d_str, row in ts.items():
+        try:
+            d = datetime.strptime(d_str, "%Y-%m-%d").date()
+            close = float(row["4. close"])
+            series.append((d, close))
+        except Exception:
+            continue
+
+    series.sort(key=lambda x: x[0])
+    return series
+
+
+def slice_series(series: List[Tuple[date, float]], start: date, end: date) -> List[Tuple[date, float]]:
+    return [(d, c) for (d, c) in series if start <= d <= end]

@@ -19,7 +19,7 @@ def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            os.getenv("JWT_SECRET"),
+            os.getenv("JWT_SECRET", "dev_secret"),
             algorithms=[os.getenv("JWT_ALGORITHM", "HS256")],
         )
 

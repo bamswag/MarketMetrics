@@ -4,6 +4,7 @@ from app.db_models.watchlist_item import WatchlistItemDB
 from app.db_models.price_alert import PriceAlertDB
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import ws_quotes
 
 from app.routers import health, simulation, movers
 from app.routers.auth import router as auth_router
@@ -27,6 +28,7 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(simulation.router)
 app.include_router(movers.router)
 app.include_router(auth_router)
+app.include_router(ws_quotes.router)
 
 # Create tables
 Base.metadata.create_all(bind=engine)
