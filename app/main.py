@@ -1,17 +1,12 @@
 from dotenv import load_dotenv
 load_dotenv()
-from app.db_models.watchlist_item import WatchlistItemDB
-from app.db_models.price_alert import PriceAlertDB
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import ws_quotes
-
-from app.routers import health, simulation, movers
+from app.routers import ws_quotes, health, simulation, movers
+from app.routers import alerts
+from app.routers import search
 from app.routers.auth import router as auth_router
-
-from app.core.database import Base, engine
-from app.db_models.user import UserDB  # noqa: F401
-from app.db_models.simulation_history import SimulationHistoryDB  # noqa: F401
+from app.routers import watchlist
 
 app = FastAPI(title="Market Metrics API")
 
@@ -27,11 +22,11 @@ app.add_middleware(
 app.include_router(health.router, tags=["Health"])
 app.include_router(simulation.router)
 app.include_router(movers.router)
+app.include_router(search.router)
 app.include_router(auth_router)
 app.include_router(ws_quotes.router)
-
-# Create tables
-Base.metadata.create_all(bind=engine)
+app.include_router(watchlist.router)
+app.include_router(alerts.router)
 
 # Optional: root route so / isn't 404
 @app.get("/")

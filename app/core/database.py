@@ -1,8 +1,9 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./marketmetrics.db")
+from app.core.config import settings
+
+DATABASE_URL = settings.database_url
 
 # Required for SQLite with FastAPI (multi-threading)
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Dict, Tuple
 
@@ -11,6 +12,8 @@ from app.services.alpha_vantage import BASE_URL, _get_api_key, AlphaVantageError
 # Simple in-memory cache to reduce rate-limit risk
 # symbol -> (timestamp, payload)
 _quote_cache: Dict[str, Tuple[float, dict]] = {}
+# symbol -> lock guarding upstream fetches for that symbol
+_quote_locks: Dict[str, asyncio.Lock] = {}
 
 
 async def fetch_global_quote(symbol: str) -> dict:
@@ -76,6 +79,15 @@ async def get_quote_cached(symbol: str, min_ttl_seconds: int = 15) -> dict:
         if now - ts < min_ttl_seconds:
             return payload
 
-    payload = await fetch_global_quote(key)
-    _quote_cache[key] = (now, payload)
-    return payload
+    lock = _quote_locks.setdefault(key, asyncio.Lock())
+    async with lock:
+        # Re-check cache after waiting for any in-flight fetch for this symbol.
+        now = time.time()
+        if key in _quote_cache:
+            ts, payload = _quote_cache[key]
+            if now - ts < min_ttl_seconds:
+                return payload
+
+        payload = await fetch_global_quote(key)
+        _quote_cache[key] = (time.time(), payload)
+        return payload

@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import Optional
 from uuid import uuid4
+
 from sqlalchemy.orm import Session
+
 from app.core.security import hash_password, verify_password
 from app.db_models.user import UserDB
-from app.core.security import hash_password, verify_password
-
-
 
 def register_user(db: Session, email: str, password: str, display_name: str) -> UserDB:
     existing = db.query(UserDB).filter(UserDB.email == email).first()
@@ -25,8 +24,6 @@ def register_user(db: Session, email: str, password: str, display_name: str) -> 
     db.commit()
     db.refresh(user)
     return user
-
-
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[UserDB]:
     user = db.query(UserDB).filter(UserDB.email == email).first()

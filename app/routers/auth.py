@@ -1,24 +1,14 @@
-import os
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from app.models.user import UserCreate, UserLogin, UserOut, Token
-from app.services.auth_service import register_user, authenticate_user
-from app.core.security import create_access_token
-from app.core.db_deps import get_db
-from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from app.core.db_deps import get_db
-from app.services.auth_service import authenticate_user
+from app.core.security import create_access_token, _jwt_settings
+from app.models.user import UserCreate, UserOut, Token
+from app.services.auth_service import authenticate_user, register_user
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-def _jwt_settings():
-    secret = os.getenv("JWT_SECRET", "dev_secret")
-    algorithm = os.getenv("JWT_ALGORITHM", "HS256")
-    expires = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    return secret, algorithm, expires
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
