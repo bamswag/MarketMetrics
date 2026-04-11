@@ -1,105 +1,164 @@
 # MarketMetrics
 
-MarketMetrics is a backend financial analytics platform built with FastAPI. It supports user authentication, market movers, buy-and-hold investment simulations, simulation history, personal watchlists, price alerts, and live quote streaming over WebSockets.
+MarketMetrics is a stock analysis project built around a FastAPI backend and a React frontend. The idea behind it is to keep market search, tracked symbols, alerts, simulation tools, forecasting, and long-term projection in one system instead of splitting them across separate mini apps.
 
-The project is structured as a modular API rather than a single script. Routing, business logic, persistence, authentication, and external market-data access are separated so the system is easier to reason about, extend, and evaluate as a software engineering project.
+The project started as a backend-first build, so a lot of the structure is focused on clean services, reusable logic, and routes that are easy to test. The frontend is there to surface that functionality in a more practical way.
 
-## Features
-- User registration and JWT-based login
-- Protected API routes for authenticated user features
-- Market movers endpoint powered by Alpha Vantage
-- Company search endpoint for symbol lookup and frontend search bars
-- Strategy-based simulation endpoint for historical what-if analysis
-- Persistent simulation history per user
-- Watchlist create, list, and delete flows with live quote enrichment
-- Price alert create, list, toggle, and delete flows
-- Clear alert status/history in API responses for frontend use
-- Live quote streaming over WebSockets
-- Alembic-based database migrations
-- Interactive API documentation through Swagger
+## Main Features
+
+- user registration and login
+- Google sign-in support
+- stock and company search
+- tracked symbols / watchlist workflow
+- price alerts
+- daily movers
+- live quote streaming
+- historical investment simulation
+- simulation history
+- short-term forecasting
+- long-term portfolio projection
 
 ## Tech Stack
+
+### Backend
+
 - Python 3.9
 - FastAPI
 - SQLAlchemy
 - Alembic
 - Pydantic
-- Uvicorn
-- Alpha Vantage API
-- SQLite
+- SQLite for local development
+- Alpaca market data
+- pandas, numpy, scikit-learn, joblib
 
-## Architecture Overview
+### Frontend
 
-The backend follows a service-based structure:
+- React
+- TypeScript
+- Vite
+- React Router
+- Recharts
 
-- `app/routers`: HTTP and WebSocket endpoints
-- `app/services`: business logic and external API integration
-- `app/models`: request and response schemas
-- `app/db_models`: SQLAlchemy persistence models
-- `app/core`: shared infrastructure such as database setup, auth helpers, dependencies, and configuration
+## Project Structure
 
-This separation keeps request handling thin and pushes actual application logic into reusable service functions.
+- `app/api/routes`
+  API and WebSocket routes
+- `app/services`
+  main backend logic
+- `app/integrations/alpaca`
+  Alpaca-specific data access
+- `app/forecasting`
+  training and forecast logic
+- `app/projections`
+  long-term growth projection logic
+- `app/orm_models`
+  database models
+- `app/schemas`
+  request and response schemas
+- `frontend/src`
+  React app
+- `tests`
+  backend tests
+- `docs`
+  supporting project notes and diagrams
 
 ## Running Locally
 
-1. Create and activate a virtual environment
+### Backend
+
+1. Create and activate a virtual environment.
 2. Install dependencies:
-   pip install -r requirements.txt
-3. Create a `.env` file using `.env.example`
-4. Run database migrations:
-   alembic upgrade head
-5. Start the server:
-   uvicorn app.main:app --reload
 
-The API will then be available at `http://127.0.0.1:8000`.
+```bash
+pip install -r requirements.txt
+```
 
-## API Documentation
+3. Copy `.env.example` to `.env` and fill in the values you need.
+4. Run migrations:
 
-When running the application locally, interactive API documentation is available at:
+```bash
+alembic upgrade head
+```
 
-http://127.0.0.1:8000/docs
+5. Start the backend:
 
-This is powered by FastAPI’s built-in Swagger UI.
+```bash
+uvicorn app.main:app --reload
+```
 
-## Database Migrations
+The API should then be available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
-This project uses Alembic for schema changes.
+Swagger docs:
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-- Apply migrations: `alembic upgrade head`
-- Create a new migration: `alembic revision --autogenerate -m "describe change"`
-- See current revision: `alembic current`
+### Frontend
 
-If you already have an older local database created before Alembic was added, recreate that local database before using migrations, then run:
+From the `frontend` folder:
 
-1. `alembic upgrade head`
+```bash
+npm install
+npm run dev
+```
 
-## Current API Surface
+The frontend normally runs at:
+[http://127.0.0.1:5173](http://127.0.0.1:5173)
 
-The current backend includes these main routes:
+## Forecasting Model
 
-- `GET /health`
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /movers/`
-- `GET /search/companies?q=...`
-- `POST /simulate/`
-- `GET /simulate/history`
-- `POST /watchlist/`
-- `GET /watchlist/`
-- `DELETE /watchlist/{symbol}`
-- `POST /alerts/`
-- `GET /alerts/`
-- `GET /alerts/triggered`
-- `PATCH /alerts/{alert_id}`
-- `DELETE /alerts/{alert_id}`
-- `WS /ws/quotes/{symbol}`
+Before using the forecasting endpoint, train a model:
 
-The alerts API returns active and triggered alerts separately to make frontend rendering easier. Triggered alerts can also be fetched directly through `GET /alerts/triggered`, and alerts can be reactivated with `PATCH /alerts/{alert_id}` using `{ "resetTriggered": true }`.
+```bash
+python scripts/train_stock_model.py
+```
 
-The watchlist API returns more than saved symbols. Each watchlist item is enriched with the latest cached quote data and a small alert summary so the frontend can render a portfolio-style overview without making several extra requests per symbol.
+Common optional flags:
 
-The simulation API now supports lump-sum buy-and-hold and dollar-cost averaging with weekly, monthly, or quarterly contributions. It returns comparative performance metrics, a best-strategy summary, and chart-ready time series data for frontend visualisation.
+- `--symbols AAPL MSFT NVDA`
+- `--version rf_demo`
+- `--lookback-days 1825`
 
-## Project Status
+Model artifacts are written into the prediction directory configured in `.env`.
 
-MarketMetrics is currently in the stage where the core backend flows are in place and being refined. Authentication, persistence, simulation, watchlists, alerts, and live quotes are all present. The main focus now is improving reliability, testing, and overall polish so the final system is coherent both technically and academically.
+## Symbol Catalog
+
+To refresh the local symbol catalog from Alpaca:
+
+```bash
+python scripts/sync_symbol_catalog.py
+```
+
+## Useful Commands
+
+- apply migrations: `alembic upgrade head`
+- create a migration: `alembic revision --autogenerate -m "describe change"`
+- current migration: `alembic current`
+- run backend tests:
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py' -v
+```
+
+- build frontend:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Current API Areas
+
+- `/auth`
+- `/search`
+- `/movers`
+- `/watchlist`
+- `/alerts`
+- `/simulate`
+- `/predict`
+- `/project`
+- `/ws/quotes/{symbol}`
+
+## Notes
+
+- The forecasting part of the project is experimental and should not be treated as financial advice.
+- The long-term projection tool is separate from the short-term forecasting model on purpose.
+- The frontend and backend are in the same repo, but they run as separate apps during development.

@@ -1,12 +1,8 @@
-from dotenv import load_dotenv
-load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import ws_quotes, health, simulation, movers
-from app.routers import alerts
-from app.routers import search
-from app.routers.auth import router as auth_router
-from app.routers import watchlist
+from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, search
+from app.api.routes import simulations, watchlists, websocket_quotes
+from app.api.routes.auth import router as auth_router
 
 app = FastAPI(title="Market Metrics API")
 
@@ -20,12 +16,15 @@ app.add_middleware(
 
 # Routers
 app.include_router(health.router, tags=["Health"])
-app.include_router(simulation.router)
+app.include_router(simulations.router)
 app.include_router(movers.router)
 app.include_router(search.router)
+app.include_router(instruments.router)
+app.include_router(forecasts.router)
+app.include_router(growth_projections.router)
 app.include_router(auth_router)
-app.include_router(ws_quotes.router)
-app.include_router(watchlist.router)
+app.include_router(websocket_quotes.router)
+app.include_router(watchlists.router)
 app.include_router(alerts.router)
 
 # Optional: root route so / isn't 404

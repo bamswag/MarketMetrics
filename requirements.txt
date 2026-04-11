@@ -20,6 +20,13 @@ typing_extensions==4.15.0
 urllib3==2.6.3
 uvicorn==0.39.0
 alembic==1.16.5
+alpaca-py
+joblib
+matplotlib
+numpy
+pandas
+scikit-learn
+ta
 
 python-jose[cryptography]
 passlib[bcrypt]
