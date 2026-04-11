@@ -1,0 +1,182 @@
+[
+  {
+    "symbol": "AAPL",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Large-cap platform and consumer hardware exposure"
+  },
+  {
+    "symbol": "MSFT",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Large-cap software and cloud exposure"
+  },
+  {
+    "symbol": "NVDA",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Semiconductor and AI infrastructure exposure"
+  },
+  {
+    "symbol": "AMZN",
+    "enabled": true,
+    "group": "consumer_discretionary",
+    "reason": "Consumer and cloud cross-sector exposure"
+  },
+  {
+    "symbol": "GOOGL",
+    "enabled": true,
+    "group": "communication_services",
+    "reason": "Advertising and internet services exposure"
+  },
+  {
+    "symbol": "META",
+    "enabled": true,
+    "group": "communication_services",
+    "reason": "Social media and digital advertising exposure"
+  },
+  {
+    "symbol": "TSLA",
+    "enabled": true,
+    "group": "consumer_discretionary",
+    "reason": "High-volatility consumer discretionary exposure"
+  },
+  {
+    "symbol": "AMD",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Semiconductor cycle exposure"
+  },
+  {
+    "symbol": "NFLX",
+    "enabled": true,
+    "group": "communication_services",
+    "reason": "Streaming and media exposure"
+  },
+  {
+    "symbol": "INTC",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Legacy semiconductor cycle exposure"
+  },
+  {
+    "symbol": "JPM",
+    "enabled": true,
+    "group": "financials",
+    "reason": "Large-cap banking exposure"
+  },
+  {
+    "symbol": "BAC",
+    "enabled": true,
+    "group": "financials",
+    "reason": "Consumer and commercial banking exposure"
+  },
+  {
+    "symbol": "V",
+    "enabled": true,
+    "group": "financials",
+    "reason": "Payments network exposure"
+  },
+  {
+    "symbol": "MA",
+    "enabled": true,
+    "group": "financials",
+    "reason": "Global payments exposure"
+  },
+  {
+    "symbol": "WMT",
+    "enabled": true,
+    "group": "consumer_staples",
+    "reason": "Defensive consumer exposure"
+  },
+  {
+    "symbol": "DIS",
+    "enabled": true,
+    "group": "communication_services",
+    "reason": "Media and parks exposure"
+  },
+  {
+    "symbol": "KO",
+    "enabled": true,
+    "group": "consumer_staples",
+    "reason": "Defensive beverage exposure"
+  },
+  {
+    "symbol": "PEP",
+    "enabled": true,
+    "group": "consumer_staples",
+    "reason": "Staples and beverage exposure"
+  },
+  {
+    "symbol": "XOM",
+    "enabled": true,
+    "group": "energy",
+    "reason": "Integrated energy exposure"
+  },
+  {
+    "symbol": "CVX",
+    "enabled": true,
+    "group": "energy",
+    "reason": "Integrated energy exposure"
+  },
+  {
+    "symbol": "ABBV",
+    "enabled": true,
+    "group": "healthcare",
+    "reason": "Pharmaceutical exposure"
+  },
+  {
+    "symbol": "COST",
+    "enabled": true,
+    "group": "consumer_staples",
+    "reason": "Warehouse retail exposure"
+  },
+  {
+    "symbol": "HD",
+    "enabled": true,
+    "group": "consumer_discretionary",
+    "reason": "Home improvement exposure"
+  },
+  {
+    "symbol": "MCD",
+    "enabled": true,
+    "group": "consumer_discretionary",
+    "reason": "Global restaurant exposure"
+  },
+  {
+    "symbol": "UNH",
+    "enabled": true,
+    "group": "healthcare",
+    "reason": "Managed healthcare exposure"
+  },
+  {
+    "symbol": "CRM",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Enterprise software exposure"
+  },
+  {
+    "symbol": "ADBE",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Creative software exposure"
+  },
+  {
+    "symbol": "ORCL",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Database and enterprise software exposure"
+  },
+  {
+    "symbol": "QCOM",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Wireless semiconductor exposure"
+  },
+  {
+    "symbol": "AVGO",
+    "enabled": true,
+    "group": "technology",
+    "reason": "Broad semiconductor exposure"
+  }
+]

@@ -1,0 +1,138 @@
+:root {
+  --bg: #f2f4f8;
+  --bg-elevated: #fbfcfe;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --soft-bg: rgba(245, 248, 252, 0.92);
+  --panel-border: rgba(18, 32, 51, 0.1);
+  --panel-shadow:
+    0 28px 70px rgba(13, 27, 45, 0.08),
+    0 8px 22px rgba(13, 27, 45, 0.05);
+  --text-main: #142033;
+  --muted: #687487;
+  --accent: #c96a45;
+  --accent-strong: #ae512d;
+  --accent-soft: rgba(201, 106, 69, 0.12);
+  --success: #0f766e;
+  --success-soft: rgba(15, 118, 110, 0.12);
+  --danger: #b14f2b;
+  --danger-soft: rgba(177, 79, 43, 0.12);
+  --badge-bg: rgba(20, 32, 51, 0.08);
+  --code-bg: rgba(20, 32, 51, 0.08);
+  --sans:
+    'Avenir Next',
+    'Aptos',
+    'Segoe UI',
+    'SF Pro Text',
+    sans-serif;
+  --heading:
+    'Iowan Old Style',
+    'Palatino Linotype',
+    'Book Antiqua',
+    Palatino,
+    serif;
+  --mono: 'SFMono-Regular', 'SF Mono', Consolas, monospace;
+  font-family: var(--sans);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at top center, rgba(236, 182, 128, 0.28), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.08), transparent 24%),
+    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top center, rgba(236, 182, 128, 0.24), transparent 24%),
+    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: none;
+}
+
+input,
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--text-main);
+}
+
+h1 {
+  font-family: var(--heading);
+  font-size: clamp(2.9rem, 5vw, 5.4rem);
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  max-width: 11ch;
+}
+
+h2 {
+  font-size: 1.55rem;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+strong {
+  color: var(--text-main);
+}
+
+code {
+  padding: 0.15rem 0.4rem;
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-family: var(--mono);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(201, 106, 69, 0.3);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(201, 106, 69, 0.18);
+}

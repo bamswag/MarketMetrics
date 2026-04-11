@@ -1,0 +1,137 @@
+# MarketMetrics manual API checks
+
+GET http://127.0.0.1:8000/health
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123",
+  "displayName": "Test User"
+}
+
+###
+
+POST http://127.0.0.1:8000/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=testuser@example.com&password=password123
+
+###
+
+GET http://127.0.0.1:8000/movers/
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+GET http://127.0.0.1:8000/search/companies?q=tesla
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+POST http://127.0.0.1:8000/simulate/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "assetSymbol": "MSFT",
+  "initialAmount": 1000,
+  "strategy": "dollar_cost_averaging",
+  "recurringContribution": 200,
+  "contributionFrequency": "quarterly",
+  "startDate": "2024-01-02",
+  "endDate": "2024-03-28"
+}
+
+###
+
+GET http://127.0.0.1:8000/simulate/history
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+POST http://127.0.0.1:8000/watchlist/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "NVDA"
+}
+
+###
+
+GET http://127.0.0.1:8000/watchlist/
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+POST http://127.0.0.1:8000/alerts/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "TSLA",
+  "condition": "above",
+  "targetPrice": 250
+}
+
+###
+
+GET http://127.0.0.1:8000/alerts/
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+GET http://127.0.0.1:8000/alerts/triggered
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+PATCH http://127.0.0.1:8000/alerts/{{alert_id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resetTriggered": true
+}
+
+###
+
+POST http://127.0.0.1:8000/predict/forecast
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "MSFT",
+  "horizonDays": 5,
+  "initialAmount": 1000,
+  "historyWindowDays": 365
+}
+
+###
+
+POST http://127.0.0.1:8000/project/long-term
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "MSFT",
+  "years": 10,
+  "initialAmount": 1000,
+  "recurringContribution": 200,
+  "contributionFrequency": "monthly",
+  "inflationRate": 0.02,
+  "simulationRuns": 1000
+}
+
+###

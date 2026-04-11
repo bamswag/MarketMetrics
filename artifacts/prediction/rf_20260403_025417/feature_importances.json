@@ -1,0 +1,242 @@
+[
+  {
+    "feature": "qqq_sma_ratio_50",
+    "importance": 0.06436
+  },
+  {
+    "feature": "qqq_sma_ratio_20",
+    "importance": 0.048516
+  },
+  {
+    "feature": "spy_return_10d",
+    "importance": 0.045052
+  },
+  {
+    "feature": "spy_sma_ratio_50",
+    "importance": 0.039162
+  },
+  {
+    "feature": "spy_sma_ratio_20",
+    "importance": 0.038179
+  },
+  {
+    "feature": "qqq_volatility_5d",
+    "importance": 0.035003
+  },
+  {
+    "feature": "qqq_return_10d",
+    "importance": 0.033648
+  },
+  {
+    "feature": "spy_return_5d",
+    "importance": 0.032915
+  },
+  {
+    "feature": "qqq_return_5d",
+    "importance": 0.032214
+  },
+  {
+    "feature": "qqq_return_2d",
+    "importance": 0.030989
+  },
+  {
+    "feature": "spy_macd_gap",
+    "importance": 0.030751
+  },
+  {
+    "feature": "spy_volatility_5d",
+    "importance": 0.028697
+  },
+  {
+    "feature": "qqq_return_20d",
+    "importance": 0.025359
+  },
+  {
+    "feature": "spy_sma_ratio_10",
+    "importance": 0.023775
+  },
+  {
+    "feature": "spy_return_1d",
+    "importance": 0.023358
+  },
+  {
+    "feature": "qqq_macd_gap",
+    "importance": 0.022889
+  },
+  {
+    "feature": "qqq_ema_ratio_20",
+    "importance": 0.021842
+  },
+  {
+    "feature": "spy_return_2d",
+    "importance": 0.021671
+  },
+  {
+    "feature": "qqq_return_1d",
+    "importance": 0.019533
+  },
+  {
+    "feature": "spy_ema_ratio_20",
+    "importance": 0.01951
+  },
+  {
+    "feature": "qqq_sma_ratio_5",
+    "importance": 0.019037
+  },
+  {
+    "feature": "spy_ema_ratio_5",
+    "importance": 0.017656
+  },
+  {
+    "feature": "return_10d",
+    "importance": 0.01691
+  },
+  {
+    "feature": "spy_volatility_10d",
+    "importance": 0.015297
+  },
+  {
+    "feature": "spy_return_20d",
+    "importance": 0.015037
+  },
+  {
+    "feature": "spy_sma_ratio_5",
+    "importance": 0.014887
+  },
+  {
+    "feature": "qqq_ema_ratio_10",
+    "importance": 0.014637
+  },
+  {
+    "feature": "sma_ratio_50",
+    "importance": 0.01423
+  },
+  {
+    "feature": "spy_ema_ratio_10",
+    "importance": 0.013477
+  },
+  {
+    "feature": "qqq_ema_ratio_5",
+    "importance": 0.01325
+  },
+  {
+    "feature": "volatility_20d",
+    "importance": 0.012691
+  },
+  {
+    "feature": "spy_rsi_14",
+    "importance": 0.012128
+  },
+  {
+    "feature": "qqq_volatility_20d",
+    "importance": 0.011712
+  },
+  {
+    "feature": "ema_ratio_20",
+    "importance": 0.011155
+  },
+  {
+    "feature": "qqq_volatility_10d",
+    "importance": 0.010426
+  },
+  {
+    "feature": "qqq_sma_ratio_10",
+    "importance": 0.010337
+  },
+  {
+    "feature": "volatility_5d",
+    "importance": 0.009958
+  },
+  {
+    "feature": "return_1d",
+    "importance": 0.009915
+  },
+  {
+    "feature": "volatility_10d",
+    "importance": 0.009869
+  },
+  {
+    "feature": "return_5d",
+    "importance": 0.009528
+  },
+  {
+    "feature": "ema_ratio_10",
+    "importance": 0.008955
+  },
+  {
+    "feature": "sma_ratio_10",
+    "importance": 0.007793
+  },
+  {
+    "feature": "spy_volatility_20d",
+    "importance": 0.007778
+  },
+  {
+    "feature": "sma_ratio_20",
+    "importance": 0.007418
+  },
+  {
+    "feature": "sma_ratio_5",
+    "importance": 0.006805
+  },
+  {
+    "feature": "return_20d",
+    "importance": 0.006758
+  },
+  {
+    "feature": "return_2d",
+    "importance": 0.006449
+  },
+  {
+    "feature": "qqq_rsi_14",
+    "importance": 0.005925
+  },
+  {
+    "feature": "ema_ratio_5",
+    "importance": 0.005767
+  },
+  {
+    "feature": "qqq_bollinger_position",
+    "importance": 0.005146
+  },
+  {
+    "feature": "macd_gap",
+    "importance": 0.003881
+  },
+  {
+    "feature": "qqq_day_of_week",
+    "importance": 0.00369
+  },
+  {
+    "feature": "spy_month",
+    "importance": 0.003634
+  },
+  {
+    "feature": "rsi_14",
+    "importance": 0.003527
+  },
+  {
+    "feature": "spy_bollinger_position",
+    "importance": 0.003524
+  },
+  {
+    "feature": "spy_day_of_week",
+    "importance": 0.002999
+  },
+  {
+    "feature": "month",
+    "importance": 0.002651
+  },
+  {
+    "feature": "bollinger_position",
+    "importance": 0.002645
+  },
+  {
+    "feature": "qqq_month",
+    "importance": 0.002609
+  },
+  {
+    "feature": "day_of_week",
+    "importance": 0.002486
+  }
+]

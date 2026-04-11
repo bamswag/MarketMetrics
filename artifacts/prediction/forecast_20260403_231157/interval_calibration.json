@@ -1,0 +1,70 @@
+{
+  "intervalLevel": 0.8,
+  "anchorHorizons": [
+    1,
+    5,
+    10
+  ],
+  "byHorizon": {
+    "1": {
+      "lowerResidualQuantile": -0.019639,
+      "upperResidualQuantile": 0.019814,
+      "observationCount": 3980,
+      "source": "direct_1d"
+    },
+    "2": {
+      "lowerResidualQuantile": -0.025964,
+      "upperResidualQuantile": 0.026218,
+      "observationCount": 3980,
+      "source": "interpolated_1d_5d"
+    },
+    "3": {
+      "lowerResidualQuantile": -0.032289,
+      "upperResidualQuantile": 0.032622,
+      "observationCount": 3980,
+      "source": "interpolated_1d_5d"
+    },
+    "4": {
+      "lowerResidualQuantile": -0.038614,
+      "upperResidualQuantile": 0.039026,
+      "observationCount": 3980,
+      "source": "interpolated_1d_5d"
+    },
+    "5": {
+      "lowerResidualQuantile": -0.044939,
+      "upperResidualQuantile": 0.04543,
+      "observationCount": 3980,
+      "source": "direct_5d"
+    },
+    "6": {
+      "lowerResidualQuantile": -0.048729,
+      "upperResidualQuantile": 0.049363,
+      "observationCount": 3980,
+      "source": "interpolated_5d_10d"
+    },
+    "7": {
+      "lowerResidualQuantile": -0.052519,
+      "upperResidualQuantile": 0.053296,
+      "observationCount": 3980,
+      "source": "interpolated_5d_10d"
+    },
+    "8": {
+      "lowerResidualQuantile": -0.056308,
+      "upperResidualQuantile": 0.057229,
+      "observationCount": 3980,
+      "source": "interpolated_5d_10d"
+    },
+    "9": {
+      "lowerResidualQuantile": -0.060098,
+      "upperResidualQuantile": 0.061162,
+      "observationCount": 3980,
+      "source": "interpolated_5d_10d"
+    },
+    "10": {
+      "lowerResidualQuantile": -0.063888,
+      "upperResidualQuantile": 0.065095,
+      "observationCount": 3980,
+      "source": "direct_10d"
+    }
+  }
+}

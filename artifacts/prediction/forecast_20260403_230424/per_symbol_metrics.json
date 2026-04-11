@@ -1,0 +1,202 @@
+{
+  "AAPL": {
+    "observationCount": 199,
+    "maeReturn": 0.009965,
+    "rmseReturn": 0.014168,
+    "maePrice": 2.437047,
+    "directionalAccuracy": 0.502513,
+    "returnCorrelation": 0.016795,
+    "upDayHitRate": 0.84466,
+    "downDayHitRate": 0.136842
+  },
+  "AMD": {
+    "observationCount": 199,
+    "maeReturn": 0.025653,
+    "rmseReturn": 0.038604,
+    "maePrice": 5.039824,
+    "directionalAccuracy": 0.482412,
+    "returnCorrelation": -0.1128,
+    "upDayHitRate": 0.823529,
+    "downDayHitRate": 0.125
+  },
+  "AMZN": {
+    "observationCount": 199,
+    "maeReturn": 0.013674,
+    "rmseReturn": 0.018879,
+    "maePrice": 3.079711,
+    "directionalAccuracy": 0.517588,
+    "returnCorrelation": -0.003113,
+    "upDayHitRate": 0.866667,
+    "downDayHitRate": 0.129032
+  },
+  "BAC": {
+    "observationCount": 199,
+    "maeReturn": 0.010197,
+    "rmseReturn": 0.013539,
+    "maePrice": 0.513297,
+    "directionalAccuracy": 0.552764,
+    "returnCorrelation": -0.018326,
+    "upDayHitRate": 0.873874,
+    "downDayHitRate": 0.149425
+  },
+  "CVX": {
+    "observationCount": 199,
+    "maeReturn": 0.009713,
+    "rmseReturn": 0.01281,
+    "maePrice": 1.523353,
+    "directionalAccuracy": 0.577889,
+    "returnCorrelation": 0.094598,
+    "upDayHitRate": 0.901786,
+    "downDayHitRate": 0.16092
+  },
+  "DIS": {
+    "observationCount": 199,
+    "maeReturn": 0.010859,
+    "rmseReturn": 0.01481,
+    "maePrice": 1.211565,
+    "directionalAccuracy": 0.442211,
+    "returnCorrelation": -0.043967,
+    "upDayHitRate": 0.840909,
+    "downDayHitRate": 0.126126
+  },
+  "GOOGL": {
+    "observationCount": 199,
+    "maeReturn": 0.012583,
+    "rmseReturn": 0.017115,
+    "maePrice": 3.25174,
+    "directionalAccuracy": 0.507538,
+    "returnCorrelation": -0.063428,
+    "upDayHitRate": 0.850467,
+    "downDayHitRate": 0.108696
+  },
+  "INTC": {
+    "observationCount": 199,
+    "maeReturn": 0.028759,
+    "rmseReturn": 0.041196,
+    "maePrice": 1.013579,
+    "directionalAccuracy": 0.482412,
+    "returnCorrelation": -0.088305,
+    "upDayHitRate": 0.843137,
+    "downDayHitRate": 0.104167
+  },
+  "JPM": {
+    "observationCount": 199,
+    "maeReturn": 0.010025,
+    "rmseReturn": 0.013387,
+    "maePrice": 3.024785,
+    "directionalAccuracy": 0.547739,
+    "returnCorrelation": 0.003173,
+    "upDayHitRate": 0.863636,
+    "downDayHitRate": 0.159091
+  },
+  "KO": {
+    "observationCount": 199,
+    "maeReturn": 0.007788,
+    "rmseReturn": 0.009971,
+    "maePrice": 0.547592,
+    "directionalAccuracy": 0.447236,
+    "returnCorrelation": -0.087798,
+    "upDayHitRate": 0.8125,
+    "downDayHitRate": 0.106796
+  },
+  "MA": {
+    "observationCount": 199,
+    "maeReturn": 0.009836,
+    "rmseReturn": 0.013776,
+    "maePrice": 5.429106,
+    "directionalAccuracy": 0.512563,
+    "returnCorrelation": 0.004189,
+    "upDayHitRate": 0.878788,
+    "downDayHitRate": 0.15
+  },
+  "META": {
+    "observationCount": 199,
+    "maeReturn": 0.014061,
+    "rmseReturn": 0.020711,
+    "maePrice": 9.654556,
+    "directionalAccuracy": 0.507538,
+    "returnCorrelation": 0.015324,
+    "upDayHitRate": 0.886598,
+    "downDayHitRate": 0.147059
+  },
+  "MSFT": {
+    "observationCount": 199,
+    "maeReturn": 0.009779,
+    "rmseReturn": 0.014485,
+    "maePrice": 4.632653,
+    "directionalAccuracy": 0.492462,
+    "returnCorrelation": 0.001952,
+    "upDayHitRate": 0.841584,
+    "downDayHitRate": 0.132653
+  },
+  "NFLX": {
+    "observationCount": 199,
+    "maeReturn": 0.014038,
+    "rmseReturn": 0.020955,
+    "maePrice": 1.50249,
+    "directionalAccuracy": 0.502513,
+    "returnCorrelation": 0.024616,
+    "upDayHitRate": 0.891304,
+    "downDayHitRate": 0.168224
+  },
+  "NVDA": {
+    "observationCount": 199,
+    "maeReturn": 0.016075,
+    "rmseReturn": 0.020641,
+    "maePrice": 2.885436,
+    "directionalAccuracy": 0.502513,
+    "returnCorrelation": 0.040059,
+    "upDayHitRate": 0.838095,
+    "downDayHitRate": 0.12766
+  },
+  "PEP": {
+    "observationCount": 199,
+    "maeReturn": 0.010443,
+    "rmseReturn": 0.014063,
+    "maePrice": 1.504739,
+    "directionalAccuracy": 0.457286,
+    "returnCorrelation": -0.082464,
+    "upDayHitRate": 0.833333,
+    "downDayHitRate": 0.106796
+  },
+  "TSLA": {
+    "observationCount": 199,
+    "maeReturn": 0.022743,
+    "rmseReturn": 0.029816,
+    "maePrice": 8.895798,
+    "directionalAccuracy": 0.497487,
+    "returnCorrelation": 0.054722,
+    "upDayHitRate": 0.836538,
+    "downDayHitRate": 0.126316
+  },
+  "V": {
+    "observationCount": 199,
+    "maeReturn": 0.009551,
+    "rmseReturn": 0.013509,
+    "maePrice": 3.22918,
+    "directionalAccuracy": 0.497487,
+    "returnCorrelation": -0.006487,
+    "upDayHitRate": 0.873684,
+    "downDayHitRate": 0.153846
+  },
+  "WMT": {
+    "observationCount": 199,
+    "maeReturn": 0.010206,
+    "rmseReturn": 0.014111,
+    "maePrice": 1.121614,
+    "directionalAccuracy": 0.477387,
+    "returnCorrelation": 0.015076,
+    "upDayHitRate": 0.838384,
+    "downDayHitRate": 0.121212
+  },
+  "XOM": {
+    "observationCount": 199,
+    "maeReturn": 0.011145,
+    "rmseReturn": 0.013917,
+    "maePrice": 1.352634,
+    "directionalAccuracy": 0.572864,
+    "returnCorrelation": 0.066864,
+    "upDayHitRate": 0.887931,
+    "downDayHitRate": 0.134146
+  }
+}

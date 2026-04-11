@@ -1,0 +1,1100 @@
+{
+  "selectionHorizon": 1,
+  "winner": {
+    "modelType": "RandomForestRegressor",
+    "params": {
+      "max_depth": 8,
+      "max_features": "sqrt",
+      "min_samples_leaf": 3,
+      "n_estimators": 100
+    },
+    "averageMaeReturn": 0.014456,
+    "averageDirectionalAccuracy": 0.504481,
+    "foldScores": [
+      {
+        "trainStart": "2022-04-01",
+        "trainEnd": "2022-11-16",
+        "validationStart": "2022-11-17",
+        "validationEnd": "2023-07-10",
+        "maeReturn": 0.016573,
+        "directionalAccuracy": 0.491195
+      },
+      {
+        "trainStart": "2022-04-01",
+        "trainEnd": "2023-07-10",
+        "validationStart": "2023-07-11",
+        "validationEnd": "2024-02-26",
+        "maeReturn": 0.012239,
+        "directionalAccuracy": 0.498742
+      },
+      {
+        "trainStart": "2022-04-01",
+        "trainEnd": "2024-02-26",
+        "validationStart": "2024-02-27",
+        "validationEnd": "2024-10-11",
+        "maeReturn": 0.013009,
+        "directionalAccuracy": 0.509748
+      },
+      {
+        "trainStart": "2022-04-01",
+        "trainEnd": "2024-10-11",
+        "validationStart": "2024-10-14",
+        "validationEnd": "2025-06-03",
+        "maeReturn": 0.016001,
+        "directionalAccuracy": 0.518239
+      }
+    ]
+  },
+  "candidateResults": [
+    {
+      "modelType": "RandomForestRegressor",
+      "params": {
+        "max_depth": 8,
+        "max_features": "sqrt",
+        "min_samples_leaf": 1,
+        "n_estimators": 100
+      },
+      "averageMaeReturn": 0.014466,
+      "averageDirectionalAccuracy": 0.505031,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.01659,
+          "directionalAccuracy": 0.488679
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.012222,
+          "directionalAccuracy": 0.514151
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013033,
+          "directionalAccuracy": 0.508491
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.01602,
+          "directionalAccuracy": 0.508805
+        }
+      ]
+    },
+    {
+      "modelType": "RandomForestRegressor",
+      "params": {
+        "max_depth": 8,
+        "max_features": "sqrt",
+        "min_samples_leaf": 3,
+        "n_estimators": 100
+      },
+      "averageMaeReturn": 0.014456,
+      "averageDirectionalAccuracy": 0.504481,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.016573,
+          "directionalAccuracy": 0.491195
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.012239,
+          "directionalAccuracy": 0.498742
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013009,
+          "directionalAccuracy": 0.509748
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016001,
+          "directionalAccuracy": 0.518239
+        }
+      ]
+    },
+    {
+      "modelType": "RandomForestRegressor",
+      "params": {
+        "max_depth": null,
+        "max_features": "sqrt",
+        "min_samples_leaf": 1,
+        "n_estimators": 100
+      },
+      "averageMaeReturn": 0.01469,
+      "averageDirectionalAccuracy": 0.495912,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.016562,
+          "directionalAccuracy": 0.487736
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.012701,
+          "directionalAccuracy": 0.493396
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013287,
+          "directionalAccuracy": 0.497484
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016209,
+          "directionalAccuracy": 0.505031
+        }
+      ]
+    },
+    {
+      "modelType": "RandomForestRegressor",
+      "params": {
+        "max_depth": null,
+        "max_features": "sqrt",
+        "min_samples_leaf": 3,
+        "n_estimators": 100
+      },
+      "averageMaeReturn": 0.014647,
+      "averageDirectionalAccuracy": 0.495519,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.016683,
+          "directionalAccuracy": 0.48522
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.012518,
+          "directionalAccuracy": 0.505975
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013298,
+          "directionalAccuracy": 0.484277
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016088,
+          "directionalAccuracy": 0.506604
+        }
+      ]
+    },
+    {
+      "modelType": "HistGradientBoostingRegressor",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": 4,
+        "max_iter": 200,
+        "max_leaf_nodes": 15
+      },
+      "averageMaeReturn": 0.015065,
+      "averageDirectionalAccuracy": 0.501022,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.017009,
+          "directionalAccuracy": 0.496541
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.013142,
+          "directionalAccuracy": 0.506604
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013647,
+          "directionalAccuracy": 0.478302
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016459,
+          "directionalAccuracy": 0.522642
+        }
+      ]
+    },
+    {
+      "modelType": "HistGradientBoostingRegressor",
+      "params": {
+        "learning_rate": 0.05,
+        "max_depth": null,
+        "max_iter": 200,
+        "max_leaf_nodes": 15
+      },
+      "averageMaeReturn": 0.015369,
+      "averageDirectionalAccuracy": 0.507469,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.018053,
+          "directionalAccuracy": 0.507547
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.013373,
+          "directionalAccuracy": 0.492767
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.01351,
+          "directionalAccuracy": 0.492453
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016539,
+          "directionalAccuracy": 0.537107
+        }
+      ]
+    },
+    {
+      "modelType": "HistGradientBoostingRegressor",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": 4,
+        "max_iter": 200,
+        "max_leaf_nodes": 15
+      },
+      "averageMaeReturn": 0.015171,
+      "averageDirectionalAccuracy": 0.506132,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.01693,
+          "directionalAccuracy": 0.505975
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.013418,
+          "directionalAccuracy": 0.515409
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013713,
+          "directionalAccuracy": 0.481132
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016623,
+          "directionalAccuracy": 0.522013
+        }
+      ]
+    },
+    {
+      "modelType": "HistGradientBoostingRegressor",
+      "params": {
+        "learning_rate": 0.1,
+        "max_depth": null,
+        "max_iter": 200,
+        "max_leaf_nodes": 15
+      },
+      "averageMaeReturn": 0.015878,
+      "averageDirectionalAccuracy": 0.500079,
+      "foldScores": [
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2022-11-16",
+          "validationStart": "2022-11-17",
+          "validationEnd": "2023-07-10",
+          "maeReturn": 0.019423,
+          "directionalAccuracy": 0.501887
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2023-07-10",
+          "validationStart": "2023-07-11",
+          "validationEnd": "2024-02-26",
+          "maeReturn": 0.013425,
+          "directionalAccuracy": 0.507547
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-02-26",
+          "validationStart": "2024-02-27",
+          "validationEnd": "2024-10-11",
+          "maeReturn": 0.013795,
+          "directionalAccuracy": 0.483333
+        },
+        {
+          "trainStart": "2022-04-01",
+          "trainEnd": "2024-10-11",
+          "validationStart": "2024-10-14",
+          "validationEnd": "2025-06-03",
+          "maeReturn": 0.016867,
+          "directionalAccuracy": 0.507547
+        }
+      ]
+    }
+  ],
+  "selectedModelType": "RandomForestRegressor",
+  "directHorizonSearch": {
+    "1": {
+      "winner": {
+        "modelType": "RandomForestRegressor",
+        "params": {
+          "max_depth": 8,
+          "max_features": "sqrt",
+          "min_samples_leaf": 3,
+          "n_estimators": 100
+        },
+        "averageMaeReturn": 0.014456,
+        "averageDirectionalAccuracy": 0.504481,
+        "foldScores": [
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2022-11-16",
+            "validationStart": "2022-11-17",
+            "validationEnd": "2023-07-10",
+            "maeReturn": 0.016573,
+            "directionalAccuracy": 0.491195
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2023-07-10",
+            "validationStart": "2023-07-11",
+            "validationEnd": "2024-02-26",
+            "maeReturn": 0.012239,
+            "directionalAccuracy": 0.498742
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-02-26",
+            "validationStart": "2024-02-27",
+            "validationEnd": "2024-10-11",
+            "maeReturn": 0.013009,
+            "directionalAccuracy": 0.509748
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-10-11",
+            "validationStart": "2024-10-14",
+            "validationEnd": "2025-06-03",
+            "maeReturn": 0.016001,
+            "directionalAccuracy": 0.518239
+          }
+        ]
+      },
+      "candidateResults": [
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.014466,
+          "averageDirectionalAccuracy": 0.505031,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.01659,
+              "directionalAccuracy": 0.488679
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.012222,
+              "directionalAccuracy": 0.514151
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.013033,
+              "directionalAccuracy": 0.508491
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.01602,
+              "directionalAccuracy": 0.508805
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.014456,
+          "averageDirectionalAccuracy": 0.504481,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.016573,
+              "directionalAccuracy": 0.491195
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.012239,
+              "directionalAccuracy": 0.498742
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.013009,
+              "directionalAccuracy": 0.509748
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.016001,
+              "directionalAccuracy": 0.518239
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.01469,
+          "averageDirectionalAccuracy": 0.495912,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.016562,
+              "directionalAccuracy": 0.487736
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.012701,
+              "directionalAccuracy": 0.493396
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.013287,
+              "directionalAccuracy": 0.497484
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.016209,
+              "directionalAccuracy": 0.505031
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.014647,
+          "averageDirectionalAccuracy": 0.495519,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.016683,
+              "directionalAccuracy": 0.48522
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.012518,
+              "directionalAccuracy": 0.505975
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.013298,
+              "directionalAccuracy": 0.484277
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.016088,
+              "directionalAccuracy": 0.506604
+            }
+          ]
+        }
+      ]
+    },
+    "5": {
+      "winner": {
+        "modelType": "RandomForestRegressor",
+        "params": {
+          "max_depth": 8,
+          "max_features": "sqrt",
+          "min_samples_leaf": 1,
+          "n_estimators": 100
+        },
+        "averageMaeReturn": 0.035809,
+        "averageDirectionalAccuracy": 0.500393,
+        "foldScores": [
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2022-11-16",
+            "validationStart": "2022-11-17",
+            "validationEnd": "2023-07-10",
+            "maeReturn": 0.043682,
+            "directionalAccuracy": 0.425786
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2023-07-10",
+            "validationStart": "2023-07-11",
+            "validationEnd": "2024-02-26",
+            "maeReturn": 0.029829,
+            "directionalAccuracy": 0.522642
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-02-26",
+            "validationStart": "2024-02-27",
+            "validationEnd": "2024-10-11",
+            "maeReturn": 0.031693,
+            "directionalAccuracy": 0.516352
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-10-11",
+            "validationStart": "2024-10-14",
+            "validationEnd": "2025-06-03",
+            "maeReturn": 0.038032,
+            "directionalAccuracy": 0.536792
+          }
+        ]
+      },
+      "candidateResults": [
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.035809,
+          "averageDirectionalAccuracy": 0.500393,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.043682,
+              "directionalAccuracy": 0.425786
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.029829,
+              "directionalAccuracy": 0.522642
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.031693,
+              "directionalAccuracy": 0.516352
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.038032,
+              "directionalAccuracy": 0.536792
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.035828,
+          "averageDirectionalAccuracy": 0.502594,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.043807,
+              "directionalAccuracy": 0.427673
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.029955,
+              "directionalAccuracy": 0.525786
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.031656,
+              "directionalAccuracy": 0.513522
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.037892,
+              "directionalAccuracy": 0.543396
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.036334,
+          "averageDirectionalAccuracy": 0.49544,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.043417,
+              "directionalAccuracy": 0.435849
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.030866,
+              "directionalAccuracy": 0.490881
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.032128,
+              "directionalAccuracy": 0.523585
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.038926,
+              "directionalAccuracy": 0.531447
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.036245,
+          "averageDirectionalAccuracy": 0.491509,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.043664,
+              "directionalAccuracy": 0.425786
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.030616,
+              "directionalAccuracy": 0.486478
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.031988,
+              "directionalAccuracy": 0.526101
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.038714,
+              "directionalAccuracy": 0.527673
+            }
+          ]
+        }
+      ]
+    },
+    "10": {
+      "winner": {
+        "modelType": "RandomForestRegressor",
+        "params": {
+          "max_depth": 8,
+          "max_features": "sqrt",
+          "min_samples_leaf": 1,
+          "n_estimators": 100
+        },
+        "averageMaeReturn": 0.055512,
+        "averageDirectionalAccuracy": 0.487657,
+        "foldScores": [
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2022-11-16",
+            "validationStart": "2022-11-17",
+            "validationEnd": "2023-07-10",
+            "maeReturn": 0.073504,
+            "directionalAccuracy": 0.402201
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2023-07-10",
+            "validationStart": "2023-07-11",
+            "validationEnd": "2024-02-26",
+            "maeReturn": 0.044023,
+            "directionalAccuracy": 0.565094
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-02-26",
+            "validationStart": "2024-02-27",
+            "validationEnd": "2024-10-11",
+            "maeReturn": 0.04614,
+            "directionalAccuracy": 0.503774
+          },
+          {
+            "trainStart": "2022-04-01",
+            "trainEnd": "2024-10-11",
+            "validationStart": "2024-10-14",
+            "validationEnd": "2025-06-03",
+            "maeReturn": 0.058381,
+            "directionalAccuracy": 0.47956
+          }
+        ]
+      },
+      "candidateResults": [
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.055512,
+          "averageDirectionalAccuracy": 0.487657,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.073504,
+              "directionalAccuracy": 0.402201
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.044023,
+              "directionalAccuracy": 0.565094
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.04614,
+              "directionalAccuracy": 0.503774
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.058381,
+              "directionalAccuracy": 0.47956
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": 8,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.055619,
+          "averageDirectionalAccuracy": 0.483491,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.073605,
+              "directionalAccuracy": 0.40283
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.044196,
+              "directionalAccuracy": 0.562579
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.046144,
+              "directionalAccuracy": 0.501258
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.058532,
+              "directionalAccuracy": 0.467296
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 1,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.056601,
+          "averageDirectionalAccuracy": 0.474607,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.07445,
+              "directionalAccuracy": 0.403145
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.045036,
+              "directionalAccuracy": 0.540566
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.047404,
+              "directionalAccuracy": 0.491509
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.059514,
+              "directionalAccuracy": 0.463208
+            }
+          ]
+        },
+        {
+          "modelType": "RandomForestRegressor",
+          "params": {
+            "max_depth": null,
+            "max_features": "sqrt",
+            "min_samples_leaf": 3,
+            "n_estimators": 100
+          },
+          "averageMaeReturn": 0.056003,
+          "averageDirectionalAccuracy": 0.469969,
+          "foldScores": [
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2022-11-16",
+              "validationStart": "2022-11-17",
+              "validationEnd": "2023-07-10",
+              "maeReturn": 0.072009,
+              "directionalAccuracy": 0.40283
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2023-07-10",
+              "validationStart": "2023-07-11",
+              "validationEnd": "2024-02-26",
+              "maeReturn": 0.045302,
+              "directionalAccuracy": 0.529874
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-02-26",
+              "validationStart": "2024-02-27",
+              "validationEnd": "2024-10-11",
+              "maeReturn": 0.047493,
+              "directionalAccuracy": 0.487736
+            },
+            {
+              "trainStart": "2022-04-01",
+              "trainEnd": "2024-10-11",
+              "validationStart": "2024-10-14",
+              "validationEnd": "2025-06-03",
+              "maeReturn": 0.059207,
+              "directionalAccuracy": 0.459434
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
