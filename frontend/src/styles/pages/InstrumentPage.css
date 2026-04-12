@@ -1,0 +1,335 @@
+.instrument-page {
+  display: grid;
+  gap: 24px;
+}
+
+.instrument-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(207, 108, 65, 0.06), transparent 40%),
+    var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+}
+
+.instrument-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instrument-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.instrument-back-link:hover {
+  color: var(--text-main);
+}
+
+.instrument-back-arrow {
+  font-size: 1.1rem;
+}
+
+.instrument-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.instrument-symbol-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.instrument-symbol-logo .mover-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+.instrument-symbol-logo .mover-logo-mark {
+  font-size: 0.95rem;
+}
+
+.instrument-name {
+  font-family: var(--sans);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  max-width: none;
+  margin: 0;
+}
+
+.instrument-exchange {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.instrument-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.instrument-price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.instrument-live-price {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+}
+
+.instrument-price-change {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.instrument-price-change--up {
+  color: var(--success);
+}
+
+.instrument-price-change--down {
+  color: var(--danger);
+}
+
+.instrument-price-date {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.instrument-hero-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.instrument-track-btn,
+.instrument-untrack-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.instrument-track-btn {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #f7fbff;
+}
+
+.instrument-track-btn:hover {
+  transform: translateY(-1px);
+}
+
+.instrument-untrack-btn {
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
+}
+
+.instrument-untrack-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.instrument-track-btn:disabled,
+.instrument-untrack-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.instrument-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+
+.instrument-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--panel-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: instrument-loading-spin 0.7s linear infinite;
+}
+
+@keyframes instrument-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.instrument-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+}
+
+.instrument-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 28px 0;
+}
+
+.instrument-chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.instrument-chart-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.instrument-range-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instrument-range-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.instrument-range-badge--up {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.instrument-range-badge--down {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.instrument-range-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.instrument-range-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(20, 32, 51, 0.05);
+}
+
+.instrument-range-btn {
+  min-height: 36px;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.instrument-range-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-main);
+}
+
+.instrument-range-btn--active {
+  background: #fff;
+  color: var(--text-main);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.instrument-chart-frame {
+  padding: 12px 20px 8px;
+}
+
+.instrument-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(20, 32, 51, 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.instrument-tooltip-date {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.instrument-tooltip-price {
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.instrument-chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 28px 18px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.instrument-chart-footer-note,
+.instrument-chart-footer-source {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: 500;
+}
