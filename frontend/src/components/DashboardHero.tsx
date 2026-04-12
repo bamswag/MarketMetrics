@@ -1,4 +1,3 @@
-import { StatCard } from './StatCard'
 import { TrackedSymbolsPreview } from './TrackedSymbolsPreview'
 import type { WatchlistItemDetailedOut } from '../lib/api'
 
@@ -20,19 +19,31 @@ export function DashboardHero({
   return (
     <section className="dashboard-hero page-section">
       <div className="dashboard-hero-copy">
-        <p className="eyebrow personalized-eyebrow">
-          {displayName ? `Hey ${displayName}, Welcome to MarketMetrics!` : 'MarketMetrics dashboard'}
-        </p>
-        <h1>Search faster, track smarter, and move through the market with clarity.</h1>
+        <div className="dashboard-greeting-row">
+          <span className="dashboard-greeting-badge">Dashboard</span>
+        </div>
+        <h1 className="dashboard-heading">
+          {displayName ? `Welcome back, ${displayName}.` : 'Your market overview'}
+        </h1>
         <p className="hero-text">
-          Your workspace is centered on chartable instruments, cleaner watchlists, faster drill-downs,
-          and signal-rich summaries so the dashboard feels like a product instead of a prototype.
+          Track your instruments, monitor alerts, and stay on top of the market — all in one place.
         </p>
 
-        <div className="dashboard-tag-row">
-          <span className="dashboard-tag">Search-ready workflow</span>
-          <span className="dashboard-tag">Watchlist-first context</span>
-          <span className="dashboard-tag">Chart-driven analysis</span>
+        <div className="dashboard-quick-stats">
+          <div className="dashboard-quick-stat">
+            <strong className="dashboard-quick-stat-value">{trackedSymbols.length}</strong>
+            <span className="dashboard-quick-stat-label">Tracked</span>
+          </div>
+          <div className="dashboard-quick-stat-divider" />
+          <div className="dashboard-quick-stat">
+            <strong className="dashboard-quick-stat-value">{activeAlerts}</strong>
+            <span className="dashboard-quick-stat-label">Active alerts</span>
+          </div>
+          <div className="dashboard-quick-stat-divider" />
+          <div className="dashboard-quick-stat">
+            <strong className="dashboard-quick-stat-value">{triggeredAlerts}</strong>
+            <span className="dashboard-quick-stat-label">Triggered</span>
+          </div>
         </div>
       </div>
 
@@ -41,16 +52,6 @@ export function DashboardHero({
           isLoading={isLoadingTrackedSymbols}
           trackedSymbols={trackedSymbols}
           variant="hero"
-        />
-        <StatCard
-          description="Live monitoring rules currently waiting on price conditions."
-          label="Active alerts"
-          value={activeAlerts}
-        />
-        <StatCard
-          description="Triggered alerts that have already surfaced meaningful events."
-          label="Triggered alerts"
-          value={triggeredAlerts}
         />
       </div>
     </section>

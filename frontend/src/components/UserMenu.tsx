@@ -53,7 +53,7 @@ export function UserMenu({ displayName }: UserMenuProps) {
         onClick={() => setIsOpen((currentValue) => !currentValue)}
         type="button"
       >
-        <span className="user-menu-trigger-label">{displayName ?? 'My account'}</span>
+        <span className="user-menu-trigger-label">My account</span>
         <span aria-hidden="true" className="user-menu-caret">
           {isOpen ? '▴' : '▾'}
         </span>

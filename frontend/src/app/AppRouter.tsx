@@ -284,7 +284,7 @@ function AppContent() {
       cancelled = true
       abortController.abort()
     }
-  }, [handleSessionExpired, token])
+  }, [token])
 
   async function refreshWatchlist(activeToken: string) {
     const updatedWatchlist = await fetchWatchlist(activeToken)
@@ -378,7 +378,7 @@ function AppContent() {
     <AppHeader
       actions={
         <>
-          <span className="connected-chip">{currentUser?.displayName ?? 'Connected'}</span>
+          <span className="connected-chip">Connected</span>
           <UserMenu displayName={currentUser?.displayName} />
           <button className="ghost-action" onClick={handleLogout} type="button">
             Log out

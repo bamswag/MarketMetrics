@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 type MoverLogoProps = {
   name?: string | null
   symbol: string
@@ -32,6 +34,91 @@ const BRAND_MARKS: Record<string, BrandMark> = {
   CVX: { label: 'CV', background: 'linear-gradient(135deg, #1d4ed8, #06b6d4)', color: '#ecfeff' },
 }
 
+const SYMBOL_DOMAINS: Record<string, string> = {
+  AAPL: 'apple.com',
+  MSFT: 'microsoft.com',
+  NVDA: 'nvidia.com',
+  AMZN: 'amazon.com',
+  GOOGL: 'google.com',
+  GOOG: 'google.com',
+  META: 'meta.com',
+  TSLA: 'tesla.com',
+  AMD: 'amd.com',
+  NFLX: 'netflix.com',
+  INTC: 'intel.com',
+  JPM: 'jpmorgan.com',
+  BAC: 'bankofamerica.com',
+  V: 'visa.com',
+  MA: 'mastercard.com',
+  WMT: 'walmart.com',
+  DIS: 'thewaltdisneycompany.com',
+  KO: 'coca-colacompany.com',
+  PEP: 'pepsico.com',
+  XOM: 'exxonmobil.com',
+  CVX: 'chevron.com',
+  CRM: 'salesforce.com',
+  ORCL: 'oracle.com',
+  CSCO: 'cisco.com',
+  ADBE: 'adobe.com',
+  AVGO: 'broadcom.com',
+  QCOM: 'qualcomm.com',
+  TXN: 'ti.com',
+  IBM: 'ibm.com',
+  PYPL: 'paypal.com',
+  UBER: 'uber.com',
+  SQ: 'squareup.com',
+  SPOT: 'spotify.com',
+  ABNB: 'airbnb.com',
+  SNAP: 'snapchat.com',
+  PINS: 'pinterest.com',
+  ROKU: 'roku.com',
+  ZM: 'zoom.us',
+  SHOP: 'shopify.com',
+  COIN: 'coinbase.com',
+  HOOD: 'robinhood.com',
+  PLTR: 'palantir.com',
+  NET: 'cloudflare.com',
+  DDOG: 'datadoghq.com',
+  RBLX: 'roblox.com',
+  EA: 'ea.com',
+  NKE: 'nike.com',
+  SBUX: 'starbucks.com',
+  MCD: 'mcdonalds.com',
+  HD: 'homedepot.com',
+  LOW: 'lowes.com',
+  TGT: 'target.com',
+  COST: 'costco.com',
+  PG: 'pg.com',
+  JNJ: 'jnj.com',
+  PFE: 'pfizer.com',
+  ABBV: 'abbvie.com',
+  MRK: 'merck.com',
+  LLY: 'lilly.com',
+  UNH: 'unitedhealthgroup.com',
+  GS: 'goldmansachs.com',
+  MS: 'morganstanley.com',
+  C: 'citigroup.com',
+  WFC: 'wellsfargo.com',
+  T: 'att.com',
+  VZ: 'verizon.com',
+  TMUS: 't-mobile.com',
+  BA: 'boeing.com',
+  GE: 'ge.com',
+  CAT: 'caterpillar.com',
+  DE: 'deere.com',
+  F: 'ford.com',
+  GM: 'gm.com',
+  DAL: 'delta.com',
+  UAL: 'united.com',
+  LUV: 'southwest.com',
+}
+
+function getLogoUrl(symbol: string): string | null {
+  const domain = SYMBOL_DOMAINS[symbol]
+  if (!domain) return null
+  return `https://logo.clearbit.com/${domain}`
+}
+
 function fallbackLabel(symbol: string) {
   return symbol.trim().toUpperCase().slice(0, 2) || 'MM'
 }
@@ -40,6 +127,24 @@ export function MoverLogo({ name, symbol }: MoverLogoProps) {
   const normalizedSymbol = symbol.trim().toUpperCase()
   const mark = BRAND_MARKS[normalizedSymbol]
   const label = mark?.label ?? fallbackLabel(normalizedSymbol)
+  const logoUrl = getLogoUrl(normalizedSymbol)
+  const [imgFailed, setImgFailed] = useState(false)
+
+  if (logoUrl && !imgFailed) {
+    return (
+      <span
+        className="mover-logo mover-logo--image"
+        title={name ?? normalizedSymbol}
+      >
+        <img
+          alt={name ?? normalizedSymbol}
+          className="mover-logo-img"
+          onError={() => setImgFailed(true)}
+          src={logoUrl}
+        />
+      </span>
+    )
+  }
 
   return (
     <span

@@ -8,6 +8,7 @@ import type {
   InstrumentRange,
   WatchlistItemDetailedOut,
 } from '../lib/api'
+import { formatCurrency } from '../lib/formatters'
 
 type InstrumentPageProps = {
   isLoadingTrackedSymbols?: boolean
@@ -97,7 +98,7 @@ export function InstrumentPage({
     return () => {
       cancelled = true
     }
-  }, [onUnauthorizedEvent, selectedRange, symbol, token])
+  }, [selectedRange, symbol, token])
 
   if (!symbol) {
     return <Navigate replace to="/dashboard" />
@@ -133,45 +134,67 @@ export function InstrumentPage({
     }
   }
 
+  const quote = instrumentDetail?.latestQuote
+  const priceChange = quote?.change ?? 0
+  const isPositive = priceChange >= 0
+
   return (
     <section className="instrument-page page-section">
-      <div className="instrument-page-head">
-        <div>
-          <Link className="secondary-link" to={token ? '/dashboard' : '/'}>
-            {token ? 'Back to dashboard' : 'Back to home'}
+      <div className="instrument-hero">
+        <div className="instrument-hero-left">
+          <Link className="instrument-back-link" to={token ? '/dashboard' : '/'}>
+            <span className="instrument-back-arrow">&larr;</span>
+            {token ? 'Dashboard' : 'Home'}
           </Link>
-          <p className="section-label">Instrument detail</p>
-          <h1 className="instrument-title">{instrumentDetail?.companyName ?? symbol}</h1>
-          <p className="instrument-subtitle">
-            {instrumentDetail
-              ? `${instrumentDetail.symbol} · ${instrumentDetail.exchange ?? 'US market'}`
-              : `Loading chart-ready data for ${symbol}`}
-          </p>
+
+          <div className="instrument-identity">
+            <div className="instrument-symbol-badge">{symbol}</div>
+            <div>
+              <h1 className="instrument-name">
+                {instrumentDetail?.companyName ?? symbol}
+              </h1>
+              <p className="instrument-exchange">
+                {instrumentDetail
+                  ? `${instrumentDetail.exchange ?? 'US market'}`
+                  : `Loading...`}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="instrument-page-actions">
-          {token ? (
-            <button
-              className={isTracked ? 'ghost-action instrument-track-button' : 'search-button instrument-track-button'}
-              disabled={isUpdatingTrackedSymbol || isLoadingTrackedSymbols}
-              onClick={() => void handleToggleTrackedSymbol()}
-              type="button"
-            >
-              {isLoadingTrackedSymbols
-                ? 'Checking tracked state...'
-                : isUpdatingTrackedSymbol
-                  ? isTracked
-                    ? 'Removing...'
-                    : 'Tracking...'
-                  : isTracked
-                    ? 'Remove from tracked'
-                    : 'Track symbol'}
-            </button>
-          ) : (
-            <Link className="ghost-action instrument-track-button" to="/login">
-              Log in to track
-            </Link>
-          )}
+        <div className="instrument-hero-right">
+          {quote ? (
+            <div className="instrument-price-block">
+              <span className="instrument-live-price">{formatCurrency(quote.price)}</span>
+              <span className={`instrument-price-change ${isPositive ? 'instrument-price-change--up' : 'instrument-price-change--down'}`}>
+                {isPositive ? '+' : ''}{priceChange.toFixed(2)} USD ({quote.changePercent ?? '--'})
+              </span>
+              <span className="instrument-price-date">
+                Last traded {quote.latestTradingDay ?? '--'}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="instrument-hero-actions">
+            {token ? (
+              <button
+                className={isTracked ? 'instrument-untrack-btn' : 'instrument-track-btn'}
+                disabled={isUpdatingTrackedSymbol || isLoadingTrackedSymbols}
+                onClick={() => void handleToggleTrackedSymbol()}
+                type="button"
+              >
+                {isLoadingTrackedSymbols
+                  ? 'Checking...'
+                  : isUpdatingTrackedSymbol
+                    ? isTracked ? 'Removing...' : 'Tracking...'
+                    : isTracked ? 'Untrack' : 'Track symbol'}
+              </button>
+            ) : (
+              <Link className="instrument-track-btn" to="/login">
+                Log in to track
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,7 +202,10 @@ export function InstrumentPage({
       {trackingError ? <p className="error-text">{trackingError}</p> : null}
       {trackingSuccess ? <p className="success-text">{trackingSuccess}</p> : null}
       {isLoadingInstrument && !instrumentDetail ? (
-        <p className="empty-state">Loading instrument details and price history...</p>
+        <div className="instrument-loading">
+          <div className="instrument-loading-spinner" />
+          <p>Loading chart data for {symbol}...</p>
+        </div>
       ) : null}
 
       {instrumentDetail ? (
