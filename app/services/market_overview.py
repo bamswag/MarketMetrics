@@ -8,7 +8,11 @@ from typing import Any, Dict, List, Optional
 from app.integrations.alpaca.market_data import fetch_top_movers
 from app.schemas.movers import Mover, MoversResponse, MoverSparklinePoint
 from app.services.price_history import get_daily_close_series_cached
-from app.services.search import get_mover_universe_symbols, get_symbol_metadata
+from app.services.search import (
+    get_mover_universe_symbols,
+    get_symbol_asset_class,
+    get_symbol_metadata,
+)
 
 MOVERS_CACHE_TTL_SECONDS = 45
 SPARKLINE_LOOKBACK_DAYS = 14
@@ -103,8 +107,22 @@ def _parse_movers(
     return [mover for mover in result if mover.symbol]
 
 
+def _build_asset_class_map(symbols: List[str]) -> Dict[str, str]:
+    return {
+        symbol.strip().upper(): get_symbol_asset_class(symbol)
+        for symbol in symbols
+        if symbol
+    }
+
+
 async def _build_market_movers(limit: int) -> MoversResponse:
-    data = await fetch_top_movers(get_mover_universe_symbols(), top_n=limit)
+    mover_universe = get_mover_universe_symbols()
+    asset_class_map = _build_asset_class_map(mover_universe)
+    data = await fetch_top_movers(
+        mover_universe,
+        top_n=limit,
+        asset_class_map=asset_class_map,
+    )
     mover_items = [*(data.get("top_gainers") or []), *(data.get("top_losers") or [])]
     sparkline_map = await _load_sparkline_map(mover_items)
     metadata_map = _build_metadata_map(mover_items)

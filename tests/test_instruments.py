@@ -172,6 +172,48 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["symbol"], "AAPL")
         self.assertEqual(payload["companyName"], "Apple Inc.")
 
+    @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_crypto_instrument_detail_supports_slash_symbol_paths(
+        self,
+        mock_get_symbol_metadata,
+        mock_get_quote_cached,
+        mock_get_daily_close_series_cached,
+        mock_resolve_company_name,
+    ):
+        mock_get_symbol_metadata.return_value = {
+            "symbol": "BTC/USD",
+            "name": "Bitcoin",
+            "exchange": "CRYPTO",
+            "tradable": True,
+            "asset_class": "crypto",
+        }
+        mock_resolve_company_name.return_value = "Bitcoin"
+        mock_get_quote_cached.return_value = {
+            "symbol": "BTC/USD",
+            "price": 84250.0,
+            "change": 1320.2,
+            "changePercent": "1.59%",
+            "latestTradingDay": "2026-04-06",
+            "source": "alpaca",
+        }
+        mock_get_daily_close_series_cached.return_value = [
+            (date(2026, 4, 1), 81200.0),
+            (date(2026, 4, 2), 82150.0),
+            (date(2026, 4, 3), 83425.0),
+        ]
+
+        response = self.client.get("/instruments/BTC%2FUSD?range=1M")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["symbol"], "BTC/USD")
+        self.assertEqual(payload["companyName"], "Bitcoin")
+        self.assertEqual(payload["exchange"], "CRYPTO")
+        self.assertEqual(payload["latestQuote"]["price"], 84250.0)
+
 
 class InstrumentServiceTests(BaseAPITestCase):
     def test_range_window_selection_matches_expected_ranges(self):

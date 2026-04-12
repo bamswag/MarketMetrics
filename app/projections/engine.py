@@ -17,7 +17,11 @@ from app.schemas.growth_projections import (
     ProjectionContributionFrequency,
     ProjectionEndValuesOut,
 )
-from app.services.search import resolve_company_name as fetch_company_name
+from app.services.search import (
+    get_symbol_asset_class,
+    normalize_catalog_symbol,
+    resolve_company_name as fetch_company_name,
+)
 
 
 DEFAULT_PROJECTION_HISTORY_DAYS = 3650
@@ -355,9 +359,15 @@ async def project_long_term(request: LongTermProjectionRequest) -> LongTermProje
 
     history_end = date.today()
     history_start = history_end - timedelta(days=DEFAULT_PROJECTION_HISTORY_DAYS)
-    symbol = request.symbol.strip().upper()
+    asset_class = get_symbol_asset_class(request.symbol)
+    symbol = normalize_catalog_symbol(request.symbol, asset_class)
 
-    rows = await fetch_daily_bar_rows(symbol, start=history_start, end=history_end)
+    rows = await fetch_daily_bar_rows(
+        symbol,
+        start=history_start,
+        end=history_end,
+        asset_class=asset_class,
+    )
     company_name = await fetch_company_name(symbol)
     if not rows:
         raise LongTermProjectionError("No historical data is available for that symbol.")

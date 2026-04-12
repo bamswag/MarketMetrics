@@ -34,7 +34,7 @@ async def list_watchlist_items(
     return await get_watchlist_items_detailed(db, current_user.userID)
 
 
-@router.delete("/{symbol}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{symbol:path}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_watchlist_item(
     symbol: str,
     db: Session = Depends(get_db),

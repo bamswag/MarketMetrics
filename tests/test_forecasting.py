@@ -6,7 +6,10 @@ import unittest
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-from test_auth import BaseAPITestCase, ML_DEPENDENCIES_AVAILABLE, _generate_synthetic_rows
+try:
+    from test_auth import BaseAPITestCase, ML_DEPENDENCIES_AVAILABLE, _generate_synthetic_rows
+except ModuleNotFoundError:
+    from tests.test_auth import BaseAPITestCase, ML_DEPENDENCIES_AVAILABLE, _generate_synthetic_rows
 
 
 @unittest.skipUnless(ML_DEPENDENCIES_AVAILABLE, "ML dependencies are not installed")
@@ -24,7 +27,7 @@ class PredictionPipelineTests(BaseAPITestCase):
 
     @patch("app.forecasting.training.fetch_daily_bar_rows", new_callable=AsyncMock)
     def test_training_pipeline_creates_artifacts(self, mock_fetch_daily_bar_rows):
-        async def side_effect(symbol, start=None, end=None):
+        async def side_effect(symbol, start=None, end=None, asset_class=None):
             return self._mock_bars_for_symbol(symbol)
 
         mock_fetch_daily_bar_rows.side_effect = side_effect
@@ -122,7 +125,7 @@ class PredictionPipelineTests(BaseAPITestCase):
     ):
         token = self.register_and_login(email="predict@example.com")
 
-        async def bar_side_effect(symbol, start=None, end=None):
+        async def bar_side_effect(symbol, start=None, end=None, asset_class=None):
             return self._mock_bars_for_symbol(symbol)
 
         mock_fetch_daily_bar_rows.side_effect = bar_side_effect

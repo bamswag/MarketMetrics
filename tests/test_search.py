@@ -1,4 +1,7 @@
+import unittest
 from unittest.mock import patch
+
+from app.services.search import get_symbol_asset_class, get_symbol_metadata
 
 try:
     from test_auth import BaseAPITestCase
@@ -27,3 +30,12 @@ class SearchRouteTests(BaseAPITestCase):
         self.assertEqual(payload["query"], "apple")
         self.assertEqual(len(payload["results"]), 1)
         self.assertEqual(payload["results"][0]["symbol"], "AAPL")
+
+
+class SearchServiceTests(unittest.TestCase):
+    def test_crypto_alias_lookup_resolves_to_catalog_symbol(self):
+        metadata = get_symbol_metadata("BTCUSD")
+
+        self.assertIsNotNone(metadata)
+        self.assertEqual(metadata["symbol"], "BTC/USD")
+        self.assertEqual(get_symbol_asset_class("BTCUSD"), "crypto")

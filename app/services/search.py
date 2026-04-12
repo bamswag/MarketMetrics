@@ -9,54 +9,58 @@ from app.core.config import settings
 
 
 _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
+_CRYPTO_QUOTE_SUFFIXES = ("USD",)
 
 
 DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
-    {"symbol": "AAPL", "name": "Apple Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "MSFT", "name": "Microsoft Corporation", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "NVDA", "name": "NVIDIA Corporation", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "AMZN", "name": "Amazon.com, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "GOOGL", "name": "Alphabet Inc. Class A", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "META", "name": "Meta Platforms, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "TSLA", "name": "Tesla, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "AMD", "name": "Advanced Micro Devices, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "NFLX", "name": "Netflix, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "INTC", "name": "Intel Corporation", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "exchange": "NYSE", "tradable": True},
-    {"symbol": "BAC", "name": "Bank of America Corporation", "exchange": "NYSE", "tradable": True},
-    {"symbol": "V", "name": "Visa Inc.", "exchange": "NYSE", "tradable": True},
-    {"symbol": "MA", "name": "Mastercard Incorporated", "exchange": "NYSE", "tradable": True},
-    {"symbol": "WMT", "name": "Walmart Inc.", "exchange": "NYSE", "tradable": True},
-    {"symbol": "DIS", "name": "The Walt Disney Company", "exchange": "NYSE", "tradable": True},
-    {"symbol": "KO", "name": "The Coca-Cola Company", "exchange": "NYSE", "tradable": True},
-    {"symbol": "PEP", "name": "PepsiCo, Inc.", "exchange": "NASDAQ", "tradable": True},
-    {"symbol": "XOM", "name": "Exxon Mobil Corporation", "exchange": "NYSE", "tradable": True},
-    {"symbol": "CVX", "name": "Chevron Corporation", "exchange": "NYSE", "tradable": True},
-    {"symbol": "SPY", "name": "SPDR S&P 500 ETF Trust", "exchange": "ARCA", "tradable": True},
-    {"symbol": "QQQ", "name": "Invesco QQQ Trust", "exchange": "NASDAQ", "tradable": True},
+    # US equities
+    {"symbol": "AAPL", "name": "Apple Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "MSFT", "name": "Microsoft Corporation", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "NVDA", "name": "NVIDIA Corporation", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "AMZN", "name": "Amazon.com, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "GOOGL", "name": "Alphabet Inc. Class A", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "META", "name": "Meta Platforms, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "TSLA", "name": "Tesla, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "AMD", "name": "Advanced Micro Devices, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "NFLX", "name": "Netflix, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "INTC", "name": "Intel Corporation", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "BAC", "name": "Bank of America Corporation", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "V", "name": "Visa Inc.", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "MA", "name": "Mastercard Incorporated", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "WMT", "name": "Walmart Inc.", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "DIS", "name": "The Walt Disney Company", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "KO", "name": "The Coca-Cola Company", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "PEP", "name": "PepsiCo, Inc.", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "XOM", "name": "Exxon Mobil Corporation", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "CVX", "name": "Chevron Corporation", "exchange": "NYSE", "tradable": True, "asset_class": "us_equity"},
+    # Index ETFs
+    {"symbol": "SPY", "name": "SPDR S&P 500 ETF Trust", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "QQQ", "name": "Invesco QQQ Trust (Nasdaq 100)", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "DIA", "name": "SPDR Dow Jones Industrial Average ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "IWM", "name": "iShares Russell 2000 ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    # Crypto
+    {"symbol": "BTC/USD", "name": "Bitcoin", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "ETH/USD", "name": "Ethereum", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "SOL/USD", "name": "Solana", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "DOGE/USD", "name": "Dogecoin", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "ADA/USD", "name": "Cardano", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "XRP/USD", "name": "XRP", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "AVAX/USD", "name": "Avalanche", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "LINK/USD", "name": "Chainlink", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    {"symbol": "DOT/USD", "name": "Polkadot", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
 ]
 
 DEFAULT_MOVER_UNIVERSE: List[str] = [
-    "AAPL",
-    "MSFT",
-    "NVDA",
-    "AMZN",
-    "GOOGL",
-    "META",
-    "TSLA",
-    "AMD",
-    "NFLX",
-    "INTC",
-    "JPM",
-    "BAC",
-    "V",
-    "MA",
-    "WMT",
-    "DIS",
-    "KO",
-    "PEP",
-    "XOM",
-    "CVX",
+    # Equities
+    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
+    "META", "TSLA", "AMD", "NFLX", "INTC",
+    "JPM", "BAC", "V", "MA", "WMT",
+    "DIS", "KO", "PEP", "XOM", "CVX",
+    # Index ETFs
+    "SPY", "QQQ", "DIA", "IWM",
+    # Crypto
+    "BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD",
 ]
 
 DEFAULT_TRAINING_UNIVERSE_MANIFEST: List[Dict[str, Any]] = [
@@ -92,14 +96,75 @@ DEFAULT_TRAINING_UNIVERSE_MANIFEST: List[Dict[str, Any]] = [
     {"symbol": "AVGO", "enabled": True, "group": "technology", "reason": "Broad semiconductor exposure"},
 ]
 
+
+def normalize_catalog_symbol(
+    symbol: Any,
+    asset_class: Optional[str] = None,
+) -> str:
+    normalized_symbol = str(symbol or "").strip().upper()
+    if not normalized_symbol:
+        return ""
+
+    if asset_class == "crypto":
+        if "/" in normalized_symbol:
+            return normalized_symbol
+
+        for quote_suffix in _CRYPTO_QUOTE_SUFFIXES:
+            if normalized_symbol.endswith(quote_suffix) and len(normalized_symbol) > len(quote_suffix):
+                return f"{normalized_symbol[:-len(quote_suffix)]}/{quote_suffix}"
+
+    return normalized_symbol
+
+
+def _normalize_catalog_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    normalized_item = dict(item)
+    asset_class = str(
+        normalized_item.get("asset_class") or normalized_item.get("class") or "us_equity"
+    ).strip().lower() or "us_equity"
+    normalized_item["asset_class"] = asset_class
+    normalized_item["symbol"] = normalize_catalog_symbol(normalized_item.get("symbol"), asset_class)
+    normalized_item["name"] = normalized_item.get("name") or normalized_item["symbol"]
+    return normalized_item
+
+
+def _merge_default_catalog_entries(catalog: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    merged: List[Dict[str, Any]] = []
+    seen_symbols: set[str] = set()
+
+    for raw_item in [*catalog, *DEFAULT_SYMBOL_CATALOG]:
+        item = _normalize_catalog_item(raw_item)
+        symbol = item.get("symbol")
+        if not symbol or symbol in seen_symbols:
+            continue
+        seen_symbols.add(symbol)
+        merged.append(item)
+
+    return merged
+
+
+def _build_symbol_index(catalog: Iterable[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    index: Dict[str, Dict[str, Any]] = {}
+
+    for item in catalog:
+        symbol = str(item.get("symbol") or "").strip().upper()
+        if not symbol:
+            continue
+
+        normalized_symbol = normalize_catalog_symbol(symbol, item.get("asset_class"))
+        index[normalized_symbol] = item
+
+        if item.get("asset_class") == "crypto":
+            index[normalized_symbol.replace("/", "")] = item
+
+    return index
+
+
 _symbol_catalog_cache_path: Optional[str] = None
 _symbol_catalog_cache_mtime_ns: Optional[int] = None
-_symbol_catalog_cache_data: List[Dict[str, Any]] = list(DEFAULT_SYMBOL_CATALOG)
-_symbol_catalog_cache_index: Dict[str, Dict[str, Any]] = {
-    str(item.get("symbol", "")).strip().upper(): item
-    for item in DEFAULT_SYMBOL_CATALOG
-    if item.get("symbol")
-}
+_symbol_catalog_cache_data: List[Dict[str, Any]] = _merge_default_catalog_entries(DEFAULT_SYMBOL_CATALOG)
+_symbol_catalog_cache_index: Dict[str, Dict[str, Any]] = _build_symbol_index(
+    _symbol_catalog_cache_data
+)
 _symbol_catalog_last_check_monotonic: float = 0.0
 
 
@@ -142,24 +207,21 @@ def load_symbol_catalog(force: bool = False) -> List[Dict[str, Any]]:
 
             loaded = json.loads(path.read_text())
             if isinstance(loaded, list):
+                normalized_catalog = _merge_default_catalog_entries(loaded)
                 _symbol_catalog_cache_path = resolved_path
                 _symbol_catalog_cache_mtime_ns = current_mtime_ns
-                _symbol_catalog_cache_data = loaded
-                _symbol_catalog_cache_index = {
-                    str(item.get("symbol", "")).strip().upper(): item
-                    for item in loaded
-                    if item.get("symbol")
-                }
+                _symbol_catalog_cache_data = normalized_catalog
+                _symbol_catalog_cache_index = _build_symbol_index(normalized_catalog)
                 return list(_symbol_catalog_cache_data)
         except Exception:
-            return list(DEFAULT_SYMBOL_CATALOG)
-    return list(DEFAULT_SYMBOL_CATALOG)
+            return list(_symbol_catalog_cache_data)
+    return list(_symbol_catalog_cache_data)
 
 
 def save_symbol_catalog(catalog: List[Dict[str, Any]]) -> Path:
     path = _catalog_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(catalog, indent=2, sort_keys=True))
+    path.write_text(json.dumps(_merge_default_catalog_entries(catalog), indent=2, sort_keys=True))
     return path
 
 
@@ -181,6 +243,24 @@ def get_symbol_metadata(symbol: str) -> Optional[Dict[str, Any]]:
     # lookup is effectively a single dict read on the hot path.
     load_symbol_catalog()
     return _symbol_catalog_cache_index.get(normalized)
+
+
+def get_symbol_asset_class(symbol: str) -> str:
+    metadata = get_symbol_metadata(symbol)
+    if metadata and metadata.get("asset_class"):
+        return str(metadata["asset_class"]).strip().lower()
+
+    normalized = symbol.strip().upper()
+    if "/" in normalized and any(
+        normalized.endswith(f"/{quote_suffix}") for quote_suffix in _CRYPTO_QUOTE_SUFFIXES
+    ):
+        return "crypto"
+    if any(
+        normalized.endswith(quote_suffix) and len(normalized) > len(quote_suffix)
+        for quote_suffix in _CRYPTO_QUOTE_SUFFIXES
+    ):
+        return "crypto"
+    return "us_equity"
 
 
 def is_chartable_instrument(item: Optional[Dict[str, Any]]) -> bool:
@@ -236,17 +316,22 @@ def search_symbol_catalog(
 
 
 def build_search_result(item: Dict[str, Any]) -> Dict[str, Any]:
+    asset_class = item.get("asset_class", "us_equity")
+    symbol = normalize_catalog_symbol(item.get("symbol", ""), asset_class)
+    is_crypto = asset_class == "crypto"
+    quote_currency = symbol.split("/")[-1] if is_crypto and "/" in symbol else "USD"
+
     return {
-        "symbol": item.get("symbol", ""),
+        "symbol": symbol,
         "name": item.get("name", ""),
-        "type": item.get("asset_class", "us_equity"),
-        "region": "US",
-        "marketOpen": "09:30",
-        "marketClose": "16:00",
-        "timezone": "America/New_York",
-        "currency": "USD",
+        "type": asset_class,
+        "region": "Global" if is_crypto else "US",
+        "marketOpen": "00:00" if is_crypto else "09:30",
+        "marketClose": "23:59" if is_crypto else "16:00",
+        "timezone": "UTC" if is_crypto else "America/New_York",
+        "currency": quote_currency,
         "matchScore": item.get("matchScore"),
-        "exchange": item.get("exchange"),
+        "exchange": item.get("exchange") or ("CRYPTO" if is_crypto else None),
         "status": item.get("status", "active"),
         "tradable": bool(item.get("tradable", True)),
     }
@@ -285,4 +370,4 @@ def resolve_company_name(symbol: str) -> str:
     metadata = get_symbol_metadata(symbol)
     if metadata and metadata.get("name"):
         return metadata["name"]
-    return symbol.strip().upper()
+    return normalize_catalog_symbol(symbol, get_symbol_asset_class(symbol))

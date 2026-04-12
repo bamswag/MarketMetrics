@@ -10,7 +10,10 @@ from app.projections.assumptions import (
 )
 from app.projections.engine import build_deterministic_projection_path
 from app.projections.monte_carlo import run_monte_carlo_projection
-from test_auth import BaseAPITestCase, _generate_synthetic_rows
+try:
+    from test_auth import BaseAPITestCase, _generate_synthetic_rows
+except ModuleNotFoundError:
+    from tests.test_auth import BaseAPITestCase, _generate_synthetic_rows
 
 
 class LongTermProjectionServiceTests(unittest.TestCase):
@@ -79,7 +82,7 @@ class LongTermProjectionApiTests(BaseAPITestCase):
         token = self.register_and_login(email="project@example.com")
         mock_fetch_company_name.return_value = "Microsoft Corporation"
 
-        async def side_effect(symbol, start=None, end=None):
+        async def side_effect(symbol, start=None, end=None, asset_class=None):
             return self._projection_rows(symbol)
 
         mock_fetch_daily_bar_rows.side_effect = side_effect
@@ -146,7 +149,7 @@ class LongTermProjectionApiTests(BaseAPITestCase):
         token = self.register_and_login(email="project50@example.com")
         mock_fetch_company_name.return_value = "Apple Inc."
 
-        async def side_effect(symbol, start=None, end=None):
+        async def side_effect(symbol, start=None, end=None, asset_class=None):
             return self._projection_rows(symbol)
 
         mock_fetch_daily_bar_rows.side_effect = side_effect

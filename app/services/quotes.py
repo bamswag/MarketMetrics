@@ -5,6 +5,7 @@ import time
 from typing import Dict, Tuple
 
 from app.integrations.alpaca.market_data import fetch_snapshot
+from app.services.search import get_symbol_asset_class
 
 
 _quote_cache: Dict[str, Tuple[float, dict]] = {}
@@ -12,7 +13,8 @@ _quote_locks: Dict[str, asyncio.Lock] = {}
 
 
 async def fetch_global_quote(symbol: str) -> dict:
-    return await fetch_snapshot(symbol)
+    asset_class = get_symbol_asset_class(symbol)
+    return await fetch_snapshot(symbol, asset_class=asset_class)
 
 
 async def get_quote_cached(symbol: str, min_ttl_seconds: int = 15) -> dict:

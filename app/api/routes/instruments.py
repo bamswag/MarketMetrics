@@ -8,7 +8,7 @@ from app.services.instruments import get_instrument_detail
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 
-@router.get("/{symbol}", response_model=InstrumentDetailResponse)
+@router.get("/{symbol:path}", response_model=InstrumentDetailResponse)
 async def instrument_detail(
     symbol: str,
     range_value: InstrumentRange = Query(default=InstrumentRange.six_months, alias="range"),

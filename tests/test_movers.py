@@ -99,6 +99,10 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertEqual(payload.gainers[0].sparklineSeries[0].date.isoformat(), "2026-03-31")
         self.assertEqual(payload.source, "alpaca")
         mock_fetch_top_movers.assert_awaited_once()
+        awaited_args = mock_fetch_top_movers.await_args
+        self.assertEqual(awaited_args.kwargs["top_n"], 3)
+        self.assertIn("asset_class_map", awaited_args.kwargs)
+        self.assertEqual(awaited_args.kwargs["asset_class_map"].get("BTC/USD"), "crypto")
 
     @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)

@@ -11,7 +11,13 @@ from app.schemas.instruments import (
     InstrumentRange,
 )
 from app.services.price_history import get_daily_close_series_cached
-from app.services.search import get_symbol_metadata, is_chartable_instrument, resolve_company_name
+from app.services.search import (
+    get_symbol_asset_class,
+    get_symbol_metadata,
+    is_chartable_instrument,
+    normalize_catalog_symbol,
+    resolve_company_name,
+)
 from app.services.quotes import get_quote_cached
 
 
@@ -35,21 +41,24 @@ async def get_instrument_detail(
     symbol: str,
     selected_range: InstrumentRange,
 ) -> InstrumentDetailResponse:
-    normalized_symbol = symbol.strip().upper()
+    asset_class = get_symbol_asset_class(symbol)
+    normalized_symbol = normalize_catalog_symbol(symbol, asset_class)
     metadata = get_symbol_metadata(normalized_symbol)
     if not metadata:
         raise ValueError("That instrument is not available in the supported catalog.")
     if not is_chartable_instrument(metadata):
         raise ValueError("That instrument is not currently available for chart loading.")
 
+    canonical_symbol = metadata.get("symbol") or normalized_symbol
+
     start_date, end_date = resolve_history_window(selected_range)
 
     try:
         latest_quote, historical_series = await asyncio.wait_for(
             asyncio.gather(
-                get_quote_cached(normalized_symbol),
+                get_quote_cached(canonical_symbol),
                 get_daily_close_series_cached(
-                    normalized_symbol,
+                    canonical_symbol,
                     start=start_date,
                     end=end_date,
                 ),
@@ -67,8 +76,8 @@ async def get_instrument_detail(
         raise ValueError("No historical price data is available for that instrument.")
 
     return InstrumentDetailResponse(
-        symbol=normalized_symbol,
-        companyName=resolve_company_name(normalized_symbol),
+        symbol=canonical_symbol,
+        companyName=resolve_company_name(canonical_symbol),
         exchange=metadata.get("exchange"),
         range=selected_range,
         latestQuote=InstrumentQuoteOut(

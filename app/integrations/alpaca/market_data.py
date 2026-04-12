@@ -55,34 +55,88 @@ def _iso_datetime(value: Optional[datetime]) -> Optional[str]:
     return value.isoformat() if value else None
 
 
+def _to_crypto_data_symbol(symbol: str) -> str:
+    """Convert catalog symbol like BTCUSD to API symbol like BTC/USD."""
+    s = symbol.strip().upper()
+    if "/" in s:
+        return s
+    if s.endswith("USD"):
+        return f"{s[:-3]}/USD"
+    return s
+
+
+async def _fetch_crypto_bars(
+    symbol: str,
+    *,
+    start: date,
+    end: date,
+    limit: int = 10000,
+) -> List[Dict[str, Any]]:
+    api_symbol = _to_crypto_data_symbol(symbol)
+    params = {
+        "symbols": api_symbol,
+        "timeframe": "1Day",
+        "start": f"{start.isoformat()}T00:00:00Z",
+        "end": f"{end.isoformat()}T23:59:59Z",
+        "limit": limit,
+        "sort": "asc",
+    }
+    data = await _request_json(
+        base_url=settings.alpaca_data_base_url,
+        path="/v1beta3/crypto/us/bars",
+        params=params,
+    )
+    return data.get("bars", {}).get(api_symbol) or []
+
+
+async def _fetch_crypto_snapshot(symbol: str) -> Dict[str, Any]:
+    api_symbol = _to_crypto_data_symbol(symbol)
+    data = await _request_json(
+        base_url=settings.alpaca_data_base_url,
+        path="/v1beta3/crypto/us/snapshots",
+        params={"symbols": api_symbol},
+    )
+    snapshots = data.get("snapshots") or {}
+    snapshot = snapshots.get(api_symbol)
+    if not snapshot:
+        raise AlpacaMarketDataError("No crypto quote data is available for that symbol.")
+    return snapshot
+
+
 async def fetch_daily_bar_rows(
     symbol: str,
     *,
     start: Optional[date] = None,
     end: Optional[date] = None,
     limit: int = 10000,
+    asset_class: str = "us_equity",
 ) -> List[Dict[str, Any]]:
     normalized_symbol = _normalize_symbol(symbol)
     end_date = end or date.today()
     start_date = start or (end_date - timedelta(days=settings.market_data_default_history_days))
 
-    params = {
-        "timeframe": "1Day",
-        "start": f"{start_date.isoformat()}T00:00:00Z",
-        "end": f"{end_date.isoformat()}T23:59:59Z",
-        "adjustment": "all",
-        "feed": settings.alpaca_data_feed,
-        "limit": limit,
-        "sort": "asc",
-    }
+    if asset_class == "crypto":
+        bars = await _fetch_crypto_bars(
+            normalized_symbol, start=start_date, end=end_date, limit=limit
+        )
+    else:
+        params = {
+            "timeframe": "1Day",
+            "start": f"{start_date.isoformat()}T00:00:00Z",
+            "end": f"{end_date.isoformat()}T23:59:59Z",
+            "adjustment": "all",
+            "feed": settings.alpaca_data_feed,
+            "limit": limit,
+            "sort": "asc",
+        }
 
-    data = await _request_json(
-        base_url=settings.alpaca_data_base_url,
-        path=f"/v2/stocks/{normalized_symbol}/bars",
-        params=params,
-    )
+        data = await _request_json(
+            base_url=settings.alpaca_data_base_url,
+            path=f"/v2/stocks/{normalized_symbol}/bars",
+            params=params,
+        )
+        bars = data.get("bars") or []
 
-    bars = data.get("bars") or []
     if not bars:
         raise AlpacaMarketDataError("No historical bar data is available for that symbol.")
 
@@ -117,8 +171,9 @@ async def fetch_daily_close_series(
     *,
     start: Optional[date] = None,
     end: Optional[date] = None,
+    asset_class: str = "us_equity",
 ) -> List[Tuple[date, float]]:
-    rows = await fetch_daily_bar_rows(symbol, start=start, end=end)
+    rows = await fetch_daily_bar_rows(symbol, start=start, end=end, asset_class=asset_class)
     return [(row["date"], row["close"]) for row in rows]
 
 
@@ -165,8 +220,16 @@ def _normalize_snapshot(symbol: str, snapshot: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
-async def fetch_snapshot(symbol: str) -> Dict[str, Any]:
+async def fetch_snapshot(symbol: str, *, asset_class: str = "us_equity") -> Dict[str, Any]:
     normalized_symbol = _normalize_symbol(symbol)
+
+    if asset_class == "crypto":
+        raw_snapshot = await _fetch_crypto_snapshot(normalized_symbol)
+        normalized = _normalize_snapshot(normalized_symbol, raw_snapshot)
+        if normalized["price"] is None:
+            raise AlpacaMarketDataError("No quote data is available for that symbol.")
+        return normalized
+
     data = await _request_json(
         base_url=settings.alpaca_data_base_url,
         path=f"/v2/stocks/{normalized_symbol}/snapshot",
@@ -178,34 +241,49 @@ async def fetch_snapshot(symbol: str) -> Dict[str, Any]:
     return normalized
 
 
-async def fetch_snapshots(symbols: Iterable[str]) -> Dict[str, Dict[str, Any]]:
+async def fetch_snapshots(
+    symbols: Iterable[str],
+    *,
+    asset_class_map: Optional[Dict[str, str]] = None,
+) -> Dict[str, Dict[str, Any]]:
     normalized_symbols = [_normalize_symbol(symbol) for symbol in symbols if symbol]
     if not normalized_symbols:
         return {}
 
-    try:
-        data = await _request_json(
-            base_url=settings.alpaca_data_base_url,
-            path="/v2/stocks/snapshots",
-            params={
-                "symbols": ",".join(normalized_symbols),
-                "feed": settings.alpaca_data_feed,
-            },
-        )
-    except AlpacaMarketDataError:
-        return await _fetch_snapshots_individually(normalized_symbols)
+    ac_map = asset_class_map or {}
+    equity_symbols = [s for s in normalized_symbols if ac_map.get(s, "us_equity") != "crypto"]
+    crypto_symbols = [s for s in normalized_symbols if ac_map.get(s) == "crypto"]
 
-    snapshots = data.get("snapshots") or {}
     result: Dict[str, Dict[str, Any]] = {}
-    for symbol in normalized_symbols:
-        snapshot = snapshots.get(symbol)
-        if not snapshot:
-            continue
-        result[symbol] = _normalize_snapshot(symbol, snapshot)
 
-    if len(result) < len(normalized_symbols):
-        missing_symbols = [symbol for symbol in normalized_symbols if symbol not in result]
-        result.update(await _fetch_snapshots_individually(missing_symbols))
+    if equity_symbols:
+        try:
+            data = await _request_json(
+                base_url=settings.alpaca_data_base_url,
+                path="/v2/stocks/snapshots",
+                params={
+                    "symbols": ",".join(equity_symbols),
+                    "feed": settings.alpaca_data_feed,
+                },
+            )
+        except AlpacaMarketDataError:
+            data = {}
+
+        snapshots = data.get("snapshots") or {} if isinstance(data, dict) else {}
+        for symbol in equity_symbols:
+            snapshot = snapshots.get(symbol)
+            if snapshot:
+                result[symbol] = _normalize_snapshot(symbol, snapshot)
+
+        missing = [s for s in equity_symbols if s not in result]
+        if missing:
+            result.update(await _fetch_snapshots_individually(missing))
+
+    for symbol in crypto_symbols:
+        try:
+            result[symbol] = await fetch_snapshot(symbol, asset_class="crypto")
+        except AlpacaMarketDataError:
+            continue
 
     return result
 
@@ -249,17 +327,29 @@ async def fetch_market_calendar(start: date, end: date) -> List[date]:
 
 
 async def fetch_assets_catalog() -> List[Dict[str, Any]]:
-    data = await _request_json(
-        base_url=settings.alpaca_trading_base_url,
-        path="/v2/assets",
-        params={
-            "status": "active",
-            "asset_class": "us_equity",
-        },
+    equity_data, crypto_data = await asyncio.gather(
+        _request_json(
+            base_url=settings.alpaca_trading_base_url,
+            path="/v2/assets",
+            params={"status": "active", "asset_class": "us_equity"},
+        ),
+        _request_json(
+            base_url=settings.alpaca_trading_base_url,
+            path="/v2/assets",
+            params={"status": "active", "asset_class": "crypto"},
+        ),
+        return_exceptions=True,
     )
-    if not isinstance(data, list):
+
+    assets: List[Dict[str, Any]] = []
+    if isinstance(equity_data, list):
+        assets.extend(equity_data)
+    if isinstance(crypto_data, list):
+        assets.extend(crypto_data)
+
+    if not assets:
         raise AlpacaMarketDataError("Unexpected Alpaca asset catalog response.")
-    return data
+    return assets
 
 
 async def fetch_company_name(symbol: str) -> str:
@@ -275,8 +365,9 @@ async def fetch_top_movers(
     symbols: Iterable[str],
     *,
     top_n: int = 5,
+    asset_class_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, List[Dict[str, Any]]]:
-    snapshots = await fetch_snapshots(symbols)
+    snapshots = await fetch_snapshots(symbols, asset_class_map=asset_class_map)
 
     movers: List[Dict[str, Any]] = []
     for symbol, snapshot in snapshots.items():

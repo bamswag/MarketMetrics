@@ -45,7 +45,7 @@ def _classify_quote_error(exc: Exception) -> tuple[str, str]:
     return "transient", message
 
 
-@router.websocket("/ws/quotes/{symbol}")
+@router.websocket("/ws/quotes/{symbol:path}")
 async def ws_quotes(websocket: WebSocket, symbol: str):
     accepted = False
     try:

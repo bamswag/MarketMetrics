@@ -9,8 +9,9 @@ from app.integrations.alpaca.market_data import (
     fetch_daily_bar_rows,
     fetch_daily_close_series as fetch_alpaca_daily_close_series,
 )
+from app.services.search import get_symbol_asset_class
 
-HistoryCacheKey = Tuple[str, Optional[str], Optional[str]]
+HistoryCacheKey = Tuple[str, str, Optional[str], Optional[str]]
 
 _history_cache: Dict[HistoryCacheKey, Tuple[float, List[Tuple[date, float]]]] = {}
 _history_locks: Dict[HistoryCacheKey, asyncio.Lock] = {}
@@ -18,11 +19,13 @@ _history_locks: Dict[HistoryCacheKey, asyncio.Lock] = {}
 
 def _history_cache_key(
     symbol: str,
+    asset_class: str,
     start: Optional[date],
     end: Optional[date],
 ) -> HistoryCacheKey:
     return (
         symbol.strip().upper(),
+        asset_class,
         start.isoformat() if start else None,
         end.isoformat() if end else None,
     )
@@ -34,7 +37,13 @@ async def fetch_daily_close_series(
     start: Optional[date] = None,
     end: Optional[date] = None,
 ) -> List[Tuple[date, float]]:
-    return await fetch_alpaca_daily_close_series(symbol, start=start, end=end)
+    asset_class = get_symbol_asset_class(symbol)
+    return await fetch_alpaca_daily_close_series(
+        symbol,
+        start=start,
+        end=end,
+        asset_class=asset_class,
+    )
 
 
 async def get_daily_close_series_cached(
@@ -45,7 +54,8 @@ async def get_daily_close_series_cached(
     min_ttl_seconds: int = 300,
 ) -> List[Tuple[date, float]]:
     now = time.time()
-    key = _history_cache_key(symbol, start, end)
+    asset_class = get_symbol_asset_class(symbol)
+    key = _history_cache_key(symbol, asset_class, start, end)
 
     if key in _history_cache:
         cached_at, payload = _history_cache[key]
@@ -66,7 +76,8 @@ async def get_daily_close_series_cached(
 
 
 async def fetch_daily_bar_series(symbol: str) -> List[dict]:
-    return await fetch_daily_bar_rows(symbol)
+    asset_class = get_symbol_asset_class(symbol)
+    return await fetch_daily_bar_rows(symbol, asset_class=asset_class)
 
 
 def slice_series(series: List[Tuple[date, float]], start: date, end: date) -> List[Tuple[date, float]]:

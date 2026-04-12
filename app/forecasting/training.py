@@ -30,7 +30,11 @@ from app.schemas.forecasts import (
     PriceSeriesPoint,
     ProjectedPortfolioPoint,
 )
-from app.services.search import get_training_universe_symbols
+from app.services.search import (
+    get_symbol_asset_class,
+    get_training_universe_symbols,
+    normalize_catalog_symbol,
+)
 
 
 BENCHMARK_SYMBOLS = ("SPY", "QQQ")
@@ -98,13 +102,22 @@ async def _fetch_symbol_histories(
     start: date,
     end: date,
 ) -> Dict[str, List[dict]]:
-    normalized_symbols = [symbol.strip().upper() for symbol in symbols if symbol]
+    normalized_symbols = [
+        normalize_catalog_symbol(symbol, get_symbol_asset_class(symbol))
+        for symbol in symbols
+        if symbol
+    ]
     semaphore = asyncio.Semaphore(max(settings.prediction_fetch_concurrency, 1))
 
     async def _fetch(symbol: str):
         async with semaphore:
             try:
-                rows = await fetch_daily_bar_rows(symbol, start=start, end=end)
+                rows = await fetch_daily_bar_rows(
+                    symbol,
+                    start=start,
+                    end=end,
+                    asset_class=get_symbol_asset_class(symbol),
+                )
                 return symbol, rows, None
             except Exception as exc:
                 return symbol, None, exc
@@ -1141,14 +1154,20 @@ def _coerce_feature_frame(feature_columns: List[str], row: Dict[str, float]):
 
 async def predict_forecast(request: PredictionRequest) -> PredictionResponse:
     model_bundle, metadata, feature_importances, interval_calibration = load_trained_model(request.modelVersion)
-    symbol = request.symbol.strip().upper()
+    asset_class = get_symbol_asset_class(request.symbol)
+    symbol = normalize_catalog_symbol(request.symbol, asset_class)
 
     end_date = date.today()
     fetch_days = max(request.historyWindowDays + 365, 730)
     start_date = end_date - timedelta(days=fetch_days)
 
     try:
-        symbol_rows = await fetch_daily_bar_rows(symbol, start=start_date, end=end_date)
+        symbol_rows = await fetch_daily_bar_rows(
+            symbol,
+            start=start_date,
+            end=end_date,
+            asset_class=asset_class,
+        )
         benchmark_rows = await _fetch_symbol_histories(BENCHMARK_SYMBOLS, start=start_date, end=end_date)
     except AlpacaMarketDataError:
         raise

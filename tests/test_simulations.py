@@ -1,7 +1,10 @@
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-from test_auth import BaseAPITestCase
+try:
+    from test_auth import BaseAPITestCase
+except ModuleNotFoundError:
+    from tests.test_auth import BaseAPITestCase
 
 
 class SimulationAndHistoryTests(BaseAPITestCase):

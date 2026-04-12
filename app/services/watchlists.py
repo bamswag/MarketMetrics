@@ -11,10 +11,19 @@ from app.schemas.watchlists import (
 )
 from app.services.alerts import get_alert_counts_for_symbols
 from app.services.quotes import get_quote_cached
+from app.services.search import (
+    get_symbol_asset_class,
+    get_symbol_metadata,
+    normalize_catalog_symbol,
+)
 
 
 def add_watchlist_item(db: Session, user_id: str, symbol: str) -> WatchlistItemDB:
-    symbol = symbol.strip().upper()
+    asset_class = get_symbol_asset_class(symbol)
+    symbol = normalize_catalog_symbol(symbol, asset_class)
+    metadata = get_symbol_metadata(symbol)
+    if metadata and metadata.get("symbol"):
+        symbol = metadata["symbol"]
 
     existing = (
         db.query(WatchlistItemDB)
@@ -55,12 +64,13 @@ async def get_watchlist_items_detailed(
         return []
 
     symbols = [item.symbol for item in items]
+    asset_class_map = {symbol: get_symbol_asset_class(symbol) for symbol in symbols}
     alert_counts = get_alert_counts_for_symbols(db, user_id, symbols)
 
     snapshots: Dict[str, Dict[str, Any]]
     batch_error: Optional[str] = None
     try:
-        snapshots = await fetch_snapshots(symbols)
+        snapshots = await fetch_snapshots(symbols, asset_class_map=asset_class_map)
     except Exception as exc:  # pragma: no cover - defensive fallback
         snapshots = {}
         batch_error = str(exc) or repr(exc)
@@ -126,7 +136,7 @@ async def get_quote_for_watchlist_item(symbol: str) -> WatchlistQuoteOut:
 
 
 def delete_watchlist_item(db: Session, user_id: str, symbol: str) -> bool:
-    symbol = symbol.strip().upper()
+    symbol = normalize_catalog_symbol(symbol, get_symbol_asset_class(symbol))
 
     item = (
         db.query(WatchlistItemDB)
