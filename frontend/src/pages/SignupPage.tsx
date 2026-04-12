@@ -76,7 +76,7 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
             <div className="login-auth-card-grid">
               <div className="login-card-copy">
                 <p className="section-label">Create simulator access</p>
-                <h1 className="login-card-title">Build your simulator account.</h1>
+                <h1 className="login-card-title">Build your Market Metrics account.</h1>
                 <p className="login-card-intro">
                   Create an account to unlock your simulator dashboard, saved symbols, alerts, and
                   chart-led instrument pages.

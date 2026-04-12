@@ -7,7 +7,7 @@ import os
 import warnings
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from app.core.config import settings
 from app.forecasting.feature_engineering import (
@@ -1051,17 +1051,23 @@ async def train_random_forest_forecaster(
     return metadata
 
 
+_loaded_model_cache: Dict[str, Tuple[int, Any, Any, Any, Any]] = {}
+
+
+def _resolve_model_version(model_version: Optional[str]) -> str:
+    if model_version:
+        return model_version
+    latest_pointer = _latest_model_pointer()
+    if not latest_pointer.exists():
+        raise PredictionModelError("No trained forecasting model is available.")
+    return json.loads(latest_pointer.read_text()).get("modelVersion")
+
+
 def load_trained_model(model_version: Optional[str] = None):
     libs = _require_ml_dependencies()
     joblib = libs["joblib"]
 
-    if model_version:
-        version = model_version
-    else:
-        latest_pointer = _latest_model_pointer()
-        if not latest_pointer.exists():
-            raise PredictionModelError("No trained forecasting model is available.")
-        version = json.loads(latest_pointer.read_text()).get("modelVersion")
+    version = _resolve_model_version(model_version)
 
     version_dir = _version_dir(version)
     model_path = version_dir / "model.joblib"
@@ -1071,6 +1077,12 @@ def load_trained_model(model_version: Optional[str] = None):
 
     if not model_path.exists() or not metadata_path.exists():
         raise PredictionModelError("Requested forecasting model artifacts are missing.")
+
+    current_mtime_ns = model_path.stat().st_mtime_ns
+    cached = _loaded_model_cache.get(version)
+    if cached and cached[0] == current_mtime_ns:
+        _, bundle, metadata, importances, calibration = cached
+        return bundle, metadata, importances, calibration
 
     loaded_model = joblib.load(model_path)
     if isinstance(loaded_model, dict) and "primaryModel" in loaded_model:
@@ -1085,6 +1097,14 @@ def load_trained_model(model_version: Optional[str] = None):
     metadata = json.loads(metadata_path.read_text())
     feature_importances = json.loads(importance_path.read_text()) if importance_path.exists() else []
     interval_calibration = json.loads(interval_calibration_path.read_text()) if interval_calibration_path.exists() else {}
+
+    _loaded_model_cache[version] = (
+        current_mtime_ns,
+        model_bundle,
+        metadata,
+        feature_importances,
+        interval_calibration,
+    )
     return model_bundle, metadata, feature_importances, interval_calibration
 
 

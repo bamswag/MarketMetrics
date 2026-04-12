@@ -52,6 +52,17 @@ const initialDashboardData: DashboardData = {
   watchlist: [],
 }
 
+const DASHBOARD_CACHE_TTL_MS = 30_000
+
+type DashboardCacheEntry = {
+  token: string
+  expiresAt: number
+  data: DashboardData
+  user: UserOut
+}
+
+let dashboardCache: DashboardCacheEntry | null = null
+
 function readAuthRedirectPayload(): AuthRedirectPayload {
   if (typeof window === 'undefined') {
     return {
@@ -109,6 +120,7 @@ function AppContent() {
 
   const handleSessionExpired = useEffectEvent((message: string) => {
     localStorage.removeItem('marketmetrics.token')
+    dashboardCache = null
     setToken('')
     setCurrentUser(null)
     setDashboardData(initialDashboardData)
@@ -200,9 +212,24 @@ function AppContent() {
     if (!token) {
       setDashboardData(initialDashboardData)
       setCurrentUser(null)
+      dashboardCache = null
       return
     }
 
+    const now = Date.now()
+    if (
+      dashboardCache &&
+      dashboardCache.token === token &&
+      dashboardCache.expiresAt > now
+    ) {
+      setCurrentUser(dashboardCache.user)
+      setDashboardData(dashboardCache.data)
+      setDashboardError('')
+      setIsLoadingDashboard(false)
+      return
+    }
+
+    const abortController = new AbortController()
     let cancelled = false
 
     async function loadDashboard() {
@@ -211,24 +238,32 @@ function AppContent() {
 
       try {
         const [userProfile, movers, watchlist, alerts] = await Promise.all([
-          fetchCurrentUser(token),
-          fetchMovers(token, 3),
-          fetchWatchlist(token),
-          fetchAlerts(token),
+          fetchCurrentUser(token, abortController.signal),
+          fetchMovers(token, 3, abortController.signal),
+          fetchWatchlist(token, abortController.signal),
+          fetchAlerts(token, abortController.signal),
         ])
 
         if (cancelled) {
           return
         }
 
+        const nextData: DashboardData = { movers, watchlist, alerts }
+        dashboardCache = {
+          token,
+          expiresAt: Date.now() + DASHBOARD_CACHE_TTL_MS,
+          data: nextData,
+          user: userProfile,
+        }
         setCurrentUser(userProfile)
-        setDashboardData({ movers, watchlist, alerts })
+        setDashboardData(nextData)
       } catch (error) {
-        if (cancelled) {
+        if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) {
           return
         }
 
         if (error instanceof ApiError && error.status === 401) {
+          dashboardCache = null
           handleSessionExpired('Your session expired. Log in again to reload the dashboard.')
           return
         }
@@ -247,15 +282,19 @@ function AppContent() {
 
     return () => {
       cancelled = true
+      abortController.abort()
     }
   }, [handleSessionExpired, token])
 
   async function refreshWatchlist(activeToken: string) {
     const updatedWatchlist = await fetchWatchlist(activeToken)
-    setDashboardData((currentData) => ({
-      ...currentData,
-      watchlist: updatedWatchlist,
-    }))
+    setDashboardData((currentData) => {
+      const nextData = { ...currentData, watchlist: updatedWatchlist }
+      if (dashboardCache && dashboardCache.token === activeToken) {
+        dashboardCache = { ...dashboardCache, data: nextData }
+      }
+      return nextData
+    })
   }
 
   async function completeAuthentication(nextToken: string, successMessage: string) {
@@ -284,6 +323,7 @@ function AppContent() {
 
   function handleLogout() {
     localStorage.removeItem('marketmetrics.token')
+    dashboardCache = null
     setToken('')
     setCurrentUser(null)
     setDashboardData(initialDashboardData)

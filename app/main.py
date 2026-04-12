@@ -3,12 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, search
 from app.api.routes import simulations, watchlists, websocket_quotes
 from app.api.routes.auth import router as auth_router
+from app.core.config import settings
 
 app = FastAPI(title="Market Metrics API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[settings.frontend_base_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

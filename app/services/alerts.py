@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.orm_models.price_alert import PriceAlertDB
@@ -36,13 +37,61 @@ def create_alert(db: Session, user_id: str, payload: PriceAlertCreate) -> PriceA
     return alert
 
 
-def list_alerts(db: Session, user_id: str) -> List[PriceAlertDB]:
-    return (
+def list_alerts(
+    db: Session,
+    user_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: int = 0,
+) -> List[PriceAlertDB]:
+    query = (
         db.query(PriceAlertDB)
         .filter(PriceAlertDB.userID == user_id)
         .order_by(PriceAlertDB.createdAt.desc())
+    )
+    if offset:
+        query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
+
+
+def get_alert_counts_for_symbols(
+    db: Session,
+    user_id: str,
+    symbols: List[str],
+) -> Dict[str, Tuple[int, int, int]]:
+    """Return {symbol: (total, active, triggered)} aggregated in one SQL query."""
+    if not symbols:
+        return {}
+
+    active_expr = case((PriceAlertDB.isActive.is_(True), 1), else_=0)
+    triggered_expr = case(
+        (
+            (PriceAlertDB.isActive.is_(False)) & (PriceAlertDB.triggeredAt.is_not(None)),
+            1,
+        ),
+        else_=0,
+    )
+
+    rows = (
+        db.query(
+            PriceAlertDB.symbol,
+            func.count(PriceAlertDB.id),
+            func.sum(active_expr),
+            func.sum(triggered_expr),
+        )
+        .filter(
+            PriceAlertDB.userID == user_id,
+            PriceAlertDB.symbol.in_(symbols),
+        )
+        .group_by(PriceAlertDB.symbol)
         .all()
     )
+    return {
+        row[0]: (int(row[1] or 0), int(row[2] or 0), int(row[3] or 0))
+        for row in rows
+    }
 
 
 def list_alerts_for_symbols(db: Session, user_id: str, symbols: list[str]) -> List[PriceAlertDB]:
@@ -154,7 +203,5 @@ def evaluate_alerts_for_quote(
 
     if alerts:
         db.commit()
-        for alert in alerts:
-            db.refresh(alert)
 
     return triggered

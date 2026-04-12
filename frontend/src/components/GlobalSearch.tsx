@@ -166,7 +166,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [hasTyped, isFocused, onUnauthorizedEvent, query, recentSearches.length, token])
+  }, [hasTyped, isFocused, query, recentSearches.length, token])
 
   const shouldShowRecentSearches = !searchError && query.trim().length < 2 && recentSearches.length > 0
   const displayedResults = shouldShowRecentSearches ? recentSearches : results

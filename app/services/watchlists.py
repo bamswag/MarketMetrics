@@ -1,14 +1,15 @@
-import asyncio
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.integrations.alpaca.market_data import fetch_snapshots
 from app.orm_models.watchlist_item import WatchlistItemDB
 from app.schemas.watchlists import (
     WatchlistAlertSummaryOut,
     WatchlistItemDetailedOut,
     WatchlistQuoteOut,
 )
-from app.services.alerts import list_alerts_for_symbols
+from app.services.alerts import get_alert_counts_for_symbols
 from app.services.quotes import get_quote_cached
 
 
@@ -50,23 +51,28 @@ async def get_watchlist_items_detailed(
     user_id: str,
 ) -> list[WatchlistItemDetailedOut]:
     items = get_watchlist_items(db, user_id)
+    if not items:
+        return []
+
     symbols = [item.symbol for item in items]
-    alerts = list_alerts_for_symbols(db, user_id, symbols)
+    alert_counts = get_alert_counts_for_symbols(db, user_id, symbols)
 
-    alerts_by_symbol: dict[str, list] = {}
-    for alert in alerts:
-        alerts_by_symbol.setdefault(alert.symbol, []).append(alert)
-
-    quotes = await asyncio.gather(
-        *[get_quote_for_watchlist_item(item.symbol) for item in items]
-    )
+    snapshots: Dict[str, Dict[str, Any]]
+    batch_error: Optional[str] = None
+    try:
+        snapshots = await fetch_snapshots(symbols)
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        snapshots = {}
+        batch_error = str(exc) or repr(exc)
 
     detailed_items: list[WatchlistItemDetailedOut] = []
-    for item, quote in zip(items, quotes):
-        symbol_alerts = alerts_by_symbol.get(item.symbol, [])
-        active_alerts = sum(1 for alert in symbol_alerts if alert.isActive)
-        triggered_alerts = sum(
-            1 for alert in symbol_alerts if not alert.isActive and alert.triggeredAt is not None
+    for item in items:
+        normalized_symbol = item.symbol.strip().upper()
+        snapshot = snapshots.get(normalized_symbol)
+        latest_quote = _snapshot_to_watchlist_quote(snapshot, batch_error)
+
+        total_alerts, active_alerts, triggered_alerts = alert_counts.get(
+            item.symbol, (0, 0, 0)
         )
 
         detailed_items.append(
@@ -75,9 +81,9 @@ async def get_watchlist_items_detailed(
                 userID=item.userID,
                 symbol=item.symbol,
                 createdAt=item.createdAt,
-                latestQuote=quote,
+                latestQuote=latest_quote,
                 alerts=WatchlistAlertSummaryOut(
-                    totalAlerts=len(symbol_alerts),
+                    totalAlerts=total_alerts,
                     activeAlerts=active_alerts,
                     triggeredAlerts=triggered_alerts,
                 ),
@@ -87,7 +93,25 @@ async def get_watchlist_items_detailed(
     return detailed_items
 
 
+def _snapshot_to_watchlist_quote(
+    snapshot: Optional[Dict[str, Any]],
+    batch_error: Optional[str] = None,
+) -> WatchlistQuoteOut:
+    if not snapshot:
+        return WatchlistQuoteOut(
+            unavailableReason=batch_error or "No quote data available."
+        )
+    return WatchlistQuoteOut(
+        price=snapshot.get("price"),
+        change=snapshot.get("change"),
+        changePercent=snapshot.get("changePercent"),
+        latestTradingDay=snapshot.get("latestTradingDay"),
+        source=snapshot.get("source"),
+    )
+
+
 async def get_quote_for_watchlist_item(symbol: str) -> WatchlistQuoteOut:
+    """Legacy single-symbol helper kept for backward compatibility."""
     try:
         quote = await get_quote_cached(symbol)
         return WatchlistQuoteOut(

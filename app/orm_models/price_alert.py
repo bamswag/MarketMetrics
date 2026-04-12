@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     String,
     UniqueConstraint,
 )
@@ -44,5 +45,11 @@ class PriceAlertDB(Base):
             "condition",
             "targetPrice",
             name="uq_price_alert_user_symbol_condition_target",
+        ),
+        Index(
+            "idx_price_alert_user_symbol_active",
+            "userID",
+            "symbol",
+            "isActive",
         ),
     )

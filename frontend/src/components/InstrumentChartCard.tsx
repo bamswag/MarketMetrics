@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   CartesianGrid,
   Line,
@@ -25,9 +26,13 @@ export function InstrumentChartCard({
   selectedRange,
   onSelectRange,
 }: InstrumentChartCardProps) {
-  const chartSeries = sampleChartSeries(
-    instrumentDetail.historicalSeries,
-    getMaxChartPoints(selectedRange),
+  const chartSeries = useMemo(
+    () =>
+      sampleChartSeries(
+        instrumentDetail.historicalSeries,
+        getMaxChartPoints(selectedRange),
+      ),
+    [instrumentDetail.historicalSeries, selectedRange],
   )
 
   return (

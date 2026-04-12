@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import type { WatchlistItemDetailedOut } from '../lib/api'
@@ -15,23 +15,33 @@ export function TrackedSymbolsPage({
   onRemoveSymbol,
   trackedSymbols,
 }: TrackedSymbolsPageProps) {
-  const sortedTrackedSymbols = [...trackedSymbols].sort(
-    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-  )
   const [actionError, setActionError] = useState('')
   const [actionSuccess, setActionSuccess] = useState('')
   const [removingSymbol, setRemovingSymbol] = useState('')
-  const positiveCount = sortedTrackedSymbols.filter((item) => {
-    const changePercent = item.latestQuote?.changePercent ?? ''
-    return (
-      changePercent.startsWith('+') ||
-      (!changePercent.startsWith('-') && changePercent !== '--')
+
+  const { sortedTrackedSymbols, positiveCount, negativeCount, newestTrackedSymbol } = useMemo(() => {
+    const sorted = [...trackedSymbols].sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
     )
-  }).length
-  const negativeCount = sortedTrackedSymbols.filter((item) =>
-    (item.latestQuote?.changePercent ?? '').startsWith('-'),
-  ).length
-  const newestTrackedSymbol = sortedTrackedSymbols[0]
+
+    let positives = 0
+    let negatives = 0
+    for (const item of sorted) {
+      const changePercent = item.latestQuote?.changePercent ?? ''
+      if (changePercent.startsWith('-')) {
+        negatives += 1
+      } else if (changePercent.startsWith('+') || changePercent !== '--') {
+        positives += 1
+      }
+    }
+
+    return {
+      sortedTrackedSymbols: sorted,
+      positiveCount: positives,
+      negativeCount: negatives,
+      newestTrackedSymbol: sorted[0],
+    }
+  }, [trackedSymbols])
 
   async function handleRemoveSymbol(symbol: string) {
     setActionError('')

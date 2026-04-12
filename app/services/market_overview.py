@@ -52,10 +52,12 @@ async def _build_sparkline_series(symbol: str) -> List[MoverSparklinePoint]:
 
 
 async def _load_sparkline_map(items: List[Dict[str, Any]]) -> Dict[str, List[MoverSparklinePoint]]:
-    symbols = []
+    seen: set[str] = set()
+    symbols: List[str] = []
     for item in items:
         symbol = str(item.get("symbol") or "").strip().upper()
-        if symbol and symbol not in symbols:
+        if symbol and symbol not in seen:
+            seen.add(symbol)
             symbols.append(symbol)
 
     sparkline_results = await asyncio.gather(
@@ -65,14 +67,28 @@ async def _load_sparkline_map(items: List[Dict[str, Any]]) -> Dict[str, List[Mov
     return dict(zip(symbols, sparkline_results))
 
 
+def _build_metadata_map(items: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    metadata_map: Dict[str, Dict[str, Any]] = {}
+    for item in items:
+        symbol = str(item.get("symbol") or "").strip().upper()
+        if not symbol or symbol in metadata_map:
+            continue
+        metadata = get_symbol_metadata(symbol)
+        if metadata:
+            metadata_map[symbol] = metadata
+    return metadata_map
+
+
 def _parse_movers(
     items: List[Dict[str, Any]],
     sparkline_map: Dict[str, List[MoverSparklinePoint]],
+    metadata_map: Dict[str, Dict[str, Any]],
 ) -> List[Mover]:
     result: List[Mover] = []
     for item in items:
         symbol = item.get("symbol") or ""
-        metadata = get_symbol_metadata(symbol)
+        normalized_symbol = str(symbol).upper()
+        metadata = metadata_map.get(normalized_symbol)
         result.append(
             Mover(
                 symbol=symbol,
@@ -81,7 +97,7 @@ def _parse_movers(
                 change_amount=_to_float(item.get("change_amount")),
                 change_percent=item.get("change_percent"),
                 volume=_to_int(item.get("volume")),
-                sparklineSeries=sparkline_map.get(str(symbol).upper(), []),
+                sparklineSeries=sparkline_map.get(normalized_symbol, []),
             )
         )
     return [mover for mover in result if mover.symbol]
@@ -91,10 +107,11 @@ async def _build_market_movers(limit: int) -> MoversResponse:
     data = await fetch_top_movers(get_mover_universe_symbols(), top_n=limit)
     mover_items = [*(data.get("top_gainers") or []), *(data.get("top_losers") or [])]
     sparkline_map = await _load_sparkline_map(mover_items)
+    metadata_map = _build_metadata_map(mover_items)
 
     return MoversResponse(
-        gainers=_parse_movers(data.get("top_gainers") or [], sparkline_map),
-        losers=_parse_movers(data.get("top_losers") or [], sparkline_map),
+        gainers=_parse_movers(data.get("top_gainers") or [], sparkline_map, metadata_map),
+        losers=_parse_movers(data.get("top_losers") or [], sparkline_map, metadata_map),
         source="alpaca",
     )
 

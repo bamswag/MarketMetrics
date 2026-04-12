@@ -204,6 +204,9 @@ async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   try {
     return await fetch(input, init)
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error
+    }
     if (error instanceof TypeError) {
       throw new NetworkError(
         `Cannot reach the API at ${getApiUrl()}. Make sure the FastAPI server is running.`,
@@ -211,6 +214,34 @@ async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     }
 
     throw error
+  }
+}
+
+const inflightGetRequests = new Map<string, Promise<unknown>>()
+
+async function dedupedGet<T>(
+  cacheKey: string,
+  url: string,
+  headers: HeadersInit | undefined,
+  signal: AbortSignal | undefined,
+): Promise<T> {
+  const existing = inflightGetRequests.get(cacheKey) as Promise<T> | undefined
+  if (existing && !signal?.aborted) {
+    return existing
+  }
+
+  const request = (async () => {
+    const response = await safeFetch(url, { headers, signal })
+    return parseResponse<T>(response)
+  })()
+
+  inflightGetRequests.set(cacheKey, request as Promise<unknown>)
+  try {
+    return await request
+  } finally {
+    if (inflightGetRequests.get(cacheKey) === request) {
+      inflightGetRequests.delete(cacheKey)
+    }
   }
 }
 
@@ -242,9 +273,13 @@ export async function register(payload: RegisterPayload): Promise<UserOut> {
   return parseResponse<UserOut>(response)
 }
 
-export async function fetchCurrentUser(token: string): Promise<UserOut> {
+export async function fetchCurrentUser(
+  token: string,
+  signal?: AbortSignal,
+): Promise<UserOut> {
   const response = await safeFetch(`${getApiUrl()}/auth/me`, {
     headers: authHeaders(token),
+    signal,
   })
 
   return parseResponse<UserOut>(response)
@@ -253,11 +288,13 @@ export async function fetchCurrentUser(token: string): Promise<UserOut> {
 export async function fetchSearchResults(
   token: string | undefined,
   query: string,
+  signal?: AbortSignal,
 ): Promise<CompanySearchResponse> {
   const response = await safeFetch(
     `${getApiUrl()}/search/companies?q=${encodeURIComponent(query)}`,
     {
       headers: authHeadersIfPresent(token),
+      signal,
     },
   )
 
@@ -267,20 +304,27 @@ export async function fetchSearchResults(
 export async function fetchMovers(
   token?: string,
   limit = 5,
+  signal?: AbortSignal,
 ): Promise<MoversResponse> {
-  const response = await safeFetch(`${getApiUrl()}/movers/?limit=${encodeURIComponent(limit)}`, {
-    headers: authHeadersIfPresent(token),
-  })
-
-  return parseResponse<MoversResponse>(response)
+  const url = `${getApiUrl()}/movers/?limit=${encodeURIComponent(limit)}`
+  return dedupedGet<MoversResponse>(
+    `movers:${limit}:${token ? 'auth' : 'guest'}`,
+    url,
+    authHeadersIfPresent(token),
+    signal,
+  )
 }
 
-export async function fetchWatchlist(token: string): Promise<WatchlistItemDetailedOut[]> {
-  const response = await safeFetch(`${getApiUrl()}/watchlist/`, {
-    headers: authHeaders(token),
-  })
-
-  return parseResponse<WatchlistItemDetailedOut[]>(response)
+export async function fetchWatchlist(
+  token: string,
+  signal?: AbortSignal,
+): Promise<WatchlistItemDetailedOut[]> {
+  return dedupedGet<WatchlistItemDetailedOut[]>(
+    `watchlist:${token}`,
+    `${getApiUrl()}/watchlist/`,
+    authHeaders(token),
+    signal,
+  )
 }
 
 export async function createWatchlistItem(
@@ -361,10 +405,14 @@ export function prefetchInstrumentDetail(
   })
 }
 
-export async function fetchAlerts(token: string): Promise<AlertListResponse> {
-  const response = await safeFetch(`${getApiUrl()}/alerts/`, {
-    headers: authHeaders(token),
-  })
-
-  return parseResponse<AlertListResponse>(response)
+export async function fetchAlerts(
+  token: string,
+  signal?: AbortSignal,
+): Promise<AlertListResponse> {
+  return dedupedGet<AlertListResponse>(
+    `alerts:${token}`,
+    `${getApiUrl()}/alerts/`,
+    authHeaders(token),
+    signal,
+  )
 }

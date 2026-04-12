@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from app.core.config import settings
+
+
+_CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
 
 
 DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
@@ -96,6 +100,7 @@ _symbol_catalog_cache_index: Dict[str, Dict[str, Any]] = {
     for item in DEFAULT_SYMBOL_CATALOG
     if item.get("symbol")
 }
+_symbol_catalog_last_check_monotonic: float = 0.0
 
 
 def _catalog_path() -> Path:
@@ -106,15 +111,27 @@ def _training_universe_path() -> Path:
     return settings.prediction_training_universe_path
 
 
-def load_symbol_catalog() -> List[Dict[str, Any]]:
+def load_symbol_catalog(force: bool = False) -> List[Dict[str, Any]]:
+    global _symbol_catalog_cache_path
+    global _symbol_catalog_cache_mtime_ns
+    global _symbol_catalog_cache_data
+    global _symbol_catalog_cache_index
+    global _symbol_catalog_last_check_monotonic
+
+    now = time.monotonic()
+    if (
+        not force
+        and _symbol_catalog_cache_path is not None
+        and (now - _symbol_catalog_last_check_monotonic)
+        < _CATALOG_MTIME_CHECK_INTERVAL_SECONDS
+    ):
+        return list(_symbol_catalog_cache_data)
+
     path = _catalog_path()
+    _symbol_catalog_last_check_monotonic = now
+
     if path.exists():
         try:
-            global _symbol_catalog_cache_path
-            global _symbol_catalog_cache_mtime_ns
-            global _symbol_catalog_cache_data
-            global _symbol_catalog_cache_index
-
             resolved_path = str(path.resolve())
             current_mtime_ns = path.stat().st_mtime_ns
             if (
@@ -160,6 +177,8 @@ def load_training_universe_manifest() -> List[Dict[str, Any]]:
 
 def get_symbol_metadata(symbol: str) -> Optional[Dict[str, Any]]:
     normalized = symbol.strip().upper()
+    # Lazily refresh the cache (throttled inside load_symbol_catalog) so this
+    # lookup is effectively a single dict read on the hot path.
     load_symbol_catalog()
     return _symbol_catalog_cache_index.get(normalized)
 
