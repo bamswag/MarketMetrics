@@ -116,7 +116,7 @@ const SYMBOL_DOMAINS: Record<string, string> = {
 function getLogoUrl(symbol: string): string | null {
   const domain = SYMBOL_DOMAINS[symbol]
   if (!domain) return null
-  return `https://logo.clearbit.com/${domain}`
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 }
 
 function fallbackLabel(symbol: string) {
