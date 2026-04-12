@@ -1,4 +1,5 @@
 import type { UserOut } from '../lib/api'
+import '../styles/pages/ProfilePages.css'
 
 type SettingsPageProps = {
   currentUser: UserOut | null

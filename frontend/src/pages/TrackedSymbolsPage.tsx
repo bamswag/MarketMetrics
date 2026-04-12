@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import type { WatchlistItemDetailedOut } from '../lib/api'
 import { TrackedSymbolCard } from '../components/TrackedSymbolCard'
+import '../styles/pages/TrackedSymbolsPage.css'
 
 type TrackedSymbolsPageProps = {
   isLoading: boolean
@@ -81,41 +82,55 @@ export function TrackedSymbolsPage({
           </div>
         </div>
 
-        <div className="tracked-symbols-summary-grid">
-          <article className="tracked-symbols-summary-card tracked-symbols-summary-card--accent">
-            <span className="metric-label">Total tracked</span>
-            <strong className="metric-value">{sortedTrackedSymbols.length}</strong>
-            <p>Symbols currently pinned for quick return visits.</p>
-          </article>
-          <article className="tracked-symbols-summary-card">
-            <span className="metric-label">Positive today</span>
-            <strong className="metric-value">{positiveCount}</strong>
-            <p>Tracked names currently holding green daily movement.</p>
-          </article>
-          <article className="tracked-symbols-summary-card">
-            <span className="metric-label">Negative today</span>
-            <strong className="metric-value">{negativeCount}</strong>
-            <p>Tracked names currently leaning red on the session.</p>
-          </article>
-          <article className="tracked-symbols-summary-card">
-            <span className="metric-label">Newest tracked</span>
-            <strong className="metric-value">
-              {newestTrackedSymbol ? newestTrackedSymbol.symbol : '--'}
-            </strong>
-            <p>
-              {newestTrackedSymbol
-                ? 'Most recent addition to your tracked list.'
-                : 'Track a symbol to populate this view.'}
-            </p>
-          </article>
-        </div>
+        <article className="panel tracked-symbols-side-panel">
+          <div className="panel-header">
+            <div className="panel-header-copy">
+              <p className="section-label">Tracked now</p>
+              <h2 className="panel-title">Your active symbols</h2>
+            </div>
+
+            <span className="panel-tag">{sortedTrackedSymbols.length} total</span>
+          </div>
+
+          {actionSuccess ? <p className="success-text">{actionSuccess}</p> : null}
+          {actionError ? <p className="error-text">{actionError}</p> : null}
+
+          {isLoading && sortedTrackedSymbols.length === 0 ? (
+            <p className="empty-state">Loading your tracked symbols...</p>
+          ) : null}
+
+          {!isLoading && sortedTrackedSymbols.length === 0 ? (
+            <div className="empty-state tracked-symbols-empty tracked-symbols-empty--page">
+              <strong>No tracked stocks yet.</strong>
+              <p>Open a stock page and choose <strong>Track symbol</strong>.</p>
+              <Link className="inline-link" to="/dashboard">
+                Search the market
+              </Link>
+            </div>
+          ) : null}
+
+          {sortedTrackedSymbols.length > 0 ? (
+            <div className="tracked-symbols-side-grid">
+              {sortedTrackedSymbols.map((item) => (
+                <TrackedSymbolCard
+                  actionLabel="Untrack"
+                  isActionPending={removingSymbol === item.symbol}
+                  item={item}
+                  key={item.id}
+                  onAction={handleRemoveSymbol}
+                  variant="preview"
+                />
+              ))}
+            </div>
+          ) : null}
+        </article>
       </div>
 
       <article className="panel panel-wide tracked-symbols-page-panel">
         <div className="panel-header">
           <div className="panel-header-copy">
-            <p className="section-label">Tracked overview</p>
-            <h2 className="panel-title">All tracked symbols</h2>
+            <p className="section-label">Tracking data</p>
+            <h2 className="panel-title">Daily read on your tracked list</h2>
           </div>
 
           <div className="tracked-symbols-page-actions">
@@ -127,44 +142,33 @@ export function TrackedSymbolsPage({
         </div>
 
         <p className="panel-note tracked-symbols-page-note">
-          Open any card to continue into its live chart page, or remove names that no longer need
-          space in your watch board.
+          A quick read on how your tracked symbols are behaving today.
         </p>
 
-        {actionSuccess ? <p className="success-text">{actionSuccess}</p> : null}
-        {actionError ? <p className="error-text">{actionError}</p> : null}
-
-        {isLoading && sortedTrackedSymbols.length === 0 ? (
-          <p className="empty-state">Loading your tracked symbols...</p>
-        ) : null}
-
-        {!isLoading && sortedTrackedSymbols.length === 0 ? (
-          <div className="empty-state tracked-symbols-empty tracked-symbols-empty--page">
-            <strong>No tracked stocks yet.</strong>
-            <p>
-              Open a stock page, then choose <strong>Track symbol</strong> to start building your
-              watch board.
-            </p>
-            <Link className="inline-link" to="/dashboard">
-              Search the market
-            </Link>
-          </div>
-        ) : null}
-
-        {sortedTrackedSymbols.length > 0 ? (
-          <div className="tracked-symbols-grid">
-            {sortedTrackedSymbols.map((item) => (
-              <TrackedSymbolCard
-                actionLabel="Remove"
-                isActionPending={removingSymbol === item.symbol}
-                item={item}
-                key={item.id}
-                onAction={handleRemoveSymbol}
-                variant="page"
-              />
-            ))}
-          </div>
-        ) : null}
+        <div className="tracked-symbols-summary-grid">
+          <article className="tracked-symbols-summary-card tracked-symbols-summary-card--accent">
+            <span className="metric-label">Total tracked</span>
+            <strong className="metric-value">{sortedTrackedSymbols.length}</strong>
+            <p>Names pinned for quick return visits.</p>
+          </article>
+          <article className="tracked-symbols-summary-card">
+            <span className="metric-label">Positive today</span>
+            <strong className="metric-value">{positiveCount}</strong>
+            <p>Tracked names currently in green.</p>
+          </article>
+          <article className="tracked-symbols-summary-card">
+            <span className="metric-label">Negative today</span>
+            <strong className="metric-value">{negativeCount}</strong>
+            <p>Tracked names currently in red.</p>
+          </article>
+          <article className="tracked-symbols-summary-card">
+            <span className="metric-label">Newest tracked</span>
+            <strong className="metric-value">
+              {newestTrackedSymbol ? newestTrackedSymbol.symbol : '--'}
+            </strong>
+            <p>{newestTrackedSymbol ? 'Most recent addition.' : 'Waiting for your next pick.'}</p>
+          </article>
+        </div>
       </article>
     </section>
   )

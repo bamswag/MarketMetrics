@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 import { GoogleLogoIcon } from './shared/GoogleLogoIcon'
+import '../styles/pages/AuthPages.css'
 
 type SignupPageProps = {
   googleAuthUrl: string

@@ -13,6 +13,7 @@ import {
 import { DailyMoversSection } from '../components/DailyMoversSection'
 import type { MoversResponse } from '../lib/api'
 import { formatCurrency } from '../lib/formatters'
+import '../styles/pages/LandingPage.css'
 
 const PREVIEW_SERIES = {
   '1W': [

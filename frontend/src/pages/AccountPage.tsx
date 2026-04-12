@@ -1,5 +1,6 @@
 import type { UserOut } from '../lib/api'
 import { formatDateTime } from '../lib/formatters'
+import '../styles/pages/ProfilePages.css'
 
 type AccountPageProps = {
   currentUser: UserOut | null

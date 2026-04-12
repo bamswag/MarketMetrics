@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 
-type UserMenuProps = {
-  displayName?: string
-}
-
 function menuItemClass(isActive: boolean) {
   return isActive ? 'user-menu-item is-active' : 'user-menu-item'
 }
 
-export function UserMenu({ displayName }: UserMenuProps) {
+export function UserMenu() {
   const location = useLocation()
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)

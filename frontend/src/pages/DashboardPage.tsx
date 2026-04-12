@@ -7,6 +7,7 @@ import type {
   UserOut,
   WatchlistItemDetailedOut,
 } from '../lib/api'
+import '../styles/pages/DashboardPage.css'
 
 type DashboardPageProps = {
   alerts: AlertListResponse | null

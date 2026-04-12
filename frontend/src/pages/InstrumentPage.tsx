@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { InstrumentChartCard } from '../components/InstrumentChartCard'
+import { MoverLogo } from '../components/MoverLogo'
 import { ApiError, fetchInstrumentDetail } from '../lib/api'
 import type {
   InstrumentDetailResponse,
@@ -9,6 +10,7 @@ import type {
   WatchlistItemDetailedOut,
 } from '../lib/api'
 import { formatCurrency } from '../lib/formatters'
+import '../styles/pages/InstrumentPage.css'
 
 type InstrumentPageProps = {
   isLoadingTrackedSymbols?: boolean
@@ -148,7 +150,12 @@ export function InstrumentPage({
           </Link>
 
           <div className="instrument-identity">
-            <div className="instrument-symbol-badge">{symbol}</div>
+            <div className="instrument-symbol-logo">
+              <MoverLogo
+                name={instrumentDetail?.companyName ?? symbol}
+                symbol={instrumentDetail?.symbol ?? symbol}
+              />
+            </div>
             <div>
               <h1 className="instrument-name">
                 {instrumentDetail?.companyName ?? symbol}

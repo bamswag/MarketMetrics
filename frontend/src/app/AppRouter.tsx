@@ -379,7 +379,7 @@ function AppContent() {
       actions={
         <>
           <span className="connected-chip">Connected</span>
-          <UserMenu displayName={currentUser?.displayName} />
+          <UserMenu />
           <button className="ghost-action" onClick={handleLogout} type="button">
             Log out
           </button>
