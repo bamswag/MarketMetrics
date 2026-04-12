@@ -30,6 +30,7 @@ ta
 
 python-jose[cryptography]
 passlib[bcrypt]
+argon2-cffi
 python-multipart
 email-validator
 sqlalchemy
