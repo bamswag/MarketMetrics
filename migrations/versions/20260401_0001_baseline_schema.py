@@ -12,6 +12,19 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table(
+        "users",
+        sa.Column("userID", sa.String(), nullable=False),
+        sa.Column("email", sa.String(), nullable=False),
+        sa.Column("passwordHash", sa.String(), nullable=False),
+        sa.Column("displayName", sa.String(), nullable=False),
+        sa.Column("createdAt", sa.DateTime(), nullable=False),
+        sa.Column("lastLoginAt", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("userID"),
+    )
+    op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
+    op.create_index(op.f("ix_users_userID"), "users", ["userID"], unique=False)
+
+    op.create_table(
         "price_alerts",
         sa.Column("id", sa.String(), nullable=False),
         sa.Column("userID", sa.String(), nullable=False),
@@ -24,7 +37,7 @@ def upgrade() -> None:
         sa.Column("lastEvaluatedAt", sa.DateTime(), nullable=True),
         sa.Column("triggeredAt", sa.DateTime(), nullable=True),
         sa.CheckConstraint("condition IN ('above', 'below')", name="ck_price_alert_condition"),
-        sa.CheckConstraint("targetPrice > 0", name="ck_price_alert_target_price_positive"),
+        sa.CheckConstraint('"targetPrice" > 0', name="ck_price_alert_target_price_positive"),
         sa.ForeignKeyConstraint(["userID"], ["users.userID"], name="fk_price_alerts_user_id_users"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
@@ -59,19 +72,6 @@ def upgrade() -> None:
     op.create_index(op.f("ix_simulation_history_userID"), "simulation_history", ["userID"], unique=False)
 
     op.create_table(
-        "users",
-        sa.Column("userID", sa.String(), nullable=False),
-        sa.Column("email", sa.String(), nullable=False),
-        sa.Column("passwordHash", sa.String(), nullable=False),
-        sa.Column("displayName", sa.String(), nullable=False),
-        sa.Column("createdAt", sa.DateTime(), nullable=False),
-        sa.Column("lastLoginAt", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("userID"),
-    )
-    op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
-    op.create_index(op.f("ix_users_userID"), "users", ["userID"], unique=False)
-
-    op.create_table(
         "watchlist_items",
         sa.Column("id", sa.String(), nullable=False),
         sa.Column("userID", sa.String(), nullable=False),
@@ -89,10 +89,6 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_watchlist_items_symbol"), table_name="watchlist_items")
     op.drop_table("watchlist_items")
 
-    op.drop_index(op.f("ix_users_userID"), table_name="users")
-    op.drop_index(op.f("ix_users_email"), table_name="users")
-    op.drop_table("users")
-
     op.drop_index(op.f("ix_simulation_history_userID"), table_name="simulation_history")
     op.drop_index(op.f("ix_simulation_history_simulationId"), table_name="simulation_history")
     op.drop_table("simulation_history")
@@ -100,3 +96,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_price_alerts_userID"), table_name="price_alerts")
     op.drop_index(op.f("ix_price_alerts_symbol"), table_name="price_alerts")
     op.drop_table("price_alerts")
+
+    op.drop_index(op.f("ix_users_userID"), table_name="users")
+    op.drop_index(op.f("ix_users_email"), table_name="users")
+    op.drop_table("users")
