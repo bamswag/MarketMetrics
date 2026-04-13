@@ -8,6 +8,10 @@ load_dotenv(find_dotenv(), override=False)
 
 
 class Settings:
+    @staticmethod
+    def _normalize_origin(origin: str) -> str:
+        return origin.strip().rstrip("/")
+
     @property
     def project_root(self) -> Path:
         return Path(__file__).resolve().parents[2]
@@ -31,6 +35,31 @@ class Settings:
     @property
     def frontend_base_url(self) -> str:
         return os.getenv("FRONTEND_BASE_URL", "http://127.0.0.1:5173")
+
+    @property
+    def additional_frontend_origins(self) -> list[str]:
+        raw_value = os.getenv("ADDITIONAL_FRONTEND_ORIGINS", "")
+        if not raw_value.strip():
+            return []
+        return [
+            self._normalize_origin(origin)
+            for origin in raw_value.split(",")
+            if origin.strip()
+        ]
+
+    @property
+    def allowed_frontend_origins(self) -> list[str]:
+        candidates = [
+            self._normalize_origin(self.frontend_base_url),
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+            *self.additional_frontend_origins,
+        ]
+        deduped: list[str] = []
+        for origin in candidates:
+            if origin and origin not in deduped:
+                deduped.append(origin)
+        return deduped
 
     @property
     def google_client_id(self) -> str:

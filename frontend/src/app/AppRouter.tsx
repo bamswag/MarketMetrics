@@ -164,8 +164,21 @@ function RouteLoadingState() {
 function AppContent() {
   const navigate = useNavigate()
   const apiUrl = getApiUrl()
-  const googleLoginUrl = `${apiUrl}/auth/google/login?returnTo=/dashboard&intent=login`
-  const googleSignupUrl = `${apiUrl}/auth/google/login?returnTo=/dashboard&intent=signup`
+  const frontendOrigin = typeof window === 'undefined' ? '' : window.location.origin
+  const loginGoogleParams = new URLSearchParams({
+    returnTo: '/dashboard',
+    intent: 'login',
+  })
+  const signupGoogleParams = new URLSearchParams({
+    returnTo: '/dashboard',
+    intent: 'signup',
+  })
+  if (frontendOrigin) {
+    loginGoogleParams.set('frontendOrigin', frontendOrigin)
+    signupGoogleParams.set('frontendOrigin', frontendOrigin)
+  }
+  const googleLoginUrl = `${apiUrl}/auth/google/login?${loginGoogleParams.toString()}`
+  const googleSignupUrl = `${apiUrl}/auth/google/login?${signupGoogleParams.toString()}`
   const initialRedirectPayloadRef = useRef(readAuthRedirectPayload())
   const initialRedirectPayload = initialRedirectPayloadRef.current
 

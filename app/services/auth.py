@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 from secrets import token_urlsafe
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from uuid import uuid4
 
 import httpx
@@ -66,6 +66,10 @@ def ensure_user_schema(bind) -> None:
         return
 
     engine = getattr(bind, "engine", bind)
+    if getattr(engine.dialect, "name", "") != "sqlite":
+        _ENSURED_USER_SCHEMA_KEYS.add(cache_key)
+        return
+
     Base.metadata.create_all(bind=engine)
 
     inspector = inspect(engine)
@@ -132,6 +136,22 @@ def _email_verification_expiry() -> datetime:
     return datetime.utcnow() + timedelta(
         minutes=settings.email_verification_token_expire_minutes,
     )
+
+
+def _resolve_frontend_origin(frontend_origin: Optional[str]) -> str:
+    if frontend_origin is None:
+        return settings.frontend_base_url.rstrip("/")
+
+    normalized_origin = frontend_origin.strip().rstrip("/")
+    parsed = urlparse(normalized_origin)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise GoogleAuthError("Frontend origin is invalid.")
+
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    if origin not in settings.allowed_frontend_origins:
+        raise GoogleAuthError("Frontend origin is not allowed.")
+
+    return origin
 
 
 def register_user(db: Session, email: str, password: str, display_name: str) -> UserDB:
@@ -379,8 +399,10 @@ def _build_google_state_token(
     *,
     intent: str = "login",
     accepted_terms: bool = False,
+    frontend_origin: Optional[str] = None,
 ) -> str:
     _require_google_oauth_config()
+    resolved_frontend_origin = _resolve_frontend_origin(frontend_origin)
     secret, algorithm, _ = _jwt_settings()
     return create_access_token(
         data={
@@ -388,6 +410,7 @@ def _build_google_state_token(
             "returnTo": _normalize_return_to(return_to),
             "intent": "signup" if intent == "signup" else "login",
             "acceptedTerms": bool(accepted_terms),
+            "frontendOrigin": resolved_frontend_origin,
         },
         secret=secret,
         algorithm=algorithm,
@@ -400,11 +423,13 @@ def build_google_authorization_url(
     *,
     intent: str = "login",
     accepted_terms: bool = False,
+    frontend_origin: Optional[str] = None,
 ) -> str:
     state_token = _build_google_state_token(
         return_to,
         intent=intent,
         accepted_terms=accepted_terms,
+        frontend_origin=frontend_origin,
     )
     params = urlencode(
         {
@@ -424,8 +449,9 @@ def build_frontend_auth_redirect(
     *,
     access_token: Optional[str] = None,
     error: Optional[str] = None,
+    frontend_origin: Optional[str] = None,
 ) -> str:
-    base_url = settings.frontend_base_url.rstrip("/")
+    base_url = _resolve_frontend_origin(frontend_origin)
     path = _normalize_return_to(return_to)
     fragment_params: dict[str, str] = {}
 
@@ -453,6 +479,9 @@ def _decode_google_state_token(state_token: str) -> dict[str, object]:
         "returnTo": _normalize_return_to(payload.get("returnTo")),
         "intent": intent,
         "acceptedTerms": accepted_terms,
+        "frontendOrigin": _resolve_frontend_origin(payload.get("frontendOrigin"))
+        if payload.get("frontendOrigin") is not None
+        else settings.frontend_base_url.rstrip("/"),
     }
 
 

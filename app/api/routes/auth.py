@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Query, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
@@ -173,17 +175,22 @@ def google_login(
     return_to: str = Query(default="/", alias="returnTo"),
     intent: str = Query(default="login"),
     accepted_terms: bool = Query(default=False, alias="acceptedTerms"),
+    frontend_origin: Optional[str] = Query(default=None, alias="frontendOrigin"),
 ):
     try:
         redirect_url = build_google_authorization_url(
             return_to,
             intent=intent,
             accepted_terms=accepted_terms,
+            frontend_origin=frontend_origin,
         )
     except GoogleAuthError as exc:
         redirect_path = "/signup" if intent == "signup" else "/login"
         return RedirectResponse(
-            url=build_frontend_auth_redirect(redirect_path, error=str(exc)),
+            url=build_frontend_auth_redirect(
+                redirect_path,
+                error=str(exc),
+            ),
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
         )
 
@@ -197,9 +204,11 @@ async def google_callback(
     db: Session = Depends(get_db),
 ):
     fallback_path = "/login"
+    fallback_frontend_origin = None
     try:
         google_userinfo, google_state = await exchange_google_code_for_userinfo(code, state)
         fallback_path = "/signup" if google_state["intent"] == "signup" else "/login"
+        fallback_frontend_origin = google_state.get("frontendOrigin") or None
         user = get_or_create_google_user(
             db,
             email=google_userinfo["email"],
@@ -209,7 +218,11 @@ async def google_callback(
         )
     except GoogleAuthError as exc:
         return RedirectResponse(
-            url=build_frontend_auth_redirect(fallback_path, error=str(exc)),
+            url=build_frontend_auth_redirect(
+                fallback_path,
+                error=str(exc),
+                frontend_origin=fallback_frontend_origin,
+            ),
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
         )
 
@@ -221,6 +234,10 @@ async def google_callback(
         expires_minutes=expires,
     )
     return RedirectResponse(
-        url=build_frontend_auth_redirect(str(google_state["returnTo"]), access_token=token),
+        url=build_frontend_auth_redirect(
+            str(google_state["returnTo"]),
+            access_token=token,
+            frontend_origin=google_state.get("frontendOrigin") or None,
+        ),
         status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     )
