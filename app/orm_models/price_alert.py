@@ -10,7 +10,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     String,
-    UniqueConstraint,
 )
 from app.core.database import Base
 
@@ -23,7 +22,17 @@ class PriceAlertDB(Base):
 
     symbol = Column(String, nullable=False, index=True)
     condition = Column(String, nullable=False)
-    targetPrice = Column(Float, nullable=False)
+    targetPrice = Column(Float, nullable=True)
+
+    # Fields for percent_change condition
+    referencePrice = Column(Float, nullable=True)
+
+    # Fields for range_exit condition
+    lowerBound = Column(Float, nullable=True)
+    upperBound = Column(Float, nullable=True)
+
+    severity = Column(String, nullable=True, default="normal")
+    expiresAt = Column(DateTime, nullable=True)
 
     isActive = Column(Boolean, default=True, nullable=False)
     createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -37,14 +46,9 @@ class PriceAlertDB(Base):
     triggeredAt = Column(DateTime, nullable=True)
 
     __table_args__ = (
-        CheckConstraint("condition IN ('above', 'below')", name="ck_price_alert_condition"),
-        CheckConstraint("targetPrice > 0", name="ck_price_alert_target_price_positive"),
-        UniqueConstraint(
-            "userID",
-            "symbol",
-            "condition",
-            "targetPrice",
-            name="uq_price_alert_user_symbol_condition_target",
+        CheckConstraint(
+            "condition IN ('above', 'below', 'percent_change', 'range_exit')",
+            name="ck_price_alert_condition",
         ),
         Index(
             "idx_price_alert_user_symbol_active",

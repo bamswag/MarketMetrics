@@ -12,6 +12,7 @@ class AlertCondition(str, Enum):
 
 class AlertStatus(str, Enum):
     active = "active"
+    paused = "paused"
     triggered = "triggered"
 
 
@@ -32,6 +33,8 @@ class PriceAlertCreate(BaseModel):
 class PriceAlertUpdate(BaseModel):
     isActive: Optional[bool] = None
     resetTriggered: bool = False
+    targetPrice: Optional[float] = Field(default=None, gt=0)
+    condition: Optional[AlertCondition] = None
 
 
 class AlertHistoryOut(BaseModel):
@@ -58,7 +61,11 @@ class PriceAlertOut(BaseModel):
     @computed_field
     @property
     def status(self) -> AlertStatus:
-        return AlertStatus.active if self.isActive else AlertStatus.triggered
+        if self.isActive:
+            return AlertStatus.active
+        if self.triggeredAt is not None:
+            return AlertStatus.triggered
+        return AlertStatus.paused
 
     @computed_field
     @property
@@ -83,7 +90,9 @@ class TriggeredAlertOut(BaseModel):
 
 class AlertListResponse(BaseModel):
     activeAlerts: list[PriceAlertOut]
+    pausedAlerts: list[PriceAlertOut]
     triggeredAlerts: list[PriceAlertOut]
     totalCount: int
     activeCount: int
+    pausedCount: int
     triggeredCount: int

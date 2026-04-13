@@ -22,7 +22,10 @@ def create_alert(db: Session, user_id: str, payload: PriceAlertCreate) -> PriceA
         .first()
     )
     if existing:
-        raise ValueError("An identical alert already exists")
+        raise ValueError(
+            f"You already have an alert for {payload.symbol} "
+            f"{payload.condition.value} ${payload.targetPrice:.2f}"
+        )
 
     alert = PriceAlertDB(
         userID=user_id,
@@ -113,6 +116,11 @@ def list_alerts_by_status(db: Session, user_id: str, status: Optional[AlertStatu
 
     if status == AlertStatus.active:
         query = query.filter(PriceAlertDB.isActive.is_(True))
+    elif status == AlertStatus.paused:
+        query = query.filter(
+            PriceAlertDB.isActive.is_(False),
+            PriceAlertDB.triggeredAt.is_(None),
+        )
     elif status == AlertStatus.triggered:
         query = query.filter(
             PriceAlertDB.isActive.is_(False),
@@ -129,6 +137,8 @@ def update_alert(
     *,
     is_active: Optional[bool],
     reset_triggered: bool,
+    target_price: Optional[float] = None,
+    condition: Optional[str] = None,
 ) -> Optional[PriceAlertDB]:
     alert = (
         db.query(PriceAlertDB)
@@ -147,6 +157,32 @@ def update_alert(
     if reset_triggered:
         alert.isActive = True
         alert.triggeredAt = None
+
+    new_target = target_price if target_price is not None else alert.targetPrice
+    new_condition = condition if condition is not None else alert.condition
+
+    if target_price is not None or condition is not None:
+        duplicate = (
+            db.query(PriceAlertDB)
+            .filter(
+                PriceAlertDB.id != alert_id,
+                PriceAlertDB.userID == user_id,
+                PriceAlertDB.symbol == alert.symbol,
+                PriceAlertDB.condition == new_condition,
+                PriceAlertDB.targetPrice == new_target,
+            )
+            .first()
+        )
+        if duplicate:
+            raise ValueError(
+                f"You already have an alert for {alert.symbol} "
+                f"{new_condition} ${new_target:.2f}"
+            )
+
+        if target_price is not None:
+            alert.targetPrice = target_price
+        if condition is not None:
+            alert.condition = condition
 
     alert.updatedAt = datetime.utcnow()
     db.commit()

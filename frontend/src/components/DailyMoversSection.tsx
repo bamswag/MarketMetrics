@@ -1,4 +1,4 @@
-import type { MoversResponse } from '../lib/api'
+import type { MoversByCategory, MoversResponse } from '../lib/api'
 import { MoverSparklineCard } from './MoverSparklineCard'
 
 type DailyMoversSectionProps = {
@@ -9,13 +9,29 @@ type DailyMoversSectionProps = {
 }
 
 type MoverGroupProps = {
-  items: MoversResponse['gainers']
+  categoryItems?: MoversByCategory
+  fallbackItems: MoversResponse['gainers']
   subtitle: string
   title: string
   tone: 'positive' | 'negative'
 }
 
-function MoverGroup({ items, subtitle, title, tone }: MoverGroupProps) {
+const CATEGORY_ORDER = [
+  { key: 'stocks', label: 'Stocks' },
+  { key: 'crypto', label: 'Crypto' },
+  { key: 'etfs', label: 'ETFs' },
+] satisfies Array<{
+  key: keyof MoversByCategory
+  label: string
+}>
+
+function MoverGroup({ categoryItems, fallbackItems, subtitle, title, tone }: MoverGroupProps) {
+  const itemsByCategory: MoversByCategory = {
+    stocks: categoryItems?.stocks.slice(0, 3) ?? fallbackItems,
+    crypto: categoryItems?.crypto.slice(0, 3) ?? [],
+    etfs: categoryItems?.etfs.slice(0, 3) ?? [],
+  }
+
   return (
     <div className={`mover-group mover-group--${tone}`}>
       <div className="panel-header-copy">
@@ -23,12 +39,29 @@ function MoverGroup({ items, subtitle, title, tone }: MoverGroupProps) {
         <h3 className="subsection-title">{title}</h3>
       </div>
 
-      <div className="mover-card-list">
-        {items.length > 0 ? (
-          items.map((item) => <MoverSparklineCard item={item} key={item.symbol} tone={tone} />)
-        ) : (
-          <p className="empty-state">No symbols are available in this group right now.</p>
-        )}
+      <div className="mover-category-columns">
+        {CATEGORY_ORDER.map(({ key, label }) => {
+          const items = itemsByCategory[key]
+
+          return (
+            <div className="mover-category-column" key={key}>
+              <div className="mover-category-header">
+                <p className="mover-category-label">{label}</p>
+                <span className="mover-category-count">{items.length}/3</span>
+              </div>
+
+              <div className="mover-card-list">
+                {items.length > 0 ? (
+                  items.map((item) => (
+                    <MoverSparklineCard item={item} key={item.symbol} tone={tone} />
+                  ))
+                ) : (
+                  <p className="mover-category-empty">No movers are available right now.</p>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -42,6 +75,8 @@ export function DailyMoversSection({
 }: DailyMoversSectionProps) {
   const gainers = movers?.gainers.slice(0, 3) ?? []
   const losers = movers?.losers.slice(0, 3) ?? []
+  const gainersByCategory = movers?.gainersByCategory
+  const losersByCategory = movers?.losersByCategory
   const sectionClassName =
     variant === 'landing'
       ? 'daily-movers-section page-section'
@@ -56,17 +91,17 @@ export function DailyMoversSection({
           </p>
           <h2 className="panel-title">
             {variant === 'landing'
-              ? "Today's highest and lowest moves in one live market snapshot"
-              : "Today's strongest and weakest movers at a glance"}
+              ? "Today's highest and lowest moves across stocks, crypto, and ETFs"
+              : "Today's strongest and weakest movers across stocks, crypto, and ETFs"}
           </h2>
         </div>
 
-        <span className="panel-tag">Top 3 / Bottom 3</span>
+        <span className="panel-tag">Stocks + Crypto + ETFs</span>
       </div>
 
       <p className="panel-note">
-        Ranked from the latest daily move percentage so you can spot the names leading and lagging
-        the market at a glance.
+        Ranked from the latest daily move percentage so you can compare the top and bottom three
+        stocks, crypto names, and ETFs side by side.
       </p>
 
       {error ? <p className="error-text">{error}</p> : null}
@@ -83,13 +118,15 @@ export function DailyMoversSection({
       {movers ? (
         <div className="daily-movers-columns">
           <MoverGroup
-            items={gainers}
+            categoryItems={gainersByCategory}
+            fallbackItems={gainers}
             subtitle="Top 3 gainers"
             title="Leading today"
             tone="positive"
           />
           <MoverGroup
-            items={losers}
+            categoryItems={losersByCategory}
+            fallbackItems={losers}
             subtitle="Bottom 3 losers"
             title="Lagging today"
             tone="negative"

@@ -18,6 +18,7 @@ from app.services.alerts import (
     delete_alert,
     list_alerts,
     list_alerts_by_status,
+    list_alerts_for_symbols,
     update_alert,
 )
 
@@ -39,18 +40,25 @@ def create_price_alert(
 @router.get("/", response_model=AlertListResponse)
 def list_price_alerts(
     status_filter: Optional[AlertStatus] = Query(default=None, alias="status"),
+    symbol: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
     current_user: UserDB = Depends(get_current_user),
 ):
-    alerts = list_alerts_by_status(db, current_user.userID, status_filter)
-    active_alerts = [alert for alert in alerts if alert.isActive]
-    triggered_alerts = [alert for alert in alerts if not alert.isActive and alert.triggeredAt is not None]
+    if symbol:
+        alerts = list_alerts_for_symbols(db, current_user.userID, [symbol.upper()])
+    else:
+        alerts = list_alerts_by_status(db, current_user.userID, status_filter)
+    active_alerts = [a for a in alerts if a.isActive]
+    paused_alerts = [a for a in alerts if not a.isActive and a.triggeredAt is None]
+    triggered_alerts = [a for a in alerts if not a.isActive and a.triggeredAt is not None]
 
     return AlertListResponse(
-        activeAlerts=[PriceAlertOut.model_validate(alert) for alert in active_alerts],
-        triggeredAlerts=[PriceAlertOut.model_validate(alert) for alert in triggered_alerts],
+        activeAlerts=[PriceAlertOut.model_validate(a) for a in active_alerts],
+        pausedAlerts=[PriceAlertOut.model_validate(a) for a in paused_alerts],
+        triggeredAlerts=[PriceAlertOut.model_validate(a) for a in triggered_alerts],
         totalCount=len(alerts),
         activeCount=len(active_alerts),
+        pausedCount=len(paused_alerts),
         triggeredCount=len(triggered_alerts),
     )
 
@@ -71,13 +79,19 @@ def update_price_alert(
     db: Session = Depends(get_db),
     current_user: UserDB = Depends(get_current_user),
 ):
-    alert = update_alert(
-        db,
-        current_user.userID,
-        alert_id,
-        is_active=payload.isActive,
-        reset_triggered=payload.resetTriggered,
-    )
+    try:
+        alert = update_alert(
+            db,
+            current_user.userID,
+            alert_id,
+            is_active=payload.isActive,
+            reset_triggered=payload.resetTriggered,
+            target_price=payload.targetPrice,
+            condition=payload.condition.value if payload.condition else None,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     return alert

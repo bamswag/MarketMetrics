@@ -19,7 +19,15 @@ class Mover(BaseModel):
     sparklineSeries: List[MoverSparklinePoint] = Field(default_factory=list)
 
 
+class MoverCategoryBuckets(BaseModel):
+    stocks: List[Mover] = Field(default_factory=list)
+    crypto: List[Mover] = Field(default_factory=list)
+    etfs: List[Mover] = Field(default_factory=list)
+
+
 class MoversResponse(BaseModel):
     gainers: List[Mover]
     losers: List[Mover]
+    gainersByCategory: MoverCategoryBuckets = Field(default_factory=MoverCategoryBuckets)
+    losersByCategory: MoverCategoryBuckets = Field(default_factory=MoverCategoryBuckets)
     source: str = "alpaca"

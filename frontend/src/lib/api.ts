@@ -61,9 +61,17 @@ export type Mover = {
   }>
 }
 
+export type MoversByCategory = {
+  stocks: Mover[]
+  crypto: Mover[]
+  etfs: Mover[]
+}
+
 export type MoversResponse = {
   gainers: Mover[]
   losers: Mover[]
+  gainersByCategory?: MoversByCategory
+  losersByCategory?: MoversByCategory
   source: string
 }
 
@@ -114,31 +122,77 @@ export type InstrumentDetailResponse = {
   }>
 }
 
+export type AlertCondition = 'above' | 'below'
+
+export type PriceAlert = {
+  id: string
+  userID: string
+  symbol: string
+  condition: AlertCondition
+  targetPrice: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  triggeredAt?: string | null
+}
+
+export type PriceAlertCreatePayload = {
+  symbol: string
+  condition: AlertCondition
+  targetPrice: number
+}
+
 export type AlertListResponse = {
-  activeAlerts: Array<{
-    id: string
-    symbol: string
-    condition: string
-    targetPrice: number
-    isActive: boolean
-    createdAt: string
-    updatedAt: string
-    triggeredAt?: string | null
-  }>
-  triggeredAlerts: Array<{
-    id: string
-    symbol: string
-    condition: string
-    targetPrice: number
-    isActive: boolean
-    createdAt: string
-    updatedAt: string
-    triggeredAt?: string | null
-  }>
+  activeAlerts: PriceAlert[]
+  pausedAlerts: PriceAlert[]
+  triggeredAlerts: PriceAlert[]
   totalCount: number
   activeCount: number
+  pausedCount: number
   triggeredCount: number
 }
+
+export type PriceAlertUpdatePayload = {
+  isActive?: boolean
+  resetTriggered?: boolean
+  targetPrice?: number
+  condition?: AlertCondition
+}
+
+export type QuoteWebSocketMessage = {
+  type: 'quote'
+  data: {
+    symbol?: string
+    price: number
+    change?: number | null
+    changePercent?: string | null
+    latestTradingDay?: string | null
+    source?: string | null
+  }
+}
+
+export type AlertTriggeredWebSocketMessage = {
+  type: 'alert_triggered'
+  data: {
+    id: string
+    symbol: string
+    condition: AlertCondition
+    targetPrice: number
+    triggeredAt?: string | null
+  }
+}
+
+export type ErrorWebSocketMessage = {
+  type: 'error'
+  message: string
+  retryInSeconds?: number
+  attempt?: number
+}
+
+export type AlertWebSocketMessage =
+  | QuoteWebSocketMessage
+  | AlertTriggeredWebSocketMessage
+  | ErrorWebSocketMessage
 
 export class ApiError extends Error {
   status: number
@@ -169,6 +223,13 @@ export function getApiUrl(): string {
   }
 
   return configuredUrl.replace(/\/+$/, '')
+}
+
+export function buildWebSocketUrl(path: string, token: string): string {
+  const url = new URL(path, getApiUrl())
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.searchParams.set('token', token)
+  return url.toString()
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -415,4 +476,79 @@ export async function fetchAlerts(
     authHeaders(token),
     signal,
   )
+}
+
+export async function fetchAlertsForSymbol(
+  token: string,
+  symbol: string,
+  signal?: AbortSignal,
+): Promise<AlertListResponse> {
+  const url = `${getApiUrl()}/alerts/?symbol=${encodeURIComponent(symbol)}`
+  const response = await safeFetch(url, { headers: authHeaders(token), signal })
+  return parseResponse<AlertListResponse>(response)
+}
+
+export async function createAlert(
+  token: string,
+  payload: PriceAlertCreatePayload,
+): Promise<PriceAlert> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return parseResponse<PriceAlert>(response)
+}
+
+export async function resetAlert(token: string, alertId: string): Promise<PriceAlert> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/${encodeURIComponent(alertId)}`, {
+    method: 'PATCH',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ resetTriggered: true }),
+  })
+
+  return parseResponse<PriceAlert>(response)
+}
+
+export async function deleteAlert(token: string, alertId: string): Promise<void> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/${encodeURIComponent(alertId)}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+
+  if (!response.ok) {
+    await parseResponse<unknown>(response)
+  }
+}
+
+export async function updateAlert(
+  token: string,
+  alertId: string,
+  payload: PriceAlertUpdatePayload,
+): Promise<PriceAlert> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/${encodeURIComponent(alertId)}`, {
+    method: 'PATCH',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return parseResponse<PriceAlert>(response)
+}
+
+export async function pauseAlert(token: string, alertId: string): Promise<PriceAlert> {
+  return updateAlert(token, alertId, { isActive: false })
+}
+
+export async function resumeAlert(token: string, alertId: string): Promise<PriceAlert> {
+  return updateAlert(token, alertId, { isActive: true })
 }

@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 
+import { AlertToastStack } from '../components/AlertToastStack'
+import type { AlertToast } from '../components/AlertToastStack'
 import { AppHeader } from '../components/AppHeader'
 import { AuthActions } from '../components/AuthActions'
 import { GlobalSearch } from '../components/GlobalSearch'
@@ -12,7 +14,10 @@ import { TrackedSymbolsPage } from '../pages/TrackedSymbolsPage'
 import { UserMenu } from '../components/UserMenu'
 import {
   ApiError,
+  buildWebSocketUrl,
+  createAlert,
   createWatchlistItem,
+  deleteAlert,
   deleteWatchlistItem,
   fetchAlerts,
   fetchCurrentUser,
@@ -20,14 +25,22 @@ import {
   fetchWatchlist,
   getApiUrl,
   login,
+  pauseAlert,
   register,
+  resetAlert,
+  resumeAlert,
+  updateAlert,
 } from '../lib/api'
 import type {
+  AlertWebSocketMessage,
   AlertListResponse,
   MoversResponse,
+  PriceAlertCreatePayload,
+  PriceAlertUpdatePayload,
   UserOut,
   WatchlistItemDetailedOut,
 } from '../lib/api'
+import { formatCurrency } from '../lib/formatters'
 import { AccountPage } from '../pages/AccountPage'
 import { SettingsPage } from '../pages/SettingsPage'
 
@@ -46,6 +59,10 @@ type AuthRedirectPayload = {
   redirectedToken: string | null
 }
 
+type NotificationPermissionState = NotificationPermission | 'unsupported'
+
+type PendingAlertAction = 'delete' | 'reset' | 'pause' | 'resume' | 'edit' | null
+
 const initialDashboardData: DashboardData = {
   alerts: null,
   movers: null,
@@ -62,6 +79,14 @@ type DashboardCacheEntry = {
 }
 
 let dashboardCache: DashboardCacheEntry | null = null
+
+function getInitialNotificationPermission(): NotificationPermissionState {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return 'unsupported'
+  }
+
+  return window.Notification.permission
+}
 
 function readAuthRedirectPayload(): AuthRedirectPayload {
   if (typeof window === 'undefined') {
@@ -117,14 +142,40 @@ function AppContent() {
   const [landingMovers, setLandingMovers] = useState<MoversResponse | null>(null)
   const [landingMoversError, setLandingMoversError] = useState('')
   const [isLoadingLandingMovers, setIsLoadingLandingMovers] = useState(false)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>(
+    () => getInitialNotificationPermission(),
+  )
+  const [alertToasts, setAlertToasts] = useState<AlertToast[]>([])
+  const [alertActionError, setAlertActionError] = useState('')
+  const [pendingAlertActionId, setPendingAlertActionId] = useState('')
+  const [pendingAlertAction, setPendingAlertAction] = useState<PendingAlertAction>(null)
+
+  const alertSocketsRef = useRef<Map<string, WebSocket>>(new Map())
+  const alertReconnectTimersRef = useRef<Map<string, number>>(new Map())
+  const triggeredAlertIdsRef = useRef<Set<string>>(new Set())
 
   const handleSessionExpired = useEffectEvent((message: string) => {
+    for (const timeoutId of alertReconnectTimersRef.current.values()) {
+      window.clearTimeout(timeoutId)
+    }
+    alertReconnectTimersRef.current.clear()
+
+    for (const socket of alertSocketsRef.current.values()) {
+      socket.close()
+    }
+    alertSocketsRef.current.clear()
+
+    triggeredAlertIdsRef.current.clear()
     localStorage.removeItem('marketmetrics.token')
     dashboardCache = null
     setToken('')
     setCurrentUser(null)
     setDashboardData(initialDashboardData)
     setDashboardError('')
+    setAlertActionError('')
+    setPendingAlertActionId('')
+    setPendingAlertAction(null)
+    setAlertToasts([])
     setFlashMessage('')
     setAuthRedirectError(message)
     navigate('/login')
@@ -286,15 +337,38 @@ function AppContent() {
     }
   }, [token])
 
-  async function refreshWatchlist(activeToken: string) {
-    const updatedWatchlist = await fetchWatchlist(activeToken)
+  function updateDashboardDataCache(
+    activeToken: string,
+    buildNextData: (currentData: DashboardData) => DashboardData,
+  ) {
     setDashboardData((currentData) => {
-      const nextData = { ...currentData, watchlist: updatedWatchlist }
+      const nextData = buildNextData(currentData)
       if (dashboardCache && dashboardCache.token === activeToken) {
         dashboardCache = { ...dashboardCache, data: nextData }
       }
       return nextData
     })
+  }
+
+  async function refreshWatchlist(activeToken: string) {
+    const updatedWatchlist = await fetchWatchlist(activeToken)
+    updateDashboardDataCache(activeToken, (currentData) => ({
+      ...currentData,
+      watchlist: updatedWatchlist,
+    }))
+  }
+
+  async function refreshAlertWorkspaceData(activeToken: string) {
+    const [updatedAlerts, updatedWatchlist] = await Promise.all([
+      fetchAlerts(activeToken),
+      fetchWatchlist(activeToken),
+    ])
+
+    updateDashboardDataCache(activeToken, (currentData) => ({
+      ...currentData,
+      alerts: updatedAlerts,
+      watchlist: updatedWatchlist,
+    }))
   }
 
   async function completeAuthentication(nextToken: string, successMessage: string) {
@@ -322,12 +396,27 @@ function AppContent() {
   }
 
   function handleLogout() {
+    for (const timeoutId of alertReconnectTimersRef.current.values()) {
+      window.clearTimeout(timeoutId)
+    }
+    alertReconnectTimersRef.current.clear()
+
+    for (const socket of alertSocketsRef.current.values()) {
+      socket.close()
+    }
+    alertSocketsRef.current.clear()
+
+    triggeredAlertIdsRef.current.clear()
     localStorage.removeItem('marketmetrics.token')
     dashboardCache = null
     setToken('')
     setCurrentUser(null)
     setDashboardData(initialDashboardData)
     setDashboardError('')
+    setAlertActionError('')
+    setPendingAlertActionId('')
+    setPendingAlertAction(null)
+    setAlertToasts([])
     setFlashMessage('')
     setAuthRedirectError('')
     navigate('/')
@@ -367,6 +456,388 @@ function AppContent() {
     }
   }
 
+  const dismissAlertToast = useEffectEvent((toastId: string) => {
+    setAlertToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== toastId))
+  })
+
+  useEffect(() => {
+    if (alertToasts.length === 0) {
+      return
+    }
+
+    const timeoutIds = alertToasts.map((toast) =>
+      window.setTimeout(() => {
+        dismissAlertToast(toast.id)
+      }, 7000),
+    )
+
+    return () => {
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
+    }
+  }, [alertToasts, dismissAlertToast])
+
+  const showTriggeredAlertNotification = useEffectEvent((toast: AlertToast) => {
+    setAlertToasts((currentToasts) => {
+      const nextToasts = currentToasts.filter((currentToast) => currentToast.id !== toast.id)
+      return [toast, ...nextToasts].slice(0, 4)
+    })
+
+    if (
+      notificationPermission === 'granted' &&
+      typeof window !== 'undefined' &&
+      'Notification' in window
+    ) {
+      try {
+        void new window.Notification(`${toast.symbol} alert triggered`, {
+          body: `${toast.symbol} moved ${toast.condition} ${formatCurrency(toast.targetPrice)}.`,
+        })
+      } catch {
+        // Keep the in-app toast as the reliable fallback.
+      }
+    }
+  })
+
+  async function handleRequestNotificationPermission() {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported')
+      return
+    }
+
+    const permission = await window.Notification.requestPermission()
+    setNotificationPermission(permission)
+  }
+
+  const closeAlertSocket = useEffectEvent((symbol: string) => {
+    const reconnectTimer = alertReconnectTimersRef.current.get(symbol)
+    if (reconnectTimer) {
+      window.clearTimeout(reconnectTimer)
+      alertReconnectTimersRef.current.delete(symbol)
+    }
+
+    const existingSocket = alertSocketsRef.current.get(symbol)
+    if (existingSocket) {
+      alertSocketsRef.current.delete(symbol)
+      existingSocket.close()
+    }
+  })
+
+  const closeAllAlertSockets = useEffectEvent(() => {
+    for (const symbol of Array.from(alertSocketsRef.current.keys())) {
+      closeAlertSocket(symbol)
+    }
+  })
+
+  const scheduleAlertSocketReconnect = useEffectEvent((symbol: string, retryInMs = 4000) => {
+    if (!token || alertReconnectTimersRef.current.has(symbol)) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      alertReconnectTimersRef.current.delete(symbol)
+
+      const stillActive = (dashboardData.alerts?.activeAlerts ?? []).some(
+        (alert) => alert.symbol === symbol,
+      )
+      if (!token || !stillActive || alertSocketsRef.current.has(symbol)) {
+        return
+      }
+
+      connectAlertSocket(symbol)
+    }, retryInMs)
+
+    alertReconnectTimersRef.current.set(symbol, timeoutId)
+  })
+
+  const handleAlertSocketClose = useEffectEvent(
+    (symbol: string, socket: WebSocket, event: CloseEvent) => {
+      if (alertSocketsRef.current.get(symbol) !== socket) {
+        return
+      }
+
+      alertSocketsRef.current.delete(symbol)
+
+      if (!token) {
+        return
+      }
+
+      if (event.code === 4401) {
+        handleSessionExpired('Your session expired. Log in again to keep monitoring alerts.')
+        return
+      }
+
+      if (event.code === 4404) {
+        return
+      }
+
+      const stillActive = (dashboardData.alerts?.activeAlerts ?? []).some(
+        (alert) => alert.symbol === symbol,
+      )
+      if (stillActive) {
+        scheduleAlertSocketReconnect(symbol)
+      }
+    },
+  )
+
+  const handleAlertSocketMessage = useEffectEvent((rawPayload: string) => {
+    let payload: AlertWebSocketMessage
+
+    try {
+      payload = JSON.parse(rawPayload) as AlertWebSocketMessage
+    } catch {
+      return
+    }
+
+    if (payload.type !== 'alert_triggered') {
+      return
+    }
+
+    if (triggeredAlertIdsRef.current.has(payload.data.id)) {
+      return
+    }
+
+    triggeredAlertIdsRef.current.add(payload.data.id)
+    showTriggeredAlertNotification({
+      id: payload.data.id,
+      symbol: payload.data.symbol,
+      condition: payload.data.condition,
+      targetPrice: payload.data.targetPrice,
+      triggeredAt: payload.data.triggeredAt,
+    })
+
+    if (!token) {
+      return
+    }
+
+    void refreshAlertWorkspaceData(token).catch((error) => {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to keep monitoring alerts.')
+      }
+    })
+  })
+
+  const connectAlertSocket = useEffectEvent((symbol: string) => {
+    if (!token || alertSocketsRef.current.has(symbol)) {
+      return
+    }
+
+    const socket = new WebSocket(
+      buildWebSocketUrl(`/ws/quotes/${encodeURIComponent(symbol)}`, token),
+    )
+
+    alertSocketsRef.current.set(symbol, socket)
+
+    socket.onmessage = (event) => {
+      handleAlertSocketMessage(event.data)
+    }
+    socket.onclose = (event) => {
+      handleAlertSocketClose(symbol, socket, event)
+    }
+    socket.onerror = () => {
+      // Allow the close handler to manage retries. Keeping this silent avoids noisy duplicate alerts.
+    }
+  })
+
+  useEffect(() => {
+    if (!token) {
+      closeAllAlertSockets()
+      return
+    }
+
+    const activeSymbols = Array.from(
+      new Set((dashboardData.alerts?.activeAlerts ?? []).map((alert) => alert.symbol)),
+    )
+    const activeSymbolSet = new Set(activeSymbols)
+
+    for (const symbol of Array.from(alertSocketsRef.current.keys())) {
+      if (!activeSymbolSet.has(symbol)) {
+        closeAlertSocket(symbol)
+      }
+    }
+
+    for (const [symbol, timeoutId] of Array.from(alertReconnectTimersRef.current.entries())) {
+      if (!activeSymbolSet.has(symbol)) {
+        window.clearTimeout(timeoutId)
+        alertReconnectTimersRef.current.delete(symbol)
+      }
+    }
+
+    for (const symbol of activeSymbols) {
+      if (!alertSocketsRef.current.has(symbol) && !alertReconnectTimersRef.current.has(symbol)) {
+        connectAlertSocket(symbol)
+      }
+    }
+  }, [closeAlertSocket, closeAllAlertSockets, connectAlertSocket, dashboardData.alerts, token])
+
+  useEffect(() => {
+    return () => {
+      closeAllAlertSockets()
+      for (const timeoutId of alertReconnectTimersRef.current.values()) {
+        window.clearTimeout(timeoutId)
+      }
+      alertReconnectTimersRef.current.clear()
+    }
+  }, [closeAllAlertSockets])
+
+  async function handleCreatePriceAlert(payload: PriceAlertCreatePayload) {
+    if (!token) {
+      throw new Error('Log in first to create price alerts.')
+    }
+
+    setAlertActionError('')
+
+    try {
+      const createdAlert = await createAlert(token, payload)
+      triggeredAlertIdsRef.current.delete(createdAlert.id)
+      await refreshAlertWorkspaceData(token)
+      return createdAlert
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+      }
+
+      throw error
+    }
+  }
+
+  async function handleDeleteAlert(alertId: string) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+    setPendingAlertActionId(alertId)
+    setPendingAlertAction('delete')
+
+    try {
+      await deleteAlert(token, alertId)
+      triggeredAlertIdsRef.current.delete(alertId)
+      setAlertToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== alertId))
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to remove that alert right now.',
+      )
+    } finally {
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+    }
+  }
+
+  async function handleResetAlert(alertId: string) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+    setPendingAlertActionId(alertId)
+    setPendingAlertAction('reset')
+
+    try {
+      await resetAlert(token, alertId)
+      triggeredAlertIdsRef.current.delete(alertId)
+      setAlertToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== alertId))
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to reset that alert right now.',
+      )
+    } finally {
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+    }
+  }
+
+  async function handlePauseAlert(alertId: string) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+    setPendingAlertActionId(alertId)
+    setPendingAlertAction('pause')
+
+    try {
+      await pauseAlert(token, alertId)
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to pause that alert right now.',
+      )
+    } finally {
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+    }
+  }
+
+  async function handleResumeAlert(alertId: string) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+    setPendingAlertActionId(alertId)
+    setPendingAlertAction('resume')
+
+    try {
+      await resumeAlert(token, alertId)
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to resume that alert right now.',
+      )
+    } finally {
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+    }
+  }
+
+  async function handleUpdateAlert(alertId: string, payload: PriceAlertUpdatePayload) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+    setPendingAlertActionId(alertId)
+    setPendingAlertAction('edit')
+
+    try {
+      await updateAlert(token, alertId, payload)
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to update that alert right now.',
+      )
+    } finally {
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+    }
+  }
+
   const guestHeader = (
     <AppHeader
       actions={<AuthActions />}
@@ -391,138 +862,155 @@ function AppContent() {
   )
 
   return (
-    <Routes>
-      <Route
-        element={
-          token ? (
-            <Navigate replace to="/dashboard" />
-          ) : (
+    <>
+      {token ? (
+        <AlertToastStack onDismiss={dismissAlertToast} toasts={alertToasts} />
+      ) : null}
+
+      <Routes>
+        <Route
+          element={
+            token ? (
+              <Navigate replace to="/dashboard" />
+            ) : (
+              <>
+                {guestHeader}
+                <LandingPage
+                  isLoadingMovers={isLoadingLandingMovers}
+                  movers={landingMovers}
+                  moversError={landingMoversError}
+                />
+              </>
+            )
+          }
+          path="/"
+        />
+        <Route
+          element={
+            token ? (
+              <Navigate replace to="/dashboard" />
+            ) : (
+              <>
+                {guestHeader}
+                <LoginPage
+                  authError={authRedirectError}
+                  googleAuthUrl={googleAuthUrl}
+                  onClearAuthError={() => setAuthRedirectError('')}
+                  onLogin={handleEmailLogin}
+                />
+              </>
+            )
+          }
+          path="/login"
+        />
+        <Route
+          element={
+            token ? (
+              <Navigate replace to="/dashboard" />
+            ) : (
+              <>
+                {guestHeader}
+                <SignupPage googleAuthUrl={googleAuthUrl} onRegister={handleEmailSignup} />
+              </>
+            )
+          }
+          path="/signup"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <DashboardPage
+                  alerts={dashboardData.alerts}
+                  alertActionError={alertActionError}
+                  currentUser={currentUser}
+                  dashboardError={dashboardError}
+                  isLoadingDashboard={isLoadingDashboard}
+                  movers={dashboardData.movers}
+                  notificationPermission={notificationPermission}
+                  onDeleteAlert={handleDeleteAlert}
+                  onEnableNotifications={handleRequestNotificationPermission}
+                  onPauseAlert={handlePauseAlert}
+                  onResetAlert={handleResetAlert}
+                  onResumeAlert={handleResumeAlert}
+                  onUpdateAlert={handleUpdateAlert}
+                  pendingAlertAction={pendingAlertAction}
+                  pendingAlertActionId={pendingAlertActionId}
+                  watchlist={dashboardData.watchlist}
+                />
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/dashboard"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <TrackedSymbolsPage
+                  isLoading={isLoadingDashboard}
+                  onRemoveSymbol={handleRemoveWatchlistSymbol}
+                  trackedSymbols={dashboardData.watchlist}
+                />
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/tracked-symbols"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <AccountPage currentUser={currentUser} />
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/account"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <SettingsPage currentUser={currentUser} />
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/settings"
+        />
+        <Route
+          element={
             <>
-              {guestHeader}
-              <LandingPage
-                isLoadingMovers={isLoadingLandingMovers}
-                movers={landingMovers}
-                moversError={landingMoversError}
-              />
+              {token ? authenticatedHeader : guestHeader}
+              <Suspense fallback={<RouteLoadingState />}>
+                <InstrumentPage
+                  isLoadingTrackedSymbols={Boolean(token) && isLoadingDashboard}
+                  onCreateAlert={handleCreatePriceAlert}
+                  onTrackSymbol={handleAddWatchlistSymbol}
+                  onUnauthorized={handleSessionExpired}
+                  onUntrackSymbol={handleRemoveWatchlistSymbol}
+                  token={token || undefined}
+                  trackedSymbols={dashboardData.watchlist}
+                />
+              </Suspense>
             </>
-          )
-        }
-        path="/"
-      />
-      <Route
-        element={
-          token ? (
-            <Navigate replace to="/dashboard" />
-          ) : (
-            <>
-              {guestHeader}
-              <LoginPage
-                authError={authRedirectError}
-                googleAuthUrl={googleAuthUrl}
-                onClearAuthError={() => setAuthRedirectError('')}
-                onLogin={handleEmailLogin}
-              />
-            </>
-          )
-        }
-        path="/login"
-      />
-      <Route
-        element={
-          token ? (
-            <Navigate replace to="/dashboard" />
-          ) : (
-            <>
-              {guestHeader}
-              <SignupPage googleAuthUrl={googleAuthUrl} onRegister={handleEmailSignup} />
-            </>
-          )
-        }
-        path="/signup"
-      />
-      <Route
-        element={
-          token ? (
-            <>
-              {authenticatedHeader}
-              <DashboardPage
-                alerts={dashboardData.alerts}
-                currentUser={currentUser}
-                dashboardError={dashboardError}
-                isLoadingDashboard={isLoadingDashboard}
-                movers={dashboardData.movers}
-                watchlist={dashboardData.watchlist}
-              />
-            </>
-          ) : (
-            <Navigate replace to="/login" />
-          )
-        }
-        path="/dashboard"
-      />
-      <Route
-        element={
-          token ? (
-            <>
-              {authenticatedHeader}
-              <TrackedSymbolsPage
-                isLoading={isLoadingDashboard}
-                onRemoveSymbol={handleRemoveWatchlistSymbol}
-                trackedSymbols={dashboardData.watchlist}
-              />
-            </>
-          ) : (
-            <Navigate replace to="/login" />
-          )
-        }
-        path="/tracked-symbols"
-      />
-      <Route
-        element={
-          token ? (
-            <>
-              {authenticatedHeader}
-              <AccountPage currentUser={currentUser} />
-            </>
-          ) : (
-            <Navigate replace to="/login" />
-          )
-        }
-        path="/account"
-      />
-      <Route
-        element={
-          token ? (
-            <>
-              {authenticatedHeader}
-              <SettingsPage currentUser={currentUser} />
-            </>
-          ) : (
-            <Navigate replace to="/login" />
-          )
-        }
-        path="/settings"
-      />
-      <Route
-        element={
-          <>
-            {token ? authenticatedHeader : guestHeader}
-            <Suspense fallback={<RouteLoadingState />}>
-              <InstrumentPage
-                isLoadingTrackedSymbols={Boolean(token) && isLoadingDashboard}
-                onTrackSymbol={handleAddWatchlistSymbol}
-                onUnauthorized={handleSessionExpired}
-                onUntrackSymbol={handleRemoveWatchlistSymbol}
-                token={token || undefined}
-                trackedSymbols={dashboardData.watchlist}
-              />
-            </Suspense>
-          </>
-        }
-        path="/instrument/:symbol"
-      />
-      <Route path="*" element={<Navigate replace to={token ? '/dashboard' : '/'} />} />
-    </Routes>
+          }
+          path="/instrument/:symbol"
+        />
+        <Route path="*" element={<Navigate replace to={token ? '/dashboard' : '/'} />} />
+      </Routes>
+    </>
   )
 }
 

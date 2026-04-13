@@ -45,6 +45,100 @@ class MoversRouteTests(BaseAPITestCase):
                 }
             ]
             * 3,
+            "gainersByCategory": {
+                "stocks": [
+                    {
+                        "symbol": "NVDA",
+                        "name": "NVIDIA Corporation",
+                        "price": 912.33,
+                        "change_amount": 24.19,
+                        "change_percent": "2.72%",
+                        "volume": 1_245_333,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 882.11},
+                            {"date": "2026-04-02", "close": 890.45},
+                        ],
+                    }
+                ]
+                * 3,
+                "crypto": [
+                    {
+                        "symbol": "BTC/USD",
+                        "name": "Bitcoin",
+                        "price": 74500.0,
+                        "change_amount": 1800.0,
+                        "change_percent": "2.48%",
+                        "volume": 123_000,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 72000.0},
+                            {"date": "2026-04-02", "close": 73350.0},
+                        ],
+                    }
+                ]
+                * 3,
+                "etfs": [
+                    {
+                        "symbol": "QQQ",
+                        "name": "Invesco QQQ Trust, Series 1",
+                        "price": 502.11,
+                        "change_amount": 6.12,
+                        "change_percent": "1.23%",
+                        "volume": 812_111,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 491.11},
+                            {"date": "2026-04-02", "close": 495.45},
+                        ],
+                    }
+                ]
+                * 3,
+            },
+            "losersByCategory": {
+                "stocks": [
+                    {
+                        "symbol": "INTC",
+                        "name": "Intel Corporation",
+                        "price": 31.11,
+                        "change_amount": -1.4,
+                        "change_percent": "-4.31%",
+                        "volume": 998_112,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 33.5},
+                            {"date": "2026-04-02", "close": 32.8},
+                        ],
+                    }
+                ]
+                * 3,
+                "crypto": [
+                    {
+                        "symbol": "ETH/USD",
+                        "name": "Ethereum",
+                        "price": 3500.0,
+                        "change_amount": -70.0,
+                        "change_percent": "-1.96%",
+                        "volume": 98_200,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 3620.0},
+                            {"date": "2026-04-02", "close": 3585.0},
+                        ],
+                    }
+                ]
+                * 3,
+                "etfs": [
+                    {
+                        "symbol": "IWM",
+                        "name": "iShares Russell 2000 ETF",
+                        "price": 214.22,
+                        "change_amount": -2.05,
+                        "change_percent": "-0.95%",
+                        "volume": 566_123,
+                        "sparklineSeries": [
+                            {"date": "2026-04-01", "close": 218.22},
+                            {"date": "2026-04-02", "close": 217.11},
+                        ],
+                    }
+                ]
+                * 3,
+            },
             "source": "alpaca",
         }
 
@@ -54,6 +148,8 @@ class MoversRouteTests(BaseAPITestCase):
         payload = response.json()
         self.assertEqual(len(payload["gainers"]), 3)
         self.assertEqual(len(payload["losers"]), 3)
+        self.assertEqual(len(payload["gainersByCategory"]["crypto"]), 3)
+        self.assertEqual(len(payload["losersByCategory"]["etfs"]), 3)
         self.assertIn("sparklineSeries", payload["gainers"][0])
         mock_get_market_movers.assert_awaited_once_with(3)
 
@@ -66,18 +162,44 @@ class MoversServiceTests(BaseAPITestCase):
         mock_fetch_top_movers,
         mock_get_daily_close_series_cached,
     ):
-        mock_fetch_top_movers.return_value = {
-            "top_gainers": [
-                {"symbol": "NVDA", "price": 912.33, "change_amount": 24.19, "change_percent": "2.72%", "volume": 1_245_333},
-                {"symbol": "META", "price": 511.2, "change_amount": 8.1, "change_percent": "1.61%", "volume": 845_232},
-                {"symbol": "MSFT", "price": 424.12, "change_amount": 4.02, "change_percent": "0.96%", "volume": 774_018},
-            ],
-            "top_losers": [
-                {"symbol": "INTC", "price": 31.11, "change_amount": -1.4, "change_percent": "-4.31%", "volume": 998_112},
-                {"symbol": "BAC", "price": 37.54, "change_amount": -0.91, "change_percent": "-2.37%", "volume": 563_005},
-                {"symbol": "DIS", "price": 104.42, "change_amount": -1.88, "change_percent": "-1.77%", "volume": 402_194},
-            ],
-        }
+        mock_fetch_top_movers.side_effect = [
+            {
+                "top_gainers": [
+                    {"symbol": "NVDA", "price": 912.33, "change_amount": 24.19, "change_percent": "2.72%", "volume": 1_245_333},
+                    {"symbol": "META", "price": 511.2, "change_amount": 8.1, "change_percent": "1.61%", "volume": 845_232},
+                    {"symbol": "MSFT", "price": 424.12, "change_amount": 4.02, "change_percent": "0.96%", "volume": 774_018},
+                ],
+                "top_losers": [
+                    {"symbol": "INTC", "price": 31.11, "change_amount": -1.4, "change_percent": "-4.31%", "volume": 998_112},
+                    {"symbol": "BAC", "price": 37.54, "change_amount": -0.91, "change_percent": "-2.37%", "volume": 563_005},
+                    {"symbol": "DIS", "price": 104.42, "change_amount": -1.88, "change_percent": "-1.77%", "volume": 402_194},
+                ],
+            },
+            {
+                "top_gainers": [
+                    {"symbol": "BTC/USD", "price": 74250.0, "change_amount": 3621.2, "change_percent": "5.13%", "volume": 90_000},
+                    {"symbol": "ETH/USD", "price": 3560.0, "change_amount": 88.6, "change_percent": "2.55%", "volume": 82_500},
+                    {"symbol": "SOL/USD", "price": 181.2, "change_amount": 2.5, "change_percent": "1.40%", "volume": 76_000},
+                ],
+                "top_losers": [
+                    {"symbol": "DOGE/USD", "price": 0.18, "change_amount": -0.02, "change_percent": "-8.21%", "volume": 115_000},
+                    {"symbol": "SOL/USD", "price": 168.4, "change_amount": -5.1, "change_percent": "-2.94%", "volume": 77_100},
+                    {"symbol": "ETH/USD", "price": 3420.0, "change_amount": -69.3, "change_percent": "-1.99%", "volume": 83_000},
+                ],
+            },
+            {
+                "top_gainers": [
+                    {"symbol": "QQQ", "price": 502.11, "change_amount": 9.64, "change_percent": "1.96%", "volume": 812_111},
+                    {"symbol": "SPY", "price": 524.21, "change_amount": 7.11, "change_percent": "1.37%", "volume": 930_552},
+                    {"symbol": "DIA", "price": 410.02, "change_amount": 3.43, "change_percent": "0.84%", "volume": 401_221},
+                ],
+                "top_losers": [
+                    {"symbol": "IWM", "price": 214.22, "change_amount": -2.05, "change_percent": "-0.95%", "volume": 566_123},
+                    {"symbol": "SPY", "price": 519.44, "change_amount": -1.44, "change_percent": "-0.28%", "volume": 902_000},
+                    {"symbol": "QQQ", "price": 498.72, "change_amount": -0.88, "change_percent": "-0.18%", "volume": 799_888},
+                ],
+            },
+        ]
 
         async def history_side_effect(symbol, start=None, end=None):
             return [
@@ -95,11 +217,25 @@ class MoversServiceTests(BaseAPITestCase):
 
         self.assertEqual(len(payload.gainers), 3)
         self.assertEqual(len(payload.losers), 3)
+        self.assertEqual([item.symbol for item in payload.gainers], ["BTC/USD", "NVDA", "ETH/USD"])
+        self.assertEqual([item.symbol for item in payload.losers], ["DOGE/USD", "INTC", "SOL/USD"])
+        self.assertEqual(
+            [item.symbol for item in payload.gainersByCategory.stocks],
+            ["NVDA", "META", "MSFT"],
+        )
+        self.assertEqual(
+            [item.symbol for item in payload.gainersByCategory.crypto],
+            ["BTC/USD", "ETH/USD", "SOL/USD"],
+        )
+        self.assertEqual(
+            [item.symbol for item in payload.gainersByCategory.etfs],
+            ["QQQ", "SPY", "DIA"],
+        )
         self.assertEqual(len(payload.gainers[0].sparklineSeries), 5)
         self.assertEqual(payload.gainers[0].sparklineSeries[0].date.isoformat(), "2026-03-31")
         self.assertEqual(payload.source, "alpaca")
-        mock_fetch_top_movers.assert_awaited_once()
-        awaited_args = mock_fetch_top_movers.await_args
+        self.assertEqual(mock_fetch_top_movers.await_count, 3)
+        awaited_args = mock_fetch_top_movers.await_args_list[0]
         self.assertEqual(awaited_args.kwargs["top_n"], 3)
         self.assertIn("asset_class_map", awaited_args.kwargs)
         self.assertEqual(awaited_args.kwargs["asset_class_map"].get("BTC/USD"), "crypto")
@@ -111,18 +247,28 @@ class MoversServiceTests(BaseAPITestCase):
         mock_fetch_top_movers,
         mock_get_daily_close_series_cached,
     ):
-        mock_fetch_top_movers.return_value = {
-            "top_gainers": [
-                {"symbol": "NVDA", "price": 912.33, "change_amount": 24.19, "change_percent": "2.72%", "volume": 1_245_333},
-                {"symbol": "META", "price": 511.2, "change_amount": 8.1, "change_percent": "1.61%", "volume": 845_232},
-                {"symbol": "MSFT", "price": 424.12, "change_amount": 4.02, "change_percent": "0.96%", "volume": 774_018},
-            ],
-            "top_losers": [
-                {"symbol": "INTC", "price": 31.11, "change_amount": -1.4, "change_percent": "-4.31%", "volume": 998_112},
-                {"symbol": "BAC", "price": 37.54, "change_amount": -0.91, "change_percent": "-2.37%", "volume": 563_005},
-                {"symbol": "DIS", "price": 104.42, "change_amount": -1.88, "change_percent": "-1.77%", "volume": 402_194},
-            ],
-        }
+        mock_fetch_top_movers.side_effect = [
+            {
+                "top_gainers": [
+                    {"symbol": "NVDA", "price": 912.33, "change_amount": 24.19, "change_percent": "2.72%", "volume": 1_245_333},
+                    {"symbol": "META", "price": 511.2, "change_amount": 8.1, "change_percent": "1.61%", "volume": 845_232},
+                    {"symbol": "MSFT", "price": 424.12, "change_amount": 4.02, "change_percent": "0.96%", "volume": 774_018},
+                ],
+                "top_losers": [
+                    {"symbol": "INTC", "price": 31.11, "change_amount": -1.4, "change_percent": "-4.31%", "volume": 998_112},
+                    {"symbol": "BAC", "price": 37.54, "change_amount": -0.91, "change_percent": "-2.37%", "volume": 563_005},
+                    {"symbol": "DIS", "price": 104.42, "change_amount": -1.88, "change_percent": "-1.77%", "volume": 402_194},
+                ],
+            },
+            {
+                "top_gainers": [],
+                "top_losers": [],
+            },
+            {
+                "top_gainers": [],
+                "top_losers": [],
+            },
+        ]
 
         async def history_side_effect(symbol, start=None, end=None):
             if symbol == "BAC":

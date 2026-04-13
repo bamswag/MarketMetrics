@@ -12,7 +12,10 @@ export function MoverSparklineCard({ item, tone }: MoverSparklineCardProps) {
   const pillClassName = tone === 'positive' ? 'positive-pill' : 'negative-pill'
 
   return (
-    <Link className={`mover-card mover-card--${tone}`} to={`/instrument/${item.symbol}`}>
+    <Link
+      className={`mover-card mover-card--${tone}`}
+      to={`/instrument/${encodeURIComponent(item.symbol)}`}
+    >
       <div className="mover-card-head">
         <div className="mover-card-brand">
           <MoverLogo name={item.name} symbol={item.symbol} />

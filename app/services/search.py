@@ -39,6 +39,16 @@ DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
     {"symbol": "QQQ", "name": "Invesco QQQ Trust (Nasdaq 100)", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
     {"symbol": "DIA", "name": "SPDR Dow Jones Industrial Average ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
     {"symbol": "IWM", "name": "iShares Russell 2000 ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "VOO", "name": "Vanguard S&P 500 ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "VTI", "name": "Vanguard Total Stock Market ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "XLK", "name": "Technology Select Sector SPDR Fund", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "XLF", "name": "Financial Select Sector SPDR Fund", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "XLV", "name": "Health Care Select Sector SPDR Fund", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "XLE", "name": "Energy Select Sector SPDR Fund", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "SMH", "name": "VanEck Semiconductor ETF", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "ARKK", "name": "ARK Innovation ETF", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "TLT", "name": "iShares 20+ Year Treasury Bond ETF", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
+    {"symbol": "GLD", "name": "SPDR Gold Shares", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
     # Crypto
     {"symbol": "BTC/USD", "name": "Bitcoin", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
     {"symbol": "ETH/USD", "name": "Ethereum", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
@@ -51,16 +61,28 @@ DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
     {"symbol": "DOT/USD", "name": "Polkadot", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
 ]
 
+DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
+    "stocks": [
+        "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
+        "META", "TSLA", "AMD", "NFLX", "INTC",
+        "JPM", "BAC", "V", "MA", "WMT",
+        "DIS", "KO", "PEP", "XOM", "CVX",
+    ],
+    "crypto": [
+        "BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD", "ADA/USD",
+        "XRP/USD", "AVAX/USD", "LINK/USD", "DOT/USD",
+    ],
+    "etfs": [
+        "SPY", "QQQ", "DIA", "IWM", "VOO",
+        "VTI", "XLK", "XLF", "XLV", "XLE",
+        "SMH", "ARKK", "TLT", "GLD",
+    ],
+}
+
 DEFAULT_MOVER_UNIVERSE: List[str] = [
-    # Equities
-    "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
-    "META", "TSLA", "AMD", "NFLX", "INTC",
-    "JPM", "BAC", "V", "MA", "WMT",
-    "DIS", "KO", "PEP", "XOM", "CVX",
-    # Index ETFs
-    "SPY", "QQQ", "DIA", "IWM",
-    # Crypto
-    "BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD",
+    symbol
+    for category_symbols in DEFAULT_MOVER_UNIVERSE_BY_CATEGORY.values()
+    for symbol in category_symbols
 ]
 
 DEFAULT_TRAINING_UNIVERSE_MANIFEST: List[Dict[str, Any]] = [
@@ -339,6 +361,13 @@ def build_search_result(item: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_mover_universe_symbols() -> List[str]:
     return list(DEFAULT_MOVER_UNIVERSE)
+
+
+def get_mover_universe_symbols_by_category() -> Dict[str, List[str]]:
+    return {
+        category: list(symbols)
+        for category, symbols in DEFAULT_MOVER_UNIVERSE_BY_CATEGORY.items()
+    }
 
 
 def get_training_universe_symbols() -> List[str]:

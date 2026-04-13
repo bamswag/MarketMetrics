@@ -6,10 +6,15 @@ from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
 from app.integrations.alpaca.market_data import fetch_top_movers
-from app.schemas.movers import Mover, MoversResponse, MoverSparklinePoint
+from app.schemas.movers import (
+    Mover,
+    MoverCategoryBuckets,
+    MoversResponse,
+    MoverSparklinePoint,
+)
 from app.services.price_history import get_daily_close_series_cached
 from app.services.search import (
-    get_mover_universe_symbols,
+    get_mover_universe_symbols_by_category,
     get_symbol_asset_class,
     get_symbol_metadata,
 )
@@ -17,6 +22,7 @@ from app.services.search import (
 MOVERS_CACHE_TTL_SECONDS = 45
 SPARKLINE_LOOKBACK_DAYS = 14
 SPARKLINE_POINTS = 5
+MOVER_CATEGORY_ORDER = ("stocks", "crypto", "etfs")
 
 _movers_cache: Dict[int, tuple[float, MoversResponse]] = {}
 _movers_cache_locks: Dict[int, asyncio.Lock] = {}
@@ -115,21 +121,106 @@ def _build_asset_class_map(symbols: List[str]) -> Dict[str, str]:
     }
 
 
-async def _build_market_movers(limit: int) -> MoversResponse:
-    mover_universe = get_mover_universe_symbols()
-    asset_class_map = _build_asset_class_map(mover_universe)
-    data = await fetch_top_movers(
-        mover_universe,
-        top_n=limit,
-        asset_class_map=asset_class_map,
+def _sort_mover_items(items: List[Dict[str, Any]], *, descending: bool) -> List[Dict[str, Any]]:
+    return sorted(
+        items,
+        key=lambda item: _to_float(item.get("change_percent")) or 0.0,
+        reverse=descending,
     )
-    mover_items = [*(data.get("top_gainers") or []), *(data.get("top_losers") or [])]
+
+
+def _merge_category_rankings(
+    category_results: Dict[str, Dict[str, List[Dict[str, Any]]]],
+    result_key: str,
+    *,
+    limit: int,
+) -> List[Dict[str, Any]]:
+    merged_items: List[Dict[str, Any]] = []
+    for category in MOVER_CATEGORY_ORDER:
+        merged_items.extend(category_results.get(category, {}).get(result_key) or [])
+
+    return _sort_mover_items(
+        merged_items,
+        descending=result_key == "top_gainers",
+    )[:limit]
+
+
+def _build_category_buckets(
+    category_results: Dict[str, Dict[str, List[Dict[str, Any]]]],
+    result_key: str,
+    sparkline_map: Dict[str, List[MoverSparklinePoint]],
+    metadata_map: Dict[str, Dict[str, Any]],
+) -> MoverCategoryBuckets:
+    return MoverCategoryBuckets(
+        stocks=_parse_movers(
+            category_results.get("stocks", {}).get(result_key) or [],
+            sparkline_map,
+            metadata_map,
+        ),
+        crypto=_parse_movers(
+            category_results.get("crypto", {}).get(result_key) or [],
+            sparkline_map,
+            metadata_map,
+        ),
+        etfs=_parse_movers(
+            category_results.get("etfs", {}).get(result_key) or [],
+            sparkline_map,
+            metadata_map,
+        ),
+    )
+
+
+async def _build_market_movers(limit: int) -> MoversResponse:
+    mover_universe_by_category = get_mover_universe_symbols_by_category()
+    mover_universe = [
+        symbol
+        for category in MOVER_CATEGORY_ORDER
+        for symbol in mover_universe_by_category.get(category, [])
+    ]
+    asset_class_map = _build_asset_class_map(mover_universe)
+    category_results_list = await asyncio.gather(
+        *[
+            fetch_top_movers(
+                mover_universe_by_category.get(category, []),
+                top_n=limit,
+                asset_class_map=asset_class_map,
+            )
+            for category in MOVER_CATEGORY_ORDER
+        ],
+        return_exceptions=False,
+    )
+    category_results = dict(zip(MOVER_CATEGORY_ORDER, category_results_list))
+
+    overall_gainers = _merge_category_rankings(category_results, "top_gainers", limit=limit)
+    overall_losers = _merge_category_rankings(category_results, "top_losers", limit=limit)
+    mover_items = [
+        *overall_gainers,
+        *overall_losers,
+        *[
+            item
+            for category in MOVER_CATEGORY_ORDER
+            for result_key in ("top_gainers", "top_losers")
+            for item in category_results.get(category, {}).get(result_key) or []
+        ],
+    ]
     sparkline_map = await _load_sparkline_map(mover_items)
     metadata_map = _build_metadata_map(mover_items)
 
     return MoversResponse(
-        gainers=_parse_movers(data.get("top_gainers") or [], sparkline_map, metadata_map),
-        losers=_parse_movers(data.get("top_losers") or [], sparkline_map, metadata_map),
+        gainers=_parse_movers(overall_gainers, sparkline_map, metadata_map),
+        losers=_parse_movers(overall_losers, sparkline_map, metadata_map),
+        gainersByCategory=_build_category_buckets(
+            category_results,
+            "top_gainers",
+            sparkline_map,
+            metadata_map,
+        ),
+        losersByCategory=_build_category_buckets(
+            category_results,
+            "top_losers",
+            sparkline_map,
+            metadata_map,
+        ),
         source="alpaca",
     )
 
