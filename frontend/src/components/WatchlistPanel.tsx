@@ -2,8 +2,16 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { WatchlistItemDetailedOut } from '../lib/api'
-import { formatCurrency } from '../lib/formatters'
+import {
+  formatCurrencyWithPreferences,
+  formatPriceChangeWithPreferences,
+} from '../lib/marketDisplay'
+import {
+  resolveInstrumentTone,
+  resolveInstrumentTonePillClass,
+} from '../lib/instrumentTone'
 
 type WatchlistPanelProps = {
   watchlist: WatchlistItemDetailedOut[]
@@ -16,6 +24,7 @@ export function WatchlistPanel({
   onAddSymbol,
   onRemoveSymbol,
 }: WatchlistPanelProps) {
+  const { preferences } = useMarketPreferences()
   const [watchlistSymbol, setWatchlistSymbol] = useState('')
   const [watchlistActionError, setWatchlistActionError] = useState('')
   const [watchlistActionSuccess, setWatchlistActionSuccess] = useState('')
@@ -100,26 +109,33 @@ export function WatchlistPanel({
             const quotePrice = item.latestQuote?.price
             const hasPrice = quotePrice !== null && quotePrice !== undefined
             const changePercent = item.latestQuote?.changePercent ?? '--'
-            const pillClassName = changePercent.startsWith('-')
-              ? 'negative-pill'
-              : changePercent === '--'
-                ? 'neutral-pill'
-                : 'positive-pill'
+            const tone = resolveInstrumentTone(changePercent)
+            const pillClassName = resolveInstrumentTonePillClass(tone)
+            const changeDisplay = formatPriceChangeWithPreferences(
+              { change: item.latestQuote?.change, changePercent },
+              preferences,
+            )
 
             return (
-              <article className="watchlist-card" key={item.id}>
+              <article
+                className={`watchlist-card instrument-surface instrument-surface--${tone}`}
+                key={item.id}
+              >
                 <div className="watchlist-card-top">
                   <div>
                     <p className="section-label">{item.symbol}</p>
                     <strong className="watchlist-price">
                       {hasPrice
-                        ? formatCurrency(quotePrice)
+                        ? formatCurrencyWithPreferences(quotePrice, preferences)
                         : item.latestQuote?.unavailableReason ?? 'Quote unavailable'}
                     </strong>
                   </div>
 
                   <div className="watchlist-card-actions">
-                    <Link className="inline-link" to={`/instrument/${item.symbol}`}>
+                    <Link
+                      className="inline-link"
+                      to={`/instrument/${encodeURIComponent(item.symbol)}`}
+                    >
                       Open chart
                     </Link>
                     <button
@@ -134,7 +150,7 @@ export function WatchlistPanel({
                 </div>
 
                 <div className="watchlist-meta">
-                  <span className={pillClassName}>{changePercent}</span>
+                  <span className={pillClassName}>{changeDisplay}</span>
                   <span className="watchlist-alert-chip">
                     {item.alerts.activeAlerts} active alerts
                   </span>

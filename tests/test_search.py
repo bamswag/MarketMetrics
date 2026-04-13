@@ -30,6 +30,7 @@ class SearchRouteTests(BaseAPITestCase):
         self.assertEqual(payload["query"], "apple")
         self.assertEqual(len(payload["results"]), 1)
         self.assertEqual(payload["results"][0]["symbol"], "AAPL")
+        self.assertEqual(payload["results"][0]["assetCategory"], "stocks")
 
 
 class SearchServiceTests(unittest.TestCase):

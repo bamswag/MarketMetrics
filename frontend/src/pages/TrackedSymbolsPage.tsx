@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { WatchlistItemDetailedOut } from '../lib/api'
+import { trackedSymbolsSortLabel } from '../lib/marketPreferences'
 import { TrackedSymbolCard } from '../components/TrackedSymbolCard'
 import '../styles/pages/TrackedSymbolsPage.css'
 
@@ -16,14 +18,47 @@ export function TrackedSymbolsPage({
   onRemoveSymbol,
   trackedSymbols,
 }: TrackedSymbolsPageProps) {
+  const { preferences, updatePreferences } = useMarketPreferences()
   const [actionError, setActionError] = useState('')
   const [actionSuccess, setActionSuccess] = useState('')
   const [removingSymbol, setRemovingSymbol] = useState('')
 
+  const selectedSortLabel = trackedSymbolsSortLabel(preferences.trackedSymbolsSort)
+
   const { sortedTrackedSymbols, positiveCount, negativeCount, newestTrackedSymbol } = useMemo(() => {
-    const sorted = [...trackedSymbols].sort(
-      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-    )
+    function changePercentValue(item: WatchlistItemDetailedOut) {
+      const numericValue = Number.parseFloat(
+        String(item.latestQuote?.changePercent ?? '').replace('%', ''),
+      )
+      return Number.isFinite(numericValue) ? numericValue : null
+    }
+
+    const sorted = [...trackedSymbols]
+    switch (preferences.trackedSymbolsSort) {
+      case 'alphabetical':
+        sorted.sort((left, right) => left.symbol.localeCompare(right.symbol))
+        break
+      case 'biggest_gain':
+        sorted.sort((left, right) => {
+          const leftChange = changePercentValue(left) ?? Number.NEGATIVE_INFINITY
+          const rightChange = changePercentValue(right) ?? Number.NEGATIVE_INFINITY
+          return rightChange - leftChange
+        })
+        break
+      case 'biggest_loss':
+        sorted.sort((left, right) => {
+          const leftChange = changePercentValue(left) ?? Number.POSITIVE_INFINITY
+          const rightChange = changePercentValue(right) ?? Number.POSITIVE_INFINITY
+          return leftChange - rightChange
+        })
+        break
+      default:
+        sorted.sort(
+          (left, right) =>
+            new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+        )
+        break
+    }
 
     let positives = 0
     let negatives = 0
@@ -42,7 +77,7 @@ export function TrackedSymbolsPage({
       negativeCount: negatives,
       newestTrackedSymbol: sorted[0],
     }
-  }, [trackedSymbols])
+  }, [preferences.trackedSymbolsSort, trackedSymbols])
 
   async function handleRemoveSymbol(symbol: string) {
     setActionError('')
@@ -76,7 +111,7 @@ export function TrackedSymbolsPage({
             into live charts whenever your focus changes.
           </p>
           <div className="tracked-symbols-page-tags">
-            <span className="dashboard-tag">Newest first</span>
+            <span className="dashboard-tag">Sort: {selectedSortLabel}</span>
             <span className="dashboard-tag">One-tap chart access</span>
             <span className="dashboard-tag">Live price context</span>
           </div>
@@ -89,7 +124,30 @@ export function TrackedSymbolsPage({
               <h2 className="panel-title">Your active symbols</h2>
             </div>
 
-            <span className="panel-tag">{sortedTrackedSymbols.length} total</span>
+            <div className="tracked-symbols-side-panel-actions">
+              <label className="workspace-inline-control">
+                <span className="workspace-inline-label">Sort</span>
+                <select
+                  className="workspace-select workspace-select--compact"
+                  onChange={(event) =>
+                    updatePreferences({
+                      trackedSymbolsSort: event.target.value as
+                        | 'newest'
+                        | 'biggest_gain'
+                        | 'biggest_loss'
+                        | 'alphabetical',
+                    })
+                  }
+                  value={preferences.trackedSymbolsSort}
+                >
+                  <option value="newest">Newest</option>
+                  <option value="biggest_gain">Biggest gain</option>
+                  <option value="biggest_loss">Biggest loss</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+              </label>
+              <span className="panel-tag">{sortedTrackedSymbols.length} total</span>
+            </div>
           </div>
 
           {actionSuccess ? <p className="success-text">{actionSuccess}</p> : null}

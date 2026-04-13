@@ -10,6 +10,22 @@ from app.core.config import settings
 
 _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
 _CRYPTO_QUOTE_SUFFIXES = ("USD",)
+_ETF_NAME_HINTS = (
+    " ETF",
+    " ETN",
+    " FUND",
+    " TRUST",
+    " SHARES",
+    " ISHARES",
+    " SPDR",
+    " INVESCO",
+    " VANGUARD",
+    " PROSHARES",
+    " DIREXION",
+    " VANECK",
+    " WISDOMTREE",
+    " ARK ",
+)
 
 
 DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
@@ -285,6 +301,18 @@ def get_symbol_asset_class(symbol: str) -> str:
     return "us_equity"
 
 
+def get_symbol_market_category(symbol: str) -> str:
+    if get_symbol_asset_class(symbol) == "crypto":
+        return "crypto"
+
+    metadata = get_symbol_metadata(symbol) or {}
+    normalized_name = str(metadata.get("name") or "").strip().upper()
+    if normalized_name and any(hint in normalized_name for hint in _ETF_NAME_HINTS):
+        return "etfs"
+
+    return "stocks"
+
+
 def is_chartable_instrument(item: Optional[Dict[str, Any]]) -> bool:
     if not item:
         return False
@@ -347,6 +375,7 @@ def build_search_result(item: Dict[str, Any]) -> Dict[str, Any]:
         "symbol": symbol,
         "name": item.get("name", ""),
         "type": asset_class,
+        "assetCategory": get_symbol_market_category(symbol),
         "region": "Global" if is_crypto else "US",
         "marketOpen": "00:00" if is_crypto else "09:30",
         "marketClose": "23:59" if is_crypto else "16:00",

@@ -11,20 +11,21 @@
 
 .tracked-symbols-page-hero {
   display: grid;
-  grid-template-columns: minmax(280px, 0.78fr) minmax(640px, 1.22fr);
-  gap: 32px;
-  align-items: start;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 2.25fr);
+  gap: 28px;
+  align-items: stretch;
 }
 
 .tracked-symbols-page-head {
   display: grid;
   gap: 18px;
-  max-width: 580px;
+  max-width: 660px;
   min-width: 0;
+  align-content: start;
 }
 
 .tracked-symbols-page-title {
-  max-width: 9ch;
+  max-width: 11ch;
 }
 
 .tracked-symbols-page-copy {
@@ -78,22 +79,37 @@
 }
 
 .tracked-symbols-side-panel {
-  grid-column: auto;
+  grid-column: 2 / -1;
   min-width: 0;
   width: 100%;
-  align-self: start;
-  padding: 20px 20px 18px;
+  min-height: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 24px 22px;
   background:
     radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 250, 252, 0.96)),
     var(--panel-bg);
 }
 
+.tracked-symbols-side-panel-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .tracked-symbols-side-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
   align-items: stretch;
+  align-content: start;
+  flex: 1;
 }
 
 .tracked-symbols-side-grid .tracked-symbol-card {
@@ -166,6 +182,10 @@
     grid-template-columns: 1fr;
   }
 
+  .tracked-symbols-side-panel {
+    grid-column: auto;
+  }
+
   .tracked-symbols-side-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -178,6 +198,18 @@
 }
 
 @media (max-width: 720px) {
+  .tracked-symbols-side-panel-actions {
+    align-items: stretch;
+  }
+
+  .tracked-symbols-side-panel-actions .workspace-inline-control {
+    width: 100%;
+  }
+
+  .tracked-symbols-side-panel-actions .workspace-select--compact {
+    min-width: 0;
+  }
+
   .tracked-symbols-side-grid {
     grid-template-columns: 1fr;
   }

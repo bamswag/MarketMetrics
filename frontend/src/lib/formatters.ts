@@ -1,34 +1,48 @@
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 2,
-})
+function resolveLocale() {
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    return navigator.language
+  }
 
-const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-})
+  return 'en-US'
+}
 
-const longDateFormatter = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-})
+function buildCurrencyFormatter() {
+  return new Intl.NumberFormat(resolveLocale(), {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  })
+}
+
+function buildShortDateFormatter() {
+  return new Intl.DateTimeFormat(resolveLocale(), {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function buildLongDateFormatter() {
+  return new Intl.DateTimeFormat(resolveLocale(), {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 export function formatCurrency(value?: number | null) {
   if (value === null || value === undefined) {
     return '--'
   }
 
-  return currencyFormatter.format(value)
+  return buildCurrencyFormatter().format(value)
 }
 
 export function formatShortDate(value: string) {
-  return shortDateFormatter.format(new Date(`${value}T00:00:00`))
+  return buildShortDateFormatter().format(new Date(`${value}T00:00:00`))
 }
 
 export function formatLongDate(value: string) {
-  return longDateFormatter.format(new Date(`${value}T00:00:00`))
+  return buildLongDateFormatter().format(new Date(`${value}T00:00:00`))
 }
 
 export function formatDateTime(value?: string | null) {

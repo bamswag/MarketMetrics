@@ -1,8 +1,13 @@
 import './App.css'
+import { MarketPreferencesProvider } from './app/MarketPreferencesContext'
 import { AppRouter } from './app/AppRouter'
 
 function App() {
-  return <AppRouter />
+  return (
+    <MarketPreferencesProvider>
+      <AppRouter />
+    </MarketPreferencesProvider>
+  )
 }
 
 export default App

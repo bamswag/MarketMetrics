@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { Mover } from '../lib/api'
+import { formatPriceChangeWithPreferences } from '../lib/marketDisplay'
 import { MoverLogo } from './MoverLogo'
 
 type MoverSparklineCardProps = {
@@ -9,11 +11,16 @@ type MoverSparklineCardProps = {
 }
 
 export function MoverSparklineCard({ item, tone }: MoverSparklineCardProps) {
+  const { preferences } = useMarketPreferences()
   const pillClassName = tone === 'positive' ? 'positive-pill' : 'negative-pill'
+  const changeDisplay = formatPriceChangeWithPreferences(
+    { change: item.change_amount, changePercent: item.change_percent },
+    preferences,
+  )
 
   return (
     <Link
-      className={`mover-card mover-card--${tone}`}
+      className={`mover-card instrument-surface instrument-surface--${tone}`}
       to={`/instrument/${encodeURIComponent(item.symbol)}`}
     >
       <div className="mover-card-head">
@@ -25,7 +32,7 @@ export function MoverSparklineCard({ item, tone }: MoverSparklineCardProps) {
           </div>
         </div>
 
-        <span className={pillClassName}>{item.change_percent ?? '--'}</span>
+        <span className={pillClassName}>{changeDisplay}</span>
       </div>
     </Link>
   )

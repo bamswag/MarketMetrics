@@ -1,4 +1,6 @@
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { MoversByCategory, MoversResponse } from '../lib/api'
+import { assetCategoryLabel, isAssetCategoryEnabled } from '../lib/marketPreferences'
 import { MoverSparklineCard } from './MoverSparklineCard'
 
 type DailyMoversSectionProps = {
@@ -11,6 +13,7 @@ type DailyMoversSectionProps = {
 type MoverGroupProps = {
   categoryItems?: MoversByCategory
   fallbackItems: MoversResponse['gainers']
+  visibleCategories: typeof CATEGORY_ORDER
   subtitle: string
   title: string
   tone: 'positive' | 'negative'
@@ -25,7 +28,14 @@ const CATEGORY_ORDER = [
   label: string
 }>
 
-function MoverGroup({ categoryItems, fallbackItems, subtitle, title, tone }: MoverGroupProps) {
+function MoverGroup({
+  categoryItems,
+  fallbackItems,
+  visibleCategories,
+  subtitle,
+  title,
+  tone,
+}: MoverGroupProps) {
   const itemsByCategory: MoversByCategory = {
     stocks: categoryItems?.stocks.slice(0, 3) ?? fallbackItems,
     crypto: categoryItems?.crypto.slice(0, 3) ?? [],
@@ -39,8 +49,11 @@ function MoverGroup({ categoryItems, fallbackItems, subtitle, title, tone }: Mov
         <h3 className="subsection-title">{title}</h3>
       </div>
 
-      <div className="mover-category-columns">
-        {CATEGORY_ORDER.map(({ key, label }) => {
+      <div
+        className="mover-category-columns"
+        style={{ gridTemplateColumns: `repeat(${visibleCategories.length}, minmax(0, 1fr))` }}
+      >
+        {visibleCategories.map(({ key, label }) => {
           const items = itemsByCategory[key]
 
           return (
@@ -73,10 +86,14 @@ export function DailyMoversSection({
   movers,
   variant,
 }: DailyMoversSectionProps) {
+  const { preferences } = useMarketPreferences()
   const gainers = movers?.gainers.slice(0, 3) ?? []
   const losers = movers?.losers.slice(0, 3) ?? []
   const gainersByCategory = movers?.gainersByCategory
   const losersByCategory = movers?.losersByCategory
+  const visibleCategories = CATEGORY_ORDER.filter(({ key }) =>
+    isAssetCategoryEnabled(key, preferences.preferredAssetClasses),
+  )
   const sectionClassName =
     variant === 'landing'
       ? 'daily-movers-section page-section'
@@ -96,7 +113,9 @@ export function DailyMoversSection({
           </h2>
         </div>
 
-        <span className="panel-tag">Stocks + Crypto + ETFs</span>
+        <span className="panel-tag">
+          {visibleCategories.map(({ key }) => assetCategoryLabel(key)).join(' + ')}
+        </span>
       </div>
 
       <p className="panel-note">
@@ -120,6 +139,7 @@ export function DailyMoversSection({
           <MoverGroup
             categoryItems={gainersByCategory}
             fallbackItems={gainers}
+            visibleCategories={visibleCategories}
             subtitle="Top 3 gainers"
             title="Leading today"
             tone="positive"
@@ -127,6 +147,7 @@ export function DailyMoversSection({
           <MoverGroup
             categoryItems={losersByCategory}
             fallbackItems={losers}
+            visibleCategories={visibleCategories}
             subtitle="Bottom 3 losers"
             title="Lagging today"
             tone="negative"

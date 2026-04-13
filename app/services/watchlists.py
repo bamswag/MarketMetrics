@@ -12,6 +12,7 @@ from app.schemas.watchlists import (
 from app.services.alerts import get_alert_counts_for_symbols
 from app.services.quotes import get_quote_cached
 from app.services.search import (
+    get_symbol_market_category,
     get_symbol_asset_class,
     get_symbol_metadata,
     normalize_catalog_symbol,
@@ -91,6 +92,7 @@ async def get_watchlist_items_detailed(
                 userID=item.userID,
                 symbol=item.symbol,
                 createdAt=item.createdAt,
+                assetCategory=get_symbol_market_category(item.symbol),
                 latestQuote=latest_quote,
                 alerts=WatchlistAlertSummaryOut(
                     totalAlerts=total_alerts,

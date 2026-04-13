@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { WatchlistItemDetailedOut } from '../lib/api'
+import { isAssetCategoryEnabled } from '../lib/marketPreferences'
 import { TrackedSymbolCard } from './TrackedSymbolCard'
 
 type TrackedSymbolsPreviewProps = {
@@ -14,8 +16,13 @@ export function TrackedSymbolsPreview({
   trackedSymbols,
   variant = 'panel',
 }: TrackedSymbolsPreviewProps) {
-  const previewSymbols = trackedSymbols.slice(0, 3)
-  const hasTrackedSymbols = trackedSymbols.length > 0
+  const { preferences } = useMarketPreferences()
+  const visibleTrackedSymbols = trackedSymbols.filter((item) =>
+    isAssetCategoryEnabled(item.assetCategory, preferences.preferredAssetClasses),
+  )
+  const previewSymbols = visibleTrackedSymbols.slice(0, 3)
+  const hasTrackedSymbols = visibleTrackedSymbols.length > 0
+  const hiddenTrackedCount = trackedSymbols.length - visibleTrackedSymbols.length
   const isEmpty = !isLoading && previewSymbols.length === 0
 
   return (
@@ -33,7 +40,9 @@ export function TrackedSymbolsPreview({
         </div>
 
         <div className="tracked-symbols-preview-actions">
-          <span className="panel-tag">{trackedSymbols.length} tracked</span>
+          <span className="panel-tag">
+            {hiddenTrackedCount > 0 ? `${visibleTrackedSymbols.length} shown` : `${visibleTrackedSymbols.length} tracked`}
+          </span>
           {hasTrackedSymbols ? (
             <Link className="ghost-action tracked-symbols-preview-cta" to="/tracked-symbols">
               View all tracked symbols
@@ -57,8 +66,16 @@ export function TrackedSymbolsPreview({
         <div className="empty-state tracked-symbols-empty tracked-symbols-empty-hero">
           <div className="tracked-symbols-empty-badge">+</div>
           <div className="tracked-symbols-empty-copy">
-            <strong>No tracked stocks.</strong>
-            <p>Track a symbol to pin it here.</p>
+            <strong>
+              {hiddenTrackedCount > 0
+                ? 'No tracked symbols match your market preferences.'
+                : 'No tracked stocks.'}
+            </strong>
+            <p>
+              {hiddenTrackedCount > 0
+                ? 'Adjust your preferred asset classes in Settings to show more here.'
+                : 'Track a symbol to pin it here.'}
+            </p>
           </div>
         </div>
       ) : null}

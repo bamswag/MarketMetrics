@@ -2,12 +2,18 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import {
   ApiError,
   fetchSearchResults,
   prefetchInstrumentDetail,
 } from '../lib/api'
 import type { CompanySearchResult } from '../lib/api'
+import { formatMarketHoursWithPreferences } from '../lib/marketDisplay'
+import {
+  assetCategoryLabel,
+  isAssetCategoryEnabled,
+} from '../lib/marketPreferences'
 
 type GlobalSearchProps = {
   token?: string
@@ -58,6 +64,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const { preferences } = useMarketPreferences()
   const onUnauthorizedEvent = useEffectEvent((message: string) => {
     onUnauthorized?.(message)
   })
@@ -71,6 +78,11 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
   const [hasTyped, setHasTyped] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [recentSearches, setRecentSearches] = useState<CompanySearchResult[]>(() => readRecentSearches())
+  const [didFilterOutSearchResults, setDidFilterOutSearchResults] = useState(false)
+
+  const filteredRecentSearches = recentSearches.filter((result) =>
+    isAssetCategoryEnabled(result.assetCategory, preferences.preferredAssetClasses),
+  )
 
   useEffect(() => {
     const match = location.pathname.match(/^\/instrument\/([^/]+)$/)
@@ -82,6 +94,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       setActiveIndex(-1)
       setSearchError('')
       setIsSearching(false)
+      setDidFilterOutSearchResults(false)
       return
     }
 
@@ -92,6 +105,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
     setActiveIndex(-1)
     setSearchError('')
     setIsSearching(false)
+    setDidFilterOutSearchResults(false)
   }, [location.pathname])
 
   useEffect(() => {
@@ -115,8 +129,9 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       setResults([])
       setIsSearching(false)
       setSearchError('')
-      setIsOpen(isFocused && recentSearches.length > 0)
-      setActiveIndex(isFocused && recentSearches.length > 0 ? 0 : -1)
+      setDidFilterOutSearchResults(false)
+      setIsOpen(isFocused && filteredRecentSearches.length > 0)
+      setActiveIndex(isFocused && filteredRecentSearches.length > 0 ? 0 : -1)
       return
     }
 
@@ -131,9 +146,15 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
           return
         }
 
-        setResults(response.results.slice(0, 8))
+        const filteredResults = response.results.filter((result) =>
+          isAssetCategoryEnabled(result.assetCategory, preferences.preferredAssetClasses),
+        )
+        setDidFilterOutSearchResults(
+          response.results.length > 0 && filteredResults.length === 0,
+        )
+        setResults(filteredResults.slice(0, 8))
         setIsOpen(true)
-        setActiveIndex(response.results.length > 0 ? 0 : -1)
+        setActiveIndex(filteredResults.length > 0 ? 0 : -1)
       } catch (error) {
         if (cancelled) {
           return
@@ -147,6 +168,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
             setResults([])
             setIsOpen(true)
             setActiveIndex(-1)
+            setDidFilterOutSearchResults(false)
           }
           return
         }
@@ -155,6 +177,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
         setResults([])
         setIsOpen(true)
         setActiveIndex(-1)
+        setDidFilterOutSearchResults(false)
       } finally {
         if (!cancelled) {
           setIsSearching(false)
@@ -166,10 +189,11 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [hasTyped, isFocused, query, recentSearches.length, token])
+  }, [filteredRecentSearches.length, hasTyped, preferences.preferredAssetClasses, isFocused, query, token])
 
-  const shouldShowRecentSearches = !searchError && query.trim().length < 2 && recentSearches.length > 0
-  const displayedResults = shouldShowRecentSearches ? recentSearches : results
+  const shouldShowRecentSearches =
+    !searchError && query.trim().length < 2 && filteredRecentSearches.length > 0
+  const displayedResults = shouldShowRecentSearches ? filteredRecentSearches : results
 
   function selectResult(result: CompanySearchResult) {
     const updatedRecentSearches = [
@@ -187,7 +211,8 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
     setActiveIndex(-1)
     setSearchError('')
     setIsFocused(false)
-    prefetchInstrumentDetail(token, result.symbol, '6M')
+    setDidFilterOutSearchResults(false)
+    prefetchInstrumentDetail(token, result.symbol, preferences.defaultChartRange)
     navigate(`/instrument/${encodeURIComponent(result.symbol)}`)
   }
 
@@ -241,9 +266,13 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
           }}
           onFocus={() => {
             setIsFocused(true)
-            if (results.length > 0 || searchError || recentSearches.length > 0) {
+            if (results.length > 0 || searchError || filteredRecentSearches.length > 0) {
               setIsOpen(true)
-              setActiveIndex(recentSearches.length > 0 && query.trim().length < 2 ? 0 : activeIndex)
+              setActiveIndex(
+                filteredRecentSearches.length > 0 && query.trim().length < 2
+                  ? 0
+                  : activeIndex,
+              )
             }
           }}
           onKeyDown={handleKeyDown}
@@ -263,7 +292,11 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
           ) : null}
           {searchError ? <p className="global-search-empty">{searchError}</p> : null}
           {!searchError && !shouldShowRecentSearches && results.length === 0 ? (
-            <p className="global-search-empty">No matching instruments found.</p>
+            <p className="global-search-empty">
+              {didFilterOutSearchResults
+                ? 'No matching instruments fit your preferred asset classes.'
+                : 'No matching instruments found.'}
+            </p>
           ) : null}
 
           {!searchError
@@ -277,7 +310,17 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
                   <span className="search-suggestion-symbol">{result.symbol}</span>
                   <span className="search-suggestion-copy">
                     <span className="search-suggestion-name">{result.name}</span>
-                    <span className="search-suggestion-exchange">{result.exchange ?? 'US market'}</span>
+                    <span className="search-suggestion-exchange">
+                      {[
+                        result.exchange ?? 'US market',
+                        result.assetCategory
+                          ? assetCategoryLabel(result.assetCategory as 'stocks' | 'etfs' | 'crypto')
+                          : null,
+                        formatMarketHoursWithPreferences(result, preferences),
+                      ]
+                        .filter(Boolean)
+                        .join(' • ')}
+                    </span>
                   </span>
                 </button>
               ))

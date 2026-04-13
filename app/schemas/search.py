@@ -7,6 +7,7 @@ class CompanySearchResult(BaseModel):
     symbol: str
     name: str
     type: Optional[str] = None
+    assetCategory: Optional[str] = None
     exchange: Optional[str] = None
     region: Optional[str] = None
     marketOpen: Optional[str] = None

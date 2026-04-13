@@ -33,5 +33,6 @@ class WatchlistAlertSummaryOut(BaseModel):
 
 
 class WatchlistItemDetailedOut(WatchlistItemOut):
+    assetCategory: Optional[str] = None
     latestQuote: Optional[WatchlistQuoteOut] = None
     alerts: WatchlistAlertSummaryOut

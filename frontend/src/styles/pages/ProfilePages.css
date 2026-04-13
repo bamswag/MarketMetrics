@@ -1,3 +1,5 @@
+/* ── Shared profile/account page styles ── */
+
 .profile-page {
   display: grid;
   gap: 24px;
@@ -62,6 +64,149 @@
   word-break: break-all;
 }
 
+
+/* ══════════════════════════════════════════
+   Settings page — full-width, large type
+   ══════════════════════════════════════════ */
+
+.settings-page {
+  display: grid;
+  gap: 0;
+  max-width: 100%;
+  padding-bottom: 64px;
+}
+
+/* ── Page header ── */
+
+.settings-page-header {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 8px;
+}
+
+.settings-page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.settings-page-subtitle {
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* ── Section blocks ── */
+
+.settings-section {
+  display: grid;
+  gap: 20px;
+  padding: 36px 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.settings-section-note {
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 64ch;
+}
+
+/* ── Setting rows (notification, account) ── */
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border);
+  background: rgba(248, 250, 252, 0.6);
+}
+
+.settings-row-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-row-info strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.settings-row-info p {
+  font-size: 0.98rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.settings-toggle-btn {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0.6rem 1.5rem;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── Field grid (dropdowns) ── */
+
+.settings-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.settings-field {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-field-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.005em;
+}
+
+.settings-field .workspace-select {
+  min-height: 52px;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+}
+
+/* ── Legacy classes (kept for other pages) ── */
+
 .settings-card {
   display: grid;
   gap: 14px;
@@ -92,18 +237,68 @@
   max-width: 52ch;
 }
 
-.settings-toggle-btn {
-  flex-shrink: 0;
-  min-height: 42px;
-  padding: 0.6rem 1.4rem;
-  border-radius: 12px;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
+.settings-market-panel {
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 252, 0.97)),
+    var(--panel-bg);
 }
 
+.settings-preferences-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.settings-preference-card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-height: 100%;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid var(--panel-border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 248, 252, 0.94)),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 24px rgba(13, 27, 45, 0.04);
+}
+
+.settings-preference-card--wide {
+  grid-column: 1 / -1;
+}
+
+.settings-preference-field {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.settings-preference-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-preference-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 62ch;
+}
+
+.settings-split-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* ── Responsive ── */
+
 @media (max-width: 1180px) {
+  .settings-preferences-grid,
+  .settings-split-fields {
+    grid-template-columns: 1fr;
+  }
+
   .profile-detail-grid,
   .settings-card-grid {
     grid-template-columns: 1fr;
@@ -111,5 +306,30 @@
 
   .profile-grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-page-title {
+    font-size: 1.5rem;
+  }
+
+  .settings-section-title {
+    font-size: 1.15rem;
+  }
+
+  .settings-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .settings-toggle-btn {
+    width: 100%;
+    text-align: center;
   }
 }

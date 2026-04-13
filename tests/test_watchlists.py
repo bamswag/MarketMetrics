@@ -36,6 +36,7 @@ class WatchlistTests(BaseAPITestCase):
         payload = list_response.json()
         self.assertEqual(len(payload), 1)
         self.assertEqual(payload[0]["symbol"], "AAPL")
+        self.assertEqual(payload[0]["assetCategory"], "stocks")
         self.assertEqual(payload[0]["latestQuote"]["price"], 187.25)
         self.assertEqual(payload[0]["alerts"]["totalAlerts"], 0)
 
@@ -77,6 +78,7 @@ class WatchlistTests(BaseAPITestCase):
         self.assertEqual(list_response.status_code, 200)
         payload = list_response.json()
         self.assertEqual(payload[0]["symbol"], "BTC/USD")
+        self.assertEqual(payload[0]["assetCategory"], "crypto")
         self.assertEqual(payload[0]["latestQuote"]["price"], 84000.0)
 
         delete_response = self.client.delete(

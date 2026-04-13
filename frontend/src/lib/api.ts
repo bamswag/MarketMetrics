@@ -37,6 +37,7 @@ export type CompanySearchResult = {
   symbol: string
   name: string
   type?: string | null
+  assetCategory?: string | null
   exchange?: string | null
   region?: string | null
   marketOpen?: string | null
@@ -84,6 +85,7 @@ export type WatchlistItemDetailedOut = {
   id: string
   userID: string
   symbol: string
+  assetCategory?: string | null
   createdAt: string
   latestQuote?: {
     price?: number | null

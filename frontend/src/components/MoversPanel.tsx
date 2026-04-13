@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { Mover } from '../lib/api'
-import { formatCurrency } from '../lib/formatters'
+import {
+  formatCurrencyWithPreferences,
+  formatPriceChangeWithPreferences,
+} from '../lib/marketDisplay'
 
 type MoversPanelProps = {
   title: string
@@ -11,6 +15,7 @@ type MoversPanelProps = {
 }
 
 export function MoversPanel({ title, subtitle, items, tone }: MoversPanelProps) {
+  const { preferences } = useMarketPreferences()
   return (
     <article className="panel">
       <div className="panel-header">
@@ -40,10 +45,19 @@ export function MoversPanel({ title, subtitle, items, tone }: MoversPanelProps) 
                     </Link>
                   </div>
                   <p>{item.name ?? 'Company name unavailable'}</p>
-                  <p>{item.price !== null && item.price !== undefined ? formatCurrency(item.price) : 'Price unavailable'}</p>
+                  <p>
+                    {item.price !== null && item.price !== undefined
+                      ? formatCurrencyWithPreferences(item.price, preferences)
+                      : 'Price unavailable'}
+                  </p>
                 </div>
 
-                <span className={pillClassName}>{item.change_percent ?? '--'}</span>
+                <span className={pillClassName}>
+                  {formatPriceChangeWithPreferences(
+                    { change: item.change_amount, changePercent: item.change_percent },
+                    preferences,
+                  )}
+                </span>
               </div>
             )
           })
