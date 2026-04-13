@@ -18,19 +18,40 @@ export type RegisterPayload = {
   email: string
   password: string
   displayName: string
+  acceptedTerms: boolean
 }
 
 export type UserOut = {
   userID: string
   email: string
   displayName: string
+  primaryAuthProvider: string
   emailNotificationsEnabled?: boolean
+  emailVerifiedAt?: string | null
+  pendingEmail?: string | null
+  sessionVersion?: number
   createdAt: string
   lastLoginAt?: string | null
+  planName?: string
+  accountStatus?: string
 }
 
 export type UserPreferencesPayload = {
   emailNotificationsEnabled?: boolean
+}
+
+export type AccountProfileUpdatePayload = {
+  displayName?: string
+  email?: string
+}
+
+export type PasswordChangePayload = {
+  currentPassword?: string
+  newPassword: string
+}
+
+export type AuthMessageResponse = {
+  message: string
 }
 
 export type CompanySearchResult = {
@@ -386,6 +407,86 @@ export async function fetchCurrentUser(
   })
 
   return parseResponse<UserOut>(response)
+}
+
+export async function updateAccountProfile(
+  token: string,
+  payload: AccountProfileUpdatePayload,
+): Promise<UserOut> {
+  const response = await safeFetch(`${getApiUrl()}/auth/me`, {
+    method: 'PATCH',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return parseResponse<UserOut>(response)
+}
+
+export async function changePassword(
+  token: string,
+  payload: PasswordChangePayload,
+): Promise<AuthMessageResponse> {
+  const response = await safeFetch(`${getApiUrl()}/auth/me/password`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function logoutAllSessions(token: string): Promise<AuthMessageResponse> {
+  const response = await safeFetch(`${getApiUrl()}/auth/me/logout-all`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  })
+
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function requestPasswordReset(email: string): Promise<AuthMessageResponse> {
+  const response = await safeFetch(`${getApiUrl()}/auth/password/forgot`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  })
+
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<AuthMessageResponse> {
+  const response = await safeFetch(`${getApiUrl()}/auth/password/reset`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token, newPassword }),
+  })
+
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function verifyPendingEmail(token: string): Promise<AuthMessageResponse> {
+  const response = await safeFetch(`${getApiUrl()}/auth/email/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token }),
+  })
+
+  return parseResponse<AuthMessageResponse>(response)
 }
 
 export async function fetchSearchResults(

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import decode_access_token
 from app.core.db_dependencies import get_db
-from app.services.auth import get_user_by_email
+from app.services.auth import get_user_by_id
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -17,13 +17,16 @@ def get_current_user(
 ):
     try:
         payload = decode_access_token(token)
-        email: Optional[str] = payload.get("sub")
-        if not email:
+        user_id: Optional[str] = payload.get("sub")
+        session_version = payload.get("sv")
+        if not user_id or session_version is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        user = get_user_by_email(db, email)
+        user = get_user_by_id(db, user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
+        if int(user.sessionVersion or 1) != int(session_version):
+            raise HTTPException(status_code=401, detail="Session expired")
 
         return user
 

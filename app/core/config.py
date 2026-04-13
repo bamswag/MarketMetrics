@@ -98,6 +98,14 @@ class Settings:
         return os.getenv("EMAIL_FROM_ADDRESS", "noreply@marketmetrics.app")
 
     @property
+    def password_reset_token_expire_minutes(self) -> int:
+        return int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "60"))
+
+    @property
+    def email_verification_token_expire_minutes(self) -> int:
+        return int(os.getenv("EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES", "1440"))
+
+    @property
     def prediction_training_universe(self) -> list[str]:
         raw_value = os.getenv("PREDICTION_TRAINING_UNIVERSE", "")
         if not raw_value.strip():

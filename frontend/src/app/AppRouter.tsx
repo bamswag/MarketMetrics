@@ -7,14 +7,19 @@ import { AppHeader } from '../components/AppHeader'
 import { AuthActions } from '../components/AuthActions'
 import { GlobalSearch } from '../components/GlobalSearch'
 import { DashboardPage } from '../pages/DashboardPage'
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
 import { LandingPage } from '../pages/LandingPage'
+import { LegalPage } from '../pages/LegalPage'
 import { LoginPage } from '../pages/LoginPage'
+import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { SignupPage } from '../pages/SignupPage'
 import { TrackedSymbolsPage } from '../pages/TrackedSymbolsPage'
 import { UserMenu } from '../components/UserMenu'
+import { VerifyEmailPage } from '../pages/VerifyEmailPage'
 import {
   ApiError,
   buildWebSocketUrl,
+  changePassword,
   createAlert,
   createWatchlistItem,
   bulkAlertAction,
@@ -26,12 +31,17 @@ import {
   fetchWatchlist,
   getApiUrl,
   login,
+  logoutAllSessions,
   pauseAlert,
+  requestPasswordReset,
   register,
   resetAlert,
+  resetPassword,
   resumeAlert,
+  updateAccountProfile,
   updateAlert,
   updateUserPreferences,
+  verifyPendingEmail,
 } from '../lib/api'
 import type {
   AlertWebSocketMessage,
@@ -83,6 +93,36 @@ type DashboardCacheEntry = {
 
 let dashboardCache: DashboardCacheEntry | null = null
 
+const termsSections = [
+  {
+    title: 'Using the platform responsibly',
+    body: 'MarketMetrics is designed for market research, watchlists, alerts, and educational simulator workflows. Keep your account secure, provide accurate signup information, and avoid abusing the platform or automated access routes.',
+  },
+  {
+    title: 'Account and access',
+    body: 'You are responsible for activity under your account and for maintaining the confidentiality of your credentials. We may suspend access if the service is misused or if security controls need to be enforced.',
+  },
+  {
+    title: 'Market data and decisions',
+    body: 'Displayed data, movers, charts, and simulator features are provided for informational use and product experience only. They should not be treated as guaranteed, complete, or personalized financial advice.',
+  },
+]
+
+const privacySections = [
+  {
+    title: 'What we store',
+    body: 'We store the account details and product preferences needed to run your workspace, including identity data, tracked symbols, alerts, and locally saved market defaults where supported.',
+  },
+  {
+    title: 'Why we use it',
+    body: 'Your information is used to authenticate access, personalize the dashboard, deliver account emails such as password resets or verification links, and keep your watchlists and alerts available across sessions.',
+  },
+  {
+    title: 'Security and control',
+    body: 'We use authenticated access tokens and session invalidation controls to protect accounts. You can update editable profile details, reset your password, and review account metadata directly from the account center.',
+  },
+]
+
 function getInitialNotificationPermission(): NotificationPermissionState {
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'unsupported'
@@ -124,7 +164,8 @@ function RouteLoadingState() {
 function AppContent() {
   const navigate = useNavigate()
   const apiUrl = getApiUrl()
-  const googleAuthUrl = `${apiUrl}/auth/google/login?returnTo=/dashboard`
+  const googleLoginUrl = `${apiUrl}/auth/google/login?returnTo=/dashboard&intent=login`
+  const googleSignupUrl = `${apiUrl}/auth/google/login?returnTo=/dashboard&intent=signup`
   const initialRedirectPayloadRef = useRef(readAuthRedirectPayload())
   const initialRedirectPayload = initialRedirectPayloadRef.current
 
@@ -196,15 +237,10 @@ function AppContent() {
       localStorage.setItem('marketmetrics.token', initialRedirectPayload.redirectedToken)
     }
 
-    if (initialRedirectPayload.redirectedAuthError) {
-      navigate('/login', { replace: true })
-    }
-
     window.history.replaceState(null, '', window.location.pathname + window.location.search)
   }, [
     initialRedirectPayload.redirectedAuthError,
     initialRedirectPayload.redirectedToken,
-    navigate,
   ])
 
   useEffect(() => {
@@ -353,6 +389,19 @@ function AppContent() {
     })
   }
 
+  function updateCurrentUserCache(activeToken: string, nextUser: UserOut) {
+    setCurrentUser(nextUser)
+    if (dashboardCache && dashboardCache.token === activeToken) {
+      dashboardCache = { ...dashboardCache, user: nextUser }
+    }
+  }
+
+  async function refreshCurrentUserProfile(activeToken: string) {
+    const nextUser = await fetchCurrentUser(activeToken)
+    updateCurrentUserCache(activeToken, nextUser)
+    return nextUser
+  }
+
   async function refreshWatchlist(activeToken: string) {
     const updatedWatchlist = await fetchWatchlist(activeToken)
     updateDashboardDataCache(activeToken, (currentData) => ({
@@ -392,6 +441,7 @@ function AppContent() {
     displayName: string
     email: string
     password: string
+    acceptedTerms: boolean
   }) {
     await register(payload)
     const response = await login(payload.email, payload.password)
@@ -886,10 +936,7 @@ function AppContent() {
       const updatedUser = await updateUserPreferences(token, {
         emailNotificationsEnabled: enabled,
       })
-      setCurrentUser(updatedUser)
-      if (dashboardCache && dashboardCache.token === token) {
-        dashboardCache = { ...dashboardCache, user: updatedUser }
-      }
+      updateCurrentUserCache(token, updatedUser)
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         handleSessionExpired('Your session expired. Log in again to update settings.')
@@ -900,9 +947,144 @@ function AppContent() {
     }
   }
 
+  async function handleUpdateAccountProfile(payload: {
+    displayName?: string
+    email?: string
+  }) {
+    if (!token) {
+      throw new Error('Log in first to update your profile.')
+    }
+
+    try {
+      const updatedUser = await updateAccountProfile(token, payload)
+      updateCurrentUserCache(token, updatedUser)
+      return updatedUser
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to update your account.')
+      }
+
+      throw error
+    }
+  }
+
+  async function handleChangePassword(payload: {
+    currentPassword?: string
+    newPassword: string
+  }) {
+    if (!token) {
+      throw new Error('Log in first to update your password.')
+    }
+
+    try {
+      const response = await changePassword(token, payload)
+      for (const timeoutId of alertReconnectTimersRef.current.values()) {
+        window.clearTimeout(timeoutId)
+      }
+      alertReconnectTimersRef.current.clear()
+
+      for (const socket of alertSocketsRef.current.values()) {
+        socket.close()
+      }
+      alertSocketsRef.current.clear()
+
+      triggeredAlertIdsRef.current.clear()
+      localStorage.removeItem('marketmetrics.token')
+      dashboardCache = null
+      setToken('')
+      setCurrentUser(null)
+      setDashboardData(initialDashboardData)
+      setDashboardError('')
+      setAlertActionError('')
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+      setAlertToasts([])
+      setFlashMessage(`${response.message} Sign in again to continue.`)
+      setAuthRedirectError('')
+      navigate('/login')
+      return response.message
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to update your password.')
+      }
+
+      throw error
+    }
+  }
+
+  async function handleLogoutAllSessions() {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await logoutAllSessions(token)
+      for (const timeoutId of alertReconnectTimersRef.current.values()) {
+        window.clearTimeout(timeoutId)
+      }
+      alertReconnectTimersRef.current.clear()
+
+      for (const socket of alertSocketsRef.current.values()) {
+        socket.close()
+      }
+      alertSocketsRef.current.clear()
+
+      triggeredAlertIdsRef.current.clear()
+      localStorage.removeItem('marketmetrics.token')
+      dashboardCache = null
+      setToken('')
+      setCurrentUser(null)
+      setDashboardData(initialDashboardData)
+      setDashboardError('')
+      setAlertActionError('')
+      setPendingAlertActionId('')
+      setPendingAlertAction(null)
+      setAlertToasts([])
+      setFlashMessage(response.message)
+      setAuthRedirectError('')
+      navigate('/login')
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage account security.')
+        return
+      }
+
+      throw error
+    }
+  }
+
+  async function handleRequestPasswordReset(email: string) {
+    const response = await requestPasswordReset(email)
+    return response.message
+  }
+
+  async function handleResetPasswordWithToken(resetToken: string, newPassword: string) {
+    const response = await resetPassword(resetToken, newPassword)
+    return response.message
+  }
+
+  async function handleVerifyPendingEmailToken(verificationToken: string) {
+    const response = await verifyPendingEmail(verificationToken)
+
+    if (token) {
+      try {
+        await refreshCurrentUserProfile(token)
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          handleSessionExpired('Your session expired. Log in again to refresh your account.')
+        } else {
+          throw error
+        }
+      }
+    }
+
+    return response.message
+  }
+
   const guestHeader = (
     <AppHeader
       actions={<AuthActions />}
+      bannerMessage={flashMessage}
       center={<GlobalSearch token={token || undefined} />}
     />
   )
@@ -956,7 +1138,7 @@ function AppContent() {
                 {guestHeader}
                 <LoginPage
                   authError={authRedirectError}
-                  googleAuthUrl={googleAuthUrl}
+                  googleAuthUrl={googleLoginUrl}
                   onClearAuthError={() => setAuthRedirectError('')}
                   onLogin={handleEmailLogin}
                 />
@@ -968,15 +1150,75 @@ function AppContent() {
         <Route
           element={
             token ? (
-              <Navigate replace to="/dashboard" />
-            ) : (
+                <Navigate replace to="/dashboard" />
+              ) : (
               <>
                 {guestHeader}
-                <SignupPage googleAuthUrl={googleAuthUrl} onRegister={handleEmailSignup} />
+                <SignupPage
+                  authError={authRedirectError}
+                  googleSignupUrl={googleSignupUrl}
+                  onClearAuthError={() => setAuthRedirectError('')}
+                  onRegister={handleEmailSignup}
+                />
               </>
             )
           }
           path="/signup"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <ForgotPasswordPage onRequestReset={handleRequestPasswordReset} />
+            </>
+          }
+          path="/forgot-password"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <ResetPasswordPage onResetPassword={handleResetPasswordWithToken} />
+            </>
+          }
+          path="/reset-password"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <VerifyEmailPage onVerify={handleVerifyPendingEmailToken} />
+            </>
+          }
+          path="/verify-email"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <LegalPage
+                eyebrow="Terms"
+                sections={[...termsSections]}
+                summary="These terms outline the baseline responsibilities, access expectations, and product-use boundaries for MarketMetrics."
+                title="Terms of use"
+              />
+            </>
+          }
+          path="/terms"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <LegalPage
+                eyebrow="Privacy"
+                sections={[...privacySections]}
+                summary="This overview explains the account, session, and product data used to run your MarketMetrics workspace."
+                title="Privacy policy"
+              />
+            </>
+          }
+          path="/privacy"
         />
         <Route
           element={
@@ -1032,7 +1274,12 @@ function AppContent() {
             token ? (
               <>
                 {authenticatedHeader}
-                <AccountPage currentUser={currentUser} />
+                <AccountPage
+                  currentUser={currentUser}
+                  onChangePassword={handleChangePassword}
+                  onLogoutAllSessions={handleLogoutAllSessions}
+                  onUpdateProfile={handleUpdateAccountProfile}
+                />
               </>
             ) : (
               <Navigate replace to="/login" />

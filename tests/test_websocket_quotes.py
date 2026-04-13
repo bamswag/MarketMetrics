@@ -39,6 +39,7 @@ class WebSocketTests(BaseAPITestCase):
                 symbol="AAPL",
                 condition="above",
                 targetPrice=120.0,
+                severity="normal",
                 triggeredAt=datetime(2024, 4, 1, 12, 0, 0),
             )
         ]

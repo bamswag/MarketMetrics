@@ -6,18 +6,27 @@ import { GoogleLogoIcon } from './shared/GoogleLogoIcon'
 import '../styles/pages/AuthPages.css'
 
 type SignupPageProps = {
-  googleAuthUrl: string
+  authError?: string
+  googleSignupUrl: string
+  onClearAuthError: () => void
   onRegister: (payload: {
     displayName: string
     email: string
     password: string
+    acceptedTerms: boolean
   }) => Promise<void>
 }
 
-export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
+export function SignupPage({
+  authError,
+  googleSignupUrl,
+  onClearAuthError,
+  onRegister,
+}: SignupPageProps) {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [localError, setLocalError] = useState('')
@@ -34,10 +43,15 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
     password.length > 0 && !isPasswordValid
       ? 'search-input search-input--with-action is-invalid'
       : 'search-input search-input--with-action'
+  const combinedError = localError || authError || ''
+  const resolvedGoogleSignupUrl = `${googleSignupUrl}${
+    googleSignupUrl.includes('?') ? '&' : '?'
+  }acceptedTerms=${acceptedTerms ? 'true' : 'false'}`
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLocalError('')
+    onClearAuthError()
 
     if (!normalizedDisplayName || !normalizedEmail || !password) {
       setLocalError('Enter your display name, email address, and password to create an account.')
@@ -54,6 +68,11 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
       return
     }
 
+    if (!acceptedTerms) {
+      setLocalError('Agree to the Terms and Privacy Policy before creating an account.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -61,6 +80,7 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
         displayName: normalizedDisplayName,
         email: normalizedEmail,
         password,
+        acceptedTerms: true,
       })
     } catch (error) {
       setLocalError(error instanceof Error ? error.message : 'Unable to create your account right now.')
@@ -101,7 +121,16 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
                   </p>
                 </div>
 
-                <a className="google-auth-button google-auth-button--wide" href={googleAuthUrl}>
+                <a
+                  className="google-auth-button google-auth-button--wide"
+                  href={resolvedGoogleSignupUrl}
+                  onClick={(event) => {
+                    if (!acceptedTerms) {
+                      event.preventDefault()
+                      setLocalError('Agree to the Terms and Privacy Policy before continuing with Google.')
+                    }
+                  }}
+                >
                   <GoogleLogoIcon />
                   Continue with Google
                 </a>
@@ -120,6 +149,7 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
                       onChange={(event) => {
                         setDisplayName(event.target.value)
                         setLocalError('')
+                        onClearAuthError()
                       }}
                       placeholder="How should we address you?"
                       type="text"
@@ -138,6 +168,7 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
                       onChange={(event) => {
                         setEmail(event.target.value)
                         setLocalError('')
+                        onClearAuthError()
                       }}
                       placeholder="you@example.com"
                       spellCheck={false}
@@ -158,6 +189,7 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
                         onChange={(event) => {
                           setPassword(event.target.value)
                           setLocalError('')
+                          onClearAuthError()
                         }}
                         placeholder="Minimum 8 characters"
                         type={showPassword ? 'text' : 'password'}
@@ -173,8 +205,27 @@ export function SignupPage({ googleAuthUrl, onRegister }: SignupPageProps) {
                     </div>
                   </label>
 
-                  {localError ? <p className="error-text auth-message">{localError}</p> : null}
-                  {!localError ? (
+                  <label className="checkbox-field">
+                    <span className="checkbox-control">
+                      <input
+                        checked={acceptedTerms}
+                        className="checkbox-input"
+                        onChange={(event) => {
+                          setAcceptedTerms(event.target.checked)
+                          setLocalError('')
+                          onClearAuthError()
+                        }}
+                        type="checkbox"
+                      />
+                      <span>
+                        I agree to the <Link className="auth-inline-link" to="/terms">Terms</Link>{' '}
+                        and <Link className="auth-inline-link" to="/privacy">Privacy Policy</Link>.
+                      </span>
+                    </span>
+                  </label>
+
+                  {combinedError ? <p className="error-text auth-message">{combinedError}</p> : null}
+                  {!combinedError ? (
                     <p className="auth-helper-text">
                       After sign-up, you will be signed in automatically and sent to your simulator dashboard.
                     </p>

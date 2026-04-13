@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 
 from app.orm_models.price_alert import PriceAlertDB
 from app.orm_models.alert_event import AlertEventDB
-from test_auth import BaseAPITestCase
+
+try:
+    from test_auth import BaseAPITestCase
+except ModuleNotFoundError:
+    from tests.test_auth import BaseAPITestCase
 
 
 class AlertCrudTests(BaseAPITestCase):

@@ -67,6 +67,11 @@
   box-shadow: 0 24px 54px rgba(13, 27, 45, 0.06);
 }
 
+.login-auth-card--narrow {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
 .login-auth-card-grid {
   display: grid;
   grid-template-columns: minmax(240px, 0.62fr) minmax(0, 1.38fr);
@@ -207,10 +212,39 @@
   font-weight: 700;
 }
 
+.field-link,
+.auth-inline-link {
+  color: var(--accent);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .field-hint {
   color: var(--muted);
   font-size: 0.92rem;
   font-weight: 500;
+}
+
+.checkbox-field {
+  display: grid;
+  gap: 8px;
+}
+
+.checkbox-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.18rem;
+  accent-color: var(--accent);
 }
 
 .password-input-shell {
@@ -269,6 +303,64 @@
   color: var(--muted);
 }
 
+.auth-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auth-secondary-action {
+  text-decoration: none;
+}
+
+.legal-page {
+  padding-bottom: 32px;
+}
+
+.legal-panel {
+  gap: 24px;
+  max-width: 940px;
+  margin: 0 auto;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.96)),
+    var(--panel-bg);
+}
+
+.legal-copy,
+.legal-sections {
+  display: grid;
+  gap: 16px;
+}
+
+.legal-title {
+  max-width: 9ch;
+}
+
+.legal-summary,
+.legal-section p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.legal-sections {
+  gap: 18px;
+}
+
+.legal-section {
+  display: grid;
+  gap: 10px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid var(--panel-border);
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.legal-section-title {
+  font-size: 1.2rem;
+}
+
 @media (max-width: 1180px) {
   .auth-layout {
     grid-template-columns: 1fr;
@@ -309,7 +401,8 @@
 
   .field-row,
   .login-panel-top,
-  .login-footnote {
+  .login-footnote,
+  .auth-page-actions {
     flex-direction: column;
     align-items: stretch;
   }

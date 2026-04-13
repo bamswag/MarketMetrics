@@ -122,8 +122,11 @@ export function LoginPage({
                   <label className="field">
                     <div className="field-row">
                       <span className="field-label">Password</span>
-                      <span className="field-hint">Enter the password for this account.</span>
+                      <Link className="field-link" to="/forgot-password">
+                        Forgot password?
+                      </Link>
                     </div>
+                    <span className="field-hint">Enter the password for this account.</span>
                     <div className="password-input-shell">
                       <input
                         autoComplete="current-password"
