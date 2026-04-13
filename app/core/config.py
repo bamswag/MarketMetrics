@@ -90,6 +90,14 @@ class Settings:
         return int(os.getenv("PREDICTION_FETCH_CONCURRENCY", "5"))
 
     @property
+    def sendgrid_api_key(self) -> str:
+        return os.getenv("SENDGRID_API_KEY", "")
+
+    @property
+    def email_from_address(self) -> str:
+        return os.getenv("EMAIL_FROM_ADDRESS", "noreply@marketmetrics.app")
+
+    @property
     def prediction_training_universe(self) -> list[str]:
         raw_value = os.getenv("PREDICTION_TRAINING_UNIVERSE", "")
         if not raw_value.strip():

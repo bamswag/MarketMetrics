@@ -18,8 +18,13 @@ class UserOut(BaseModel):
     userID: str
     email: EmailStr
     displayName: str
+    emailNotificationsEnabled: bool = False
     createdAt: datetime
     lastLoginAt: Optional[datetime] = None
+
+
+class UserPreferencesUpdate(BaseModel):
+    emailNotificationsEnabled: Optional[bool] = None
 
 
 class Token(BaseModel):

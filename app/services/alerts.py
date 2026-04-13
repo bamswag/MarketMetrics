@@ -6,22 +6,42 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
+from app.orm_models.alert_event import AlertEventDB
 from app.orm_models.price_alert import PriceAlertDB
 from app.schemas.alerts import AlertStatus, PriceAlertCreate
 
 
 def create_alert(db: Session, user_id: str, payload: PriceAlertCreate) -> PriceAlertDB:
-    existing = (
+    # Duplicate check — service-layer enforcement
+    query = (
         db.query(PriceAlertDB)
         .filter(
             PriceAlertDB.userID == user_id,
             PriceAlertDB.symbol == payload.symbol,
             PriceAlertDB.condition == payload.condition.value,
-            PriceAlertDB.targetPrice == payload.targetPrice,
         )
-        .first()
     )
+
+    if payload.condition.value in ("above", "below"):
+        query = query.filter(PriceAlertDB.targetPrice == payload.targetPrice)
+    elif payload.condition.value == "percent_change":
+        query = query.filter(
+            PriceAlertDB.targetPrice == payload.targetPrice,
+            PriceAlertDB.referencePrice == payload.referencePrice,
+        )
+    elif payload.condition.value == "range_exit":
+        query = query.filter(
+            PriceAlertDB.lowerBound == payload.lowerBound,
+            PriceAlertDB.upperBound == payload.upperBound,
+        )
+
+    existing = query.first()
     if existing:
+        if payload.condition.value == "range_exit":
+            raise ValueError(
+                f"You already have an alert for {payload.symbol} "
+                f"range exit ${payload.lowerBound:.2f}–${payload.upperBound:.2f}"
+            )
         raise ValueError(
             f"You already have an alert for {payload.symbol} "
             f"{payload.condition.value} ${payload.targetPrice:.2f}"
@@ -32,6 +52,11 @@ def create_alert(db: Session, user_id: str, payload: PriceAlertCreate) -> PriceA
         symbol=payload.symbol,
         condition=payload.condition.value,
         targetPrice=payload.targetPrice,
+        referencePrice=payload.referencePrice,
+        lowerBound=payload.lowerBound,
+        upperBound=payload.upperBound,
+        severity=payload.severity.value if payload.severity else "normal",
+        expiresAt=payload.expiresAt,
         isActive=True,
     )
     db.add(alert)
@@ -139,6 +164,8 @@ def update_alert(
     reset_triggered: bool,
     target_price: Optional[float] = None,
     condition: Optional[str] = None,
+    severity: Optional[str] = None,
+    expires_at: Optional[datetime] = None,
 ) -> Optional[PriceAlertDB]:
     alert = (
         db.query(PriceAlertDB)
@@ -184,6 +211,12 @@ def update_alert(
         if condition is not None:
             alert.condition = condition
 
+    if severity is not None:
+        alert.severity = severity
+
+    if expires_at is not None:
+        alert.expiresAt = expires_at
+
     alert.updatedAt = datetime.utcnow()
     db.commit()
     db.refresh(alert)
@@ -228,16 +261,122 @@ def evaluate_alerts_for_quote(
     for alert in alerts:
         alert.lastEvaluatedAt = now
 
-        if alert.condition == "above" and price >= alert.targetPrice:
+        # Feature 6: Check expiration before evaluating
+        if alert.expiresAt and alert.expiresAt < now:
+            alert.isActive = False
+            continue
+
+        fired = False
+
+        if alert.condition == "above" and alert.targetPrice is not None:
+            fired = price >= alert.targetPrice
+        elif alert.condition == "below" and alert.targetPrice is not None:
+            fired = price <= alert.targetPrice
+        elif alert.condition == "percent_change" and alert.referencePrice and alert.targetPrice:
+            pct = abs((price - alert.referencePrice) / alert.referencePrice) * 100
+            fired = pct >= alert.targetPrice
+        elif alert.condition == "range_exit" and alert.lowerBound is not None and alert.upperBound is not None:
+            fired = price < alert.lowerBound or price > alert.upperBound
+
+        if fired:
             alert.isActive = False
             alert.triggeredAt = now
             triggered.append(alert)
-        elif alert.condition == "below" and price <= alert.targetPrice:
-            alert.isActive = False
-            alert.triggeredAt = now
-            triggered.append(alert)
+
+            # Feature 8: Log trigger event
+            event = AlertEventDB(
+                alertID=alert.id,
+                userID=user_id,
+                symbol=symbol,
+                condition=alert.condition,
+                targetPrice=alert.targetPrice,
+                triggerPrice=price,
+                triggeredAt=now,
+            )
+            db.add(event)
 
     if alerts:
         db.commit()
 
     return triggered
+
+
+# --- Feature 8: Alert history ---
+
+def get_alert_history(
+    db: Session,
+    user_id: str,
+    alert_id: str,
+) -> List[AlertEventDB]:
+    return (
+        db.query(AlertEventDB)
+        .filter(
+            AlertEventDB.alertID == alert_id,
+            AlertEventDB.userID == user_id,
+        )
+        .order_by(AlertEventDB.triggeredAt.desc())
+        .all()
+    )
+
+
+def get_recent_alert_events(
+    db: Session,
+    user_id: str,
+    *,
+    limit: int = 50,
+) -> List[AlertEventDB]:
+    return (
+        db.query(AlertEventDB)
+        .filter(AlertEventDB.userID == user_id)
+        .order_by(AlertEventDB.triggeredAt.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+# --- Feature 10: Bulk management ---
+
+def bulk_update_alerts(
+    db: Session,
+    user_id: str,
+    alert_ids: List[str],
+    action: str,
+) -> int:
+    """Perform a bulk action on alerts. Returns the number of alerts affected."""
+    alerts = (
+        db.query(PriceAlertDB)
+        .filter(
+            PriceAlertDB.id.in_(alert_ids),
+            PriceAlertDB.userID == user_id,
+        )
+        .all()
+    )
+
+    now = datetime.utcnow()
+    count = 0
+
+    for alert in alerts:
+        if action == "delete":
+            db.delete(alert)
+            count += 1
+        elif action == "pause":
+            if alert.isActive:
+                alert.isActive = False
+                alert.updatedAt = now
+                count += 1
+        elif action == "resume":
+            if not alert.isActive and alert.triggeredAt is None:
+                alert.isActive = True
+                alert.updatedAt = now
+                count += 1
+        elif action == "reset":
+            if not alert.isActive and alert.triggeredAt is not None:
+                alert.isActive = True
+                alert.triggeredAt = None
+                alert.updatedAt = now
+                count += 1
+
+    if count:
+        db.commit()
+
+    return count

@@ -24,8 +24,13 @@ export type UserOut = {
   userID: string
   email: string
   displayName: string
+  emailNotificationsEnabled?: boolean
   createdAt: string
   lastLoginAt?: string | null
+}
+
+export type UserPreferencesPayload = {
+  emailNotificationsEnabled?: boolean
 }
 
 export type CompanySearchResult = {
@@ -122,14 +127,20 @@ export type InstrumentDetailResponse = {
   }>
 }
 
-export type AlertCondition = 'above' | 'below'
+export type AlertCondition = 'above' | 'below' | 'percent_change' | 'range_exit'
+export type AlertSeverity = 'normal' | 'urgent'
 
 export type PriceAlert = {
   id: string
   userID: string
   symbol: string
   condition: AlertCondition
-  targetPrice: number
+  targetPrice: number | null
+  referencePrice?: number | null
+  lowerBound?: number | null
+  upperBound?: number | null
+  severity?: AlertSeverity | null
+  expiresAt?: string | null
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -139,7 +150,12 @@ export type PriceAlert = {
 export type PriceAlertCreatePayload = {
   symbol: string
   condition: AlertCondition
-  targetPrice: number
+  targetPrice?: number
+  referencePrice?: number
+  lowerBound?: number
+  upperBound?: number
+  severity?: AlertSeverity
+  expiresAt?: string
 }
 
 export type AlertListResponse = {
@@ -157,6 +173,29 @@ export type PriceAlertUpdatePayload = {
   resetTriggered?: boolean
   targetPrice?: number
   condition?: AlertCondition
+  severity?: AlertSeverity
+  expiresAt?: string
+}
+
+export type AlertEvent = {
+  id: string
+  alertID: string
+  symbol: string
+  condition: string
+  targetPrice: number | null
+  triggerPrice: number
+  triggeredAt: string
+  createdAt: string
+}
+
+export type AlertHistoryListResponse = {
+  events: AlertEvent[]
+  totalCount: number
+}
+
+export type BulkAlertActionPayload = {
+  alertIds: string[]
+  action: 'delete' | 'pause' | 'resume' | 'reset'
 }
 
 export type QuoteWebSocketMessage = {
@@ -178,6 +217,7 @@ export type AlertTriggeredWebSocketMessage = {
     symbol: string
     condition: AlertCondition
     targetPrice: number
+    severity?: AlertSeverity | null
     triggeredAt?: string | null
   }
 }
@@ -551,4 +591,54 @@ export async function pauseAlert(token: string, alertId: string): Promise<PriceA
 
 export async function resumeAlert(token: string, alertId: string): Promise<PriceAlert> {
   return updateAlert(token, alertId, { isActive: true })
+}
+
+export async function fetchAlertHistory(
+  token: string,
+  alertId: string,
+): Promise<AlertHistoryListResponse> {
+  const response = await safeFetch(
+    `${getApiUrl()}/alerts/${encodeURIComponent(alertId)}/history`,
+    { headers: authHeaders(token) },
+  )
+  return parseResponse<AlertHistoryListResponse>(response)
+}
+
+export async function fetchRecentAlertEvents(
+  token: string,
+): Promise<AlertHistoryListResponse> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/history`, {
+    headers: authHeaders(token),
+  })
+  return parseResponse<AlertHistoryListResponse>(response)
+}
+
+export async function bulkAlertAction(
+  token: string,
+  payload: BulkAlertActionPayload,
+): Promise<{ affected: number; action: string }> {
+  const response = await safeFetch(`${getApiUrl()}/alerts/bulk`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return parseResponse<{ affected: number; action: string }>(response)
+}
+
+export async function updateUserPreferences(
+  token: string,
+  payload: UserPreferencesPayload,
+): Promise<UserOut> {
+  const response = await safeFetch(`${getApiUrl()}/auth/me/preferences`, {
+    method: 'PATCH',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return parseResponse<UserOut>(response)
 }

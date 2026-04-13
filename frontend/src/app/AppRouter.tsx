@@ -17,6 +17,7 @@ import {
   buildWebSocketUrl,
   createAlert,
   createWatchlistItem,
+  bulkAlertAction,
   deleteAlert,
   deleteWatchlistItem,
   fetchAlerts,
@@ -30,10 +31,12 @@ import {
   resetAlert,
   resumeAlert,
   updateAlert,
+  updateUserPreferences,
 } from '../lib/api'
 import type {
   AlertWebSocketMessage,
   AlertListResponse,
+  BulkAlertActionPayload,
   MoversResponse,
   PriceAlertCreatePayload,
   PriceAlertUpdatePayload,
@@ -468,7 +471,7 @@ function AppContent() {
     const timeoutIds = alertToasts.map((toast) =>
       window.setTimeout(() => {
         dismissAlertToast(toast.id)
-      }, 7000),
+      }, toast.severity === 'urgent' ? 30_000 : 7000),
     )
 
     return () => {
@@ -488,9 +491,14 @@ function AppContent() {
       'Notification' in window
     ) {
       try {
-        void new window.Notification(`${toast.symbol} alert triggered`, {
-          body: `${toast.symbol} moved ${toast.condition} ${formatCurrency(toast.targetPrice)}.`,
-        })
+        const isUrgent = toast.severity === 'urgent'
+        void new window.Notification(
+          `${isUrgent ? '[URGENT] ' : ''}${toast.symbol} alert triggered`,
+          {
+            body: `${toast.symbol} moved ${toast.condition} ${toast.targetPrice != null ? formatCurrency(toast.targetPrice) : ''}.`,
+            requireInteraction: isUrgent,
+          },
+        )
       } catch {
         // Keep the in-app toast as the reliable fallback.
       }
@@ -601,6 +609,7 @@ function AppContent() {
       symbol: payload.data.symbol,
       condition: payload.data.condition,
       targetPrice: payload.data.targetPrice,
+      severity: payload.data.severity,
       triggeredAt: payload.data.triggeredAt,
     })
 
@@ -838,6 +847,59 @@ function AppContent() {
     }
   }
 
+  async function handleBulkAlertAction(payload: BulkAlertActionPayload) {
+    if (!token) {
+      return
+    }
+
+    setAlertActionError('')
+
+    try {
+      await bulkAlertAction(token, payload)
+      // Clear toasts for any deleted alerts
+      if (payload.action === 'delete') {
+        const deletedSet = new Set(payload.alertIds)
+        setAlertToasts((current) => current.filter((t) => !deletedSet.has(t.id)))
+        for (const id of payload.alertIds) {
+          triggeredAlertIdsRef.current.delete(id)
+        }
+      }
+      await refreshAlertWorkspaceData(token)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to manage alerts.')
+        return
+      }
+
+      setAlertActionError(
+        error instanceof Error ? error.message : 'Unable to perform bulk action right now.',
+      )
+    }
+  }
+
+  async function handleUpdateEmailNotifications(enabled: boolean) {
+    if (!token) {
+      return
+    }
+
+    try {
+      const updatedUser = await updateUserPreferences(token, {
+        emailNotificationsEnabled: enabled,
+      })
+      setCurrentUser(updatedUser)
+      if (dashboardCache && dashboardCache.token === token) {
+        dashboardCache = { ...dashboardCache, user: updatedUser }
+      }
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to update settings.')
+        return
+      }
+
+      throw error
+    }
+  }
+
   const guestHeader = (
     <AppHeader
       actions={<AuthActions />}
@@ -929,6 +991,7 @@ function AppContent() {
                   isLoadingDashboard={isLoadingDashboard}
                   movers={dashboardData.movers}
                   notificationPermission={notificationPermission}
+                  onBulkAction={handleBulkAlertAction}
                   onDeleteAlert={handleDeleteAlert}
                   onEnableNotifications={handleRequestNotificationPermission}
                   onPauseAlert={handlePauseAlert}
@@ -937,6 +1000,7 @@ function AppContent() {
                   onUpdateAlert={handleUpdateAlert}
                   pendingAlertAction={pendingAlertAction}
                   pendingAlertActionId={pendingAlertActionId}
+                  token={token}
                   watchlist={dashboardData.watchlist}
                 />
               </>
@@ -981,7 +1045,10 @@ function AppContent() {
             token ? (
               <>
                 {authenticatedHeader}
-                <SettingsPage currentUser={currentUser} />
+                <SettingsPage
+                  currentUser={currentUser}
+                  onUpdateEmailNotifications={handleUpdateEmailNotifications}
+                />
               </>
             ) : (
               <Navigate replace to="/login" />
@@ -997,9 +1064,11 @@ function AppContent() {
                 <InstrumentPage
                   isLoadingTrackedSymbols={Boolean(token) && isLoadingDashboard}
                   onCreateAlert={handleCreatePriceAlert}
+                  onDeleteAlert={handleDeleteAlert}
                   onTrackSymbol={handleAddWatchlistSymbol}
                   onUnauthorized={handleSessionExpired}
                   onUntrackSymbol={handleRemoveWatchlistSymbol}
+                  onUpdateAlert={handleUpdateAlert}
                   token={token || undefined}
                   trackedSymbols={dashboardData.watchlist}
                 />

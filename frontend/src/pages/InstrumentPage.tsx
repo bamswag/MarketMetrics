@@ -7,6 +7,7 @@ import { MoverLogo } from '../components/MoverLogo'
 import { ApiError, fetchAlertsForSymbol, fetchInstrumentDetail } from '../lib/api'
 import type {
   AlertCondition,
+  AlertSeverity,
   InstrumentDetailResponse,
   InstrumentRange,
   PriceAlert,
@@ -59,6 +60,11 @@ export function InstrumentPage({
   const [alertSuccess, setAlertSuccess] = useState('')
   const [isCreatingAlert, setIsCreatingAlert] = useState(false)
   const [isAlertFormOpen, setIsAlertFormOpen] = useState(false)
+  const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>('normal')
+  const [alertExpiry, setAlertExpiry] = useState('never')
+  const [alertReferencePrice, setAlertReferencePrice] = useState('')
+  const [alertLowerBound, setAlertLowerBound] = useState('')
+  const [alertUpperBound, setAlertUpperBound] = useState('')
 
   // Existing alerts for this symbol
   const [symbolAlerts, setSymbolAlerts] = useState<PriceAlert[]>([])
@@ -111,6 +117,11 @@ export function InstrumentPage({
     setAlertSuccess('')
     setIsCreatingAlert(false)
     setIsAlertFormOpen(false)
+    setAlertSeverity('normal')
+    setAlertExpiry('never')
+    setAlertReferencePrice('')
+    setAlertLowerBound('')
+    setAlertUpperBound('')
     setSymbolAlerts([])
     setEditState(null)
     setEditError('')
@@ -127,6 +138,13 @@ export function InstrumentPage({
 
     setAlertTargetPrice(instrumentDetail.latestQuote.price.toFixed(2))
   }, [alertTargetPrice, instrumentDetail?.latestQuote.price])
+
+  useEffect(() => {
+    if (!instrumentDetail?.latestQuote.price || alertReferencePrice) {
+      return
+    }
+    setAlertReferencePrice(instrumentDetail.latestQuote.price.toFixed(2))
+  }, [alertReferencePrice, instrumentDetail?.latestQuote.price])
 
   useEffect(() => {
     if (!symbol) {
@@ -216,11 +234,60 @@ export function InstrumentPage({
       return
     }
 
-    const parsedTargetPrice = Number.parseFloat(alertTargetPrice)
-    if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
-      setAlertError('Enter a valid target price greater than zero.')
-      setAlertSuccess('')
-      return
+    // Build payload based on condition type
+    const payload: PriceAlertCreatePayload = {
+      symbol,
+      condition: alertCondition,
+      severity: alertSeverity,
+    }
+
+    if (alertCondition === 'above' || alertCondition === 'below') {
+      const parsedTargetPrice = Number.parseFloat(alertTargetPrice)
+      if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
+        setAlertError('Enter a valid target price greater than zero.')
+        setAlertSuccess('')
+        return
+      }
+      payload.targetPrice = parsedTargetPrice
+    } else if (alertCondition === 'percent_change') {
+      const parsedThreshold = Number.parseFloat(alertTargetPrice)
+      const parsedRef = Number.parseFloat(alertReferencePrice)
+      if (!Number.isFinite(parsedThreshold) || parsedThreshold <= 0) {
+        setAlertError('Enter a valid percent threshold greater than zero.')
+        setAlertSuccess('')
+        return
+      }
+      if (!Number.isFinite(parsedRef) || parsedRef <= 0) {
+        setAlertError('Enter a valid reference price greater than zero.')
+        setAlertSuccess('')
+        return
+      }
+      payload.targetPrice = parsedThreshold
+      payload.referencePrice = parsedRef
+    } else if (alertCondition === 'range_exit') {
+      const parsedLower = Number.parseFloat(alertLowerBound)
+      const parsedUpper = Number.parseFloat(alertUpperBound)
+      if (!Number.isFinite(parsedLower) || parsedLower <= 0 || !Number.isFinite(parsedUpper) || parsedUpper <= 0) {
+        setAlertError('Enter valid lower and upper bounds greater than zero.')
+        setAlertSuccess('')
+        return
+      }
+      if (parsedLower >= parsedUpper) {
+        setAlertError('Lower bound must be less than upper bound.')
+        setAlertSuccess('')
+        return
+      }
+      payload.lowerBound = parsedLower
+      payload.upperBound = parsedUpper
+    }
+
+    // Expiry
+    if (alertExpiry !== 'never') {
+      const now = new Date()
+      if (alertExpiry === '1d') now.setDate(now.getDate() + 1)
+      else if (alertExpiry === '1w') now.setDate(now.getDate() + 7)
+      else if (alertExpiry === '1m') now.setMonth(now.getMonth() + 1)
+      payload.expiresAt = now.toISOString()
     }
 
     setAlertError('')
@@ -228,11 +295,7 @@ export function InstrumentPage({
     setIsCreatingAlert(true)
 
     try {
-      await onCreateAlert({
-        symbol,
-        condition: alertCondition,
-        targetPrice: parsedTargetPrice,
-      })
+      await onCreateAlert(payload)
       setAlertSuccess(
         `${symbol} will now notify you when price moves ${alertCondition} ${formatCurrency(parsedTargetPrice)}.`,
       )
@@ -402,7 +465,7 @@ export function InstrumentPage({
 
         {token ? (
           isAlertFormOpen ? (
-            <form className="instrument-alert-form" onSubmit={(event) => void handleCreateAlertSubmit(event)}>
+            <form className="instrument-alert-form instrument-alert-form--expanded" onSubmit={(event) => void handleCreateAlertSubmit(event)}>
               <label className="instrument-alert-field">
                 <span className="instrument-alert-label">Condition</span>
                 <select
@@ -412,36 +475,69 @@ export function InstrumentPage({
                 >
                   <option value="above">Above target</option>
                   <option value="below">Below target</option>
+                  <option value="percent_change">Percent change</option>
+                  <option value="range_exit">Range exit</option>
                 </select>
               </label>
 
-              <label className="instrument-alert-field">
-                <span className="instrument-alert-label">Target price</span>
-                <input
-                  className="search-input instrument-alert-input"
-                  inputMode="decimal"
-                  min="0"
-                  onChange={(event) => setAlertTargetPrice(event.target.value)}
-                  placeholder="Enter target price"
-                  step="0.01"
-                  type="number"
-                  value={alertTargetPrice}
-                />
-              </label>
+              {(alertCondition === 'above' || alertCondition === 'below') ? (
+                <label className="instrument-alert-field">
+                  <span className="instrument-alert-label">Target price</span>
+                  <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertTargetPrice(e.target.value)} placeholder="Enter target price" step="0.01" type="number" value={alertTargetPrice} />
+                </label>
+              ) : null}
+
+              {alertCondition === 'percent_change' ? (
+                <>
+                  <label className="instrument-alert-field">
+                    <span className="instrument-alert-label">Threshold (%)</span>
+                    <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertTargetPrice(e.target.value)} placeholder="e.g. 5" step="0.1" type="number" value={alertTargetPrice} />
+                  </label>
+                  <label className="instrument-alert-field">
+                    <span className="instrument-alert-label">Reference price</span>
+                    <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertReferencePrice(e.target.value)} placeholder="Current price" step="0.01" type="number" value={alertReferencePrice} />
+                  </label>
+                </>
+              ) : null}
+
+              {alertCondition === 'range_exit' ? (
+                <>
+                  <label className="instrument-alert-field">
+                    <span className="instrument-alert-label">Lower bound</span>
+                    <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertLowerBound(e.target.value)} placeholder="e.g. 230" step="0.01" type="number" value={alertLowerBound} />
+                  </label>
+                  <label className="instrument-alert-field">
+                    <span className="instrument-alert-label">Upper bound</span>
+                    <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertUpperBound(e.target.value)} placeholder="e.g. 260" step="0.01" type="number" value={alertUpperBound} />
+                  </label>
+                </>
+              ) : null}
+
+              <div className="instrument-alert-options">
+                <label className="instrument-alert-field">
+                  <span className="instrument-alert-label">Severity</span>
+                  <select className="instrument-alert-select" onChange={(e) => setAlertSeverity(e.target.value as AlertSeverity)} value={alertSeverity}>
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </label>
+
+                <label className="instrument-alert-field">
+                  <span className="instrument-alert-label">Expires</span>
+                  <select className="instrument-alert-select" onChange={(e) => setAlertExpiry(e.target.value)} value={alertExpiry}>
+                    <option value="never">Never</option>
+                    <option value="1d">In 1 day</option>
+                    <option value="1w">In 1 week</option>
+                    <option value="1m">In 1 month</option>
+                  </select>
+                </label>
+              </div>
 
               <div className="instrument-alert-submit">
-                <button
-                  className="primary-action"
-                  disabled={isCreatingAlert}
-                  type="submit"
-                >
+                <button className="primary-action" disabled={isCreatingAlert} type="submit">
                   {isCreatingAlert ? 'Creating alert...' : 'Create alert'}
                 </button>
-                <button
-                  className="instrument-alert-cancel"
-                  onClick={() => setIsAlertFormOpen(false)}
-                  type="button"
-                >
+                <button className="instrument-alert-cancel" onClick={() => setIsAlertFormOpen(false)} type="button">
                   Cancel
                 </button>
               </div>

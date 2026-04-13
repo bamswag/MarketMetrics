@@ -1,8 +1,11 @@
+import { useState } from 'react'
+
 import type { UserOut } from '../lib/api'
 import '../styles/pages/ProfilePages.css'
 
 type SettingsPageProps = {
   currentUser: UserOut | null
+  onUpdateEmailNotifications?: (enabled: boolean) => Promise<void>
 }
 
 const SETTING_GROUPS = [
@@ -11,16 +14,34 @@ const SETTING_GROUPS = [
     description: 'Theme mode, density, chart defaults, and dashboard layout choices.',
   },
   {
-    title: 'Notifications',
-    description: 'How alerts should surface across the app once notification controls are added.',
-  },
-  {
     title: 'Market preferences',
     description: 'Preferred currency, default chart range, and instrument-view behavior.',
   },
 ]
 
-export function SettingsPage({ currentUser }: SettingsPageProps) {
+export function SettingsPage({ currentUser, onUpdateEmailNotifications }: SettingsPageProps) {
+  const [isTogglingEmail, setIsTogglingEmail] = useState(false)
+  const [emailToggleError, setEmailToggleError] = useState('')
+
+  const emailEnabled = currentUser?.emailNotificationsEnabled ?? false
+
+  async function handleToggleEmailNotifications() {
+    if (!onUpdateEmailNotifications || isTogglingEmail) return
+
+    setIsTogglingEmail(true)
+    setEmailToggleError('')
+
+    try {
+      await onUpdateEmailNotifications(!emailEnabled)
+    } catch (error) {
+      setEmailToggleError(
+        error instanceof Error ? error.message : 'Unable to update email preference.',
+      )
+    } finally {
+      setIsTogglingEmail(false)
+    }
+  }
+
   return (
     <section className="profile-page page-section">
       <div className="profile-page-head">
@@ -31,12 +52,49 @@ export function SettingsPage({ currentUser }: SettingsPageProps) {
           </h1>
         </div>
         <p className="profile-page-copy">
-          This page gives the user-menu dropdown a real destination now, and a clean foundation for
-          future preferences later.
+          Manage notification delivery, appearance, and market preferences from one place.
         </p>
       </div>
 
       <div className="profile-grid">
+        {/* Email notifications panel */}
+        <article className="panel panel-wide">
+          <div className="panel-header">
+            <div className="panel-header-copy">
+              <p className="section-label">Notifications</p>
+              <h2 className="panel-title">Alert delivery channels</h2>
+            </div>
+            <span className="panel-tag">
+              {emailEnabled ? 'Email on' : 'Email off'}
+            </span>
+          </div>
+
+          <div className="settings-notification-row">
+            <div className="settings-notification-info">
+              <strong>Email notifications</strong>
+              <p>
+                Receive an email when any of your price alerts trigger. Uses the email address
+                associated with your account ({currentUser?.email ?? '...'}).
+              </p>
+              {emailToggleError ? <p className="error-text">{emailToggleError}</p> : null}
+            </div>
+
+            <button
+              className={emailEnabled ? 'ghost-action settings-toggle-btn' : 'primary-action settings-toggle-btn'}
+              disabled={isTogglingEmail}
+              onClick={() => void handleToggleEmailNotifications()}
+              type="button"
+            >
+              {isTogglingEmail
+                ? 'Saving...'
+                : emailEnabled
+                  ? 'Disable'
+                  : 'Enable'}
+            </button>
+          </div>
+        </article>
+
+        {/* Future setting groups */}
         <article className="panel panel-wide">
           <div className="panel-header">
             <div className="panel-header-copy">

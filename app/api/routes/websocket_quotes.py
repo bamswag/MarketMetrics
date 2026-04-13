@@ -9,6 +9,7 @@ from app.core.database import SessionLocal
 from app.core.websocket_auth import get_user_from_ws
 from app.integrations.alpaca.client import AlpacaMarketDataError
 from app.services.alerts import evaluate_alerts_for_quote
+from app.services.email import send_alert_email
 from app.services.quotes import get_quote_cached
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,17 @@ def _evaluate_alerts_sync(user_id: str, symbol: str, price: float):
     """Run alert evaluation in a worker thread with a short-lived session."""
     db = SessionLocal()
     try:
-        return evaluate_alerts_for_quote(db, user_id, symbol, price)
+        triggered = evaluate_alerts_for_quote(db, user_id, symbol, price)
+        # Fetch user email preferences for email notifications
+        user_email = None
+        email_enabled = False
+        if triggered:
+            from app.orm_models.user import UserDB
+            user = db.query(UserDB).filter(UserDB.userID == user_id).first()
+            if user:
+                user_email = user.email
+                email_enabled = bool(user.emailNotificationsEnabled)
+        return triggered, user_email, email_enabled
     finally:
         db.close()
 
@@ -71,7 +82,7 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
                     logger.debug("Sending quote for %s: %s", symbol, quote)
 
                     await websocket.send_json({"type": "quote", "data": quote})
-                    triggered_alerts = await asyncio.to_thread(
+                    triggered_alerts, user_email, email_enabled = await asyncio.to_thread(
                         _evaluate_alerts_sync,
                         user.userID,
                         symbol,
@@ -87,12 +98,31 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
                                     "symbol": alert.symbol,
                                     "condition": alert.condition,
                                     "targetPrice": alert.targetPrice,
+                                    "severity": alert.severity or "normal",
                                     "triggeredAt": alert.triggeredAt.isoformat()
                                     if alert.triggeredAt
                                     else None,
                                 },
                             }
                         )
+
+                        # Feature 9: Send email notification if enabled
+                        if email_enabled and user_email:
+                            try:
+                                await asyncio.to_thread(
+                                    send_alert_email,
+                                    user_email,
+                                    alert.symbol,
+                                    alert.condition,
+                                    alert.targetPrice,
+                                    quote["price"],
+                                    alert.severity or "normal",
+                                )
+                            except Exception:
+                                logger.exception(
+                                    "Email send failed for alert %s, continuing",
+                                    alert.id,
+                                )
             except Exception as e:
                 logger.warning("Quote fetch/send error: %r", e)
                 error_kind, client_message = _classify_quote_error(e)

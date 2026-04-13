@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.auth import _jwt_settings, create_access_token
 from app.core.auth_dependencies import get_current_user
 from app.core.db_dependencies import get_db
-from app.schemas.users import Token, UserCreate, UserOut
+from app.orm_models.user import UserDB
+from app.schemas.users import Token, UserCreate, UserOut, UserPreferencesUpdate
 from app.services.auth import (
     GoogleAuthError,
     authenticate_user,
@@ -60,6 +61,20 @@ def login(
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user=Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me/preferences", response_model=UserOut)
+def update_preferences(
+    payload: UserPreferencesUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserDB = Depends(get_current_user),
+):
+    if payload.emailNotificationsEnabled is not None:
+        current_user.emailNotificationsEnabled = payload.emailNotificationsEnabled
+
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 

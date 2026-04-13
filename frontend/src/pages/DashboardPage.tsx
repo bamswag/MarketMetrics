@@ -3,6 +3,7 @@ import { DashboardHero } from '../components/DashboardHero'
 import { DailyMoversSection } from '../components/DailyMoversSection'
 import type {
   AlertListResponse,
+  BulkAlertActionPayload,
   MoversResponse,
   PriceAlertUpdatePayload,
   UserOut,
@@ -21,6 +22,7 @@ type DashboardPageProps = {
   isLoadingDashboard: boolean
   movers: MoversResponse | null
   notificationPermission: NotificationPermissionState
+  onBulkAction: (payload: BulkAlertActionPayload) => Promise<void>
   onDeleteAlert: (alertId: string) => Promise<void>
   onEnableNotifications: () => Promise<void>
   onPauseAlert: (alertId: string) => Promise<void>
@@ -29,6 +31,7 @@ type DashboardPageProps = {
   onUpdateAlert: (alertId: string, payload: PriceAlertUpdatePayload) => Promise<void>
   pendingAlertAction: PendingAlertAction
   pendingAlertActionId: string
+  token?: string
   watchlist: WatchlistItemDetailedOut[]
 }
 
@@ -40,6 +43,7 @@ export function DashboardPage({
   isLoadingDashboard,
   movers,
   notificationPermission,
+  onBulkAction,
   onDeleteAlert,
   onEnableNotifications,
   onPauseAlert,
@@ -48,6 +52,7 @@ export function DashboardPage({
   onUpdateAlert,
   pendingAlertAction,
   pendingAlertActionId,
+  token,
   watchlist,
 }: DashboardPageProps) {
   const activeAlerts = alerts?.activeCount ?? 0
@@ -77,6 +82,7 @@ export function DashboardPage({
           errorMessage={alertActionError}
           isLoading={isLoadingDashboard}
           notificationPermission={notificationPermission}
+          onBulkAction={onBulkAction}
           onDeleteAlert={onDeleteAlert}
           onEnableNotifications={onEnableNotifications}
           onPauseAlert={onPauseAlert}
@@ -85,6 +91,7 @@ export function DashboardPage({
           onUpdateAlert={onUpdateAlert}
           pendingAction={pendingAlertAction}
           pendingActionId={pendingAlertActionId}
+          token={token}
         />
       </section>
     </div>
