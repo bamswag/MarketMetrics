@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import type { MoversByCategory, MoversResponse } from '../lib/api'
 import { assetCategoryLabel, isAssetCategoryEnabled } from '../lib/marketPreferences'
@@ -59,8 +61,10 @@ function MoverGroup({
           return (
             <div className="mover-category-column" key={key}>
               <div className="mover-category-header">
-                <p className="mover-category-label">{label}</p>
-                <span className="mover-category-count">{items.length}/3</span>
+                <span className="mover-category-badge">
+                  {label}
+                  <span className="mover-category-count">{items.length}/3</span>
+                </span>
               </div>
 
               <div className="mover-card-list">
@@ -135,24 +139,32 @@ export function DailyMoversSection({
       ) : null}
 
       {movers ? (
-        <div className="daily-movers-columns">
-          <MoverGroup
-            categoryItems={gainersByCategory}
-            fallbackItems={gainers}
-            visibleCategories={visibleCategories}
-            subtitle="Top 3 gainers"
-            title="Leading today"
-            tone="positive"
-          />
-          <MoverGroup
-            categoryItems={losersByCategory}
-            fallbackItems={losers}
-            visibleCategories={visibleCategories}
-            subtitle="Bottom 3 losers"
-            title="Lagging today"
-            tone="negative"
-          />
-        </div>
+        <>
+          <div className="daily-movers-columns">
+            <MoverGroup
+              categoryItems={gainersByCategory}
+              fallbackItems={gainers}
+              visibleCategories={visibleCategories}
+              subtitle="Top 3 gainers"
+              title="Leading today"
+              tone="positive"
+            />
+            <MoverGroup
+              categoryItems={losersByCategory}
+              fallbackItems={losers}
+              visibleCategories={visibleCategories}
+              subtitle="Bottom 3 losers"
+              title="Lagging today"
+              tone="negative"
+            />
+          </div>
+          {variant === 'landing' ? (
+            <p className="movers-guest-cta">
+              <Link className="movers-guest-cta-link" to="/signup">Create a free account</Link>
+              {' '}to track these symbols and get notified when they hit a price you set.
+            </p>
+          ) : null}
+        </>
       ) : null}
     </section>
   )

@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import type { UserOut } from '../lib/api'
+import { RiskProfileBadge, RiskProfileQuiz } from '../components/RiskProfileQuiz'
+import type { RiskProfile, UserOut } from '../lib/api'
 import { formatDateTime } from '../lib/formatters'
 import '../styles/pages/ProfilePages.css'
 import '../styles/pages/AccountPage.css'
+import '../styles/components/RiskProfileQuiz.css'
 
 type AccountPageProps = {
   currentUser: UserOut | null
   onChangePassword: (payload: { currentPassword?: string; newPassword: string }) => Promise<string>
   onLogoutAllSessions: () => Promise<void>
   onUpdateProfile: (payload: { displayName?: string; email?: string }) => Promise<UserOut>
+  onUpdateRiskProfile?: (profile: RiskProfile) => Promise<void>
 }
 
 function authProviderLabel(provider?: string | null) {
@@ -22,6 +25,7 @@ export function AccountPage({
   onChangePassword,
   onLogoutAllSessions,
   onUpdateProfile,
+  onUpdateRiskProfile,
 }: AccountPageProps) {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -41,6 +45,10 @@ export function AccountPage({
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false)
   const [logoutAllError, setLogoutAllError] = useState('')
   const [showDeleteScaffold, setShowDeleteScaffold] = useState(false)
+  const [isRetakingProfile, setIsRetakingProfile] = useState(false)
+  const [isSavingProfile2, setIsSavingProfile2] = useState(false)
+
+  const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
 
   useEffect(() => {
     setDisplayName(currentUser?.displayName ?? '')
@@ -410,6 +418,41 @@ export function AccountPage({
               </div>
             </div>
           </div>
+        </article>
+
+        <article className="panel account-card account-card--full">
+          <div className="panel-header">
+            <div className="panel-header-copy">
+              <p className="section-label">Risk profile</p>
+              <h2 className="panel-title">Your investor risk profile shapes advisory insights across the app</h2>
+            </div>
+            {riskProfile && !isRetakingProfile
+              ? <span className="positive-pill">Set</span>
+              : <span className="neutral-pill">Personalisation</span>
+            }
+          </div>
+
+          {isRetakingProfile || !riskProfile ? (
+            <RiskProfileQuiz
+              isSaving={isSavingProfile2}
+              onComplete={async (profile) => {
+                if (!onUpdateRiskProfile) return
+                setIsSavingProfile2(true)
+                try {
+                  await onUpdateRiskProfile(profile)
+                  setIsRetakingProfile(false)
+                } finally {
+                  setIsSavingProfile2(false)
+                }
+              }}
+              onDismiss={riskProfile ? () => setIsRetakingProfile(false) : undefined}
+            />
+          ) : (
+            <RiskProfileBadge
+              profile={riskProfile}
+              onRetake={() => setIsRetakingProfile(true)}
+            />
+          )}
         </article>
 
         <article className="panel account-card account-card--full account-card--danger">

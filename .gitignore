@@ -15,6 +15,7 @@ __pycache__/
 .DS_Store
 # Claude Code
 .claude/
+CLAUDE.md
 
 # Databases
 *.db

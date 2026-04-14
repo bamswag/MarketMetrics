@@ -174,6 +174,7 @@ function AppContent() {
   const signupGoogleParams = new URLSearchParams({
     returnTo: '/dashboard',
     intent: 'signup',
+    acceptedTerms: 'true',
   })
   if (frontendOrigin) {
     loginGoogleParams.set('frontendOrigin', frontendOrigin)
@@ -1324,6 +1325,7 @@ function AppContent() {
                   onChangePassword={handleChangePassword}
                   onLogoutAllSessions={handleLogoutAllSessions}
                   onUpdateProfile={handleUpdateAccountProfile}
+                  onUpdateRiskProfile={handleUpdateRiskProfile}
                 />
               </>
             ) : (

@@ -20,23 +20,43 @@ MAX_TRANSIENT_FAILURES = 3
 TRANSIENT_BACKOFF_SECONDS = (5, 15, 30)
 POLL_SECONDS = 30
 QUOTE_CACHE_TTL_SECONDS = 20
+MAX_CONNECTION_SECONDS = 1800  # force-close connections open longer than 30 minutes
 
 
 def _evaluate_alerts_sync(user_id: str, symbol: str, price: float):
-    """Run alert evaluation in a worker thread with a short-lived session."""
+    """Run alert evaluation in a worker thread with a short-lived session.
+
+    All data is extracted into plain dicts before the session closes so that
+    nothing tries to touch the DB after the connection is returned to the pool
+    (avoids DetachedInstanceError).
+    """
     db = SessionLocal()
     try:
         triggered = evaluate_alerts_for_quote(db, user_id, symbol, price)
-        # Fetch user email preferences for email notifications
+
+        # Serialise ORM objects to plain dicts while the session is still open.
+        triggered_data = [
+            {
+                "id": alert.id,
+                "symbol": alert.symbol,
+                "condition": alert.condition,
+                "targetPrice": alert.targetPrice,
+                "severity": alert.severity or "normal",
+                "triggeredAt": alert.triggeredAt.isoformat() if alert.triggeredAt else None,
+            }
+            for alert in triggered
+        ]
+
         user_email = None
         email_enabled = False
-        if triggered:
+        if triggered_data:
             from app.orm_models.user import UserDB
             user = db.query(UserDB).filter(UserDB.userID == user_id).first()
             if user:
                 user_email = user.email
                 email_enabled = bool(user.emailNotificationsEnabled)
-        return triggered, user_email, email_enabled
+
+        return triggered_data, user_email, email_enabled
     finally:
         db.close()
 
@@ -68,8 +88,14 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
 
         last_price = None
         transient_failures = 0
+        connection_opened_at = asyncio.get_event_loop().time()
 
         while True:
+            if asyncio.get_event_loop().time() - connection_opened_at > MAX_CONNECTION_SECONDS:
+                logger.info("WS max lifetime reached for user=%s symbol=%s — closing", user.email, symbol)
+                await websocket.close(code=1001, reason="Connection lifetime limit reached. Reconnect to continue.")
+                return
+
             try:
                 quote = await get_quote_cached(
                     symbol, min_ttl_seconds=QUOTE_CACHE_TTL_SECONDS
@@ -94,34 +120,31 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
                             {
                                 "type": "alert_triggered",
                                 "data": {
-                                    "id": alert.id,
-                                    "symbol": alert.symbol,
-                                    "condition": alert.condition,
-                                    "targetPrice": alert.targetPrice,
-                                    "severity": alert.severity or "normal",
-                                    "triggeredAt": alert.triggeredAt.isoformat()
-                                    if alert.triggeredAt
-                                    else None,
+                                    "id": alert["id"],
+                                    "symbol": alert["symbol"],
+                                    "condition": alert["condition"],
+                                    "targetPrice": alert["targetPrice"],
+                                    "severity": alert["severity"],
+                                    "triggeredAt": alert["triggeredAt"],
                                 },
                             }
                         )
 
-                        # Feature 9: Send email notification if enabled
                         if email_enabled and user_email:
                             try:
                                 await asyncio.to_thread(
                                     send_alert_email,
                                     user_email,
-                                    alert.symbol,
-                                    alert.condition,
-                                    alert.targetPrice,
+                                    alert["symbol"],
+                                    alert["condition"],
+                                    alert["targetPrice"],
                                     quote["price"],
-                                    alert.severity or "normal",
+                                    alert["severity"],
                                 )
                             except Exception:
                                 logger.exception(
                                     "Email send failed for alert %s, continuing",
-                                    alert.id,
+                                    alert["id"],
                                 )
             except Exception as e:
                 logger.warning("Quote fetch/send error: %r", e)

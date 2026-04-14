@@ -78,6 +78,7 @@ async def get_instrument_detail(
     return InstrumentDetailResponse(
         symbol=canonical_symbol,
         companyName=resolve_company_name(canonical_symbol),
+        assetCategory=metadata.get("assetCategory"),
         exchange=metadata.get("exchange"),
         range=selected_range,
         latestQuote=InstrumentQuoteOut(

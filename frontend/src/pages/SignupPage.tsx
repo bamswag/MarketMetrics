@@ -44,9 +44,6 @@ export function SignupPage({
       ? 'search-input search-input--with-action is-invalid'
       : 'search-input search-input--with-action'
   const combinedError = localError || authError || ''
-  const resolvedGoogleSignupUrl = `${googleSignupUrl}${
-    googleSignupUrl.includes('?') ? '&' : '?'
-  }acceptedTerms=${acceptedTerms ? 'true' : 'false'}`
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -123,17 +120,17 @@ export function SignupPage({
 
                 <a
                   className="google-auth-button google-auth-button--wide"
-                  href={resolvedGoogleSignupUrl}
-                  onClick={(event) => {
-                    if (!acceptedTerms) {
-                      event.preventDefault()
-                      setLocalError('Agree to the Terms and Privacy Policy before continuing with Google.')
-                    }
-                  }}
+                  href={googleSignupUrl}
                 >
                   <GoogleLogoIcon />
                   Continue with Google
                 </a>
+
+                <p className="auth-helper-text">
+                  Continuing with Google creates your account and agrees to the{' '}
+                  <Link className="auth-inline-link" to="/terms">Terms</Link> and{' '}
+                  <Link className="auth-inline-link" to="/privacy">Privacy Policy</Link>.
+                </p>
 
                 <div className="auth-divider">
                   <span>or use email</span>

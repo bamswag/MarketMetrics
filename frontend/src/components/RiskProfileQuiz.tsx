@@ -78,6 +78,15 @@ const PROFILE_PILL: Record<RiskProfile, string> = {
   aggressive: 'warning-pill',
 }
 
+function shuffleQuestions(questions: Question[]): Question[] {
+  const arr = [...questions]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
 type RiskProfileQuizProps = {
   isSaving?: boolean
   onComplete: (profile: RiskProfile) => Promise<void>
@@ -85,21 +94,22 @@ type RiskProfileQuizProps = {
 }
 
 export function RiskProfileQuiz({ isSaving, onComplete, onDismiss }: RiskProfileQuizProps) {
+  const [questions] = useState<Question[]>(() => shuffleQuestions(QUESTIONS))
   const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
   const [step, setStep] = useState<'quiz' | 'result'>('quiz')
   const [result, setResult] = useState<RiskProfile | null>(null)
   const [error, setError] = useState('')
 
   const currentQuestionIndex = Object.keys(answers).length
-  const allAnswered = currentQuestionIndex >= QUESTIONS.length
-  const currentQuestion = allAnswered ? null : QUESTIONS[currentQuestionIndex]
+  const allAnswered = currentQuestionIndex >= questions.length
+  const currentQuestion = allAnswered ? null : questions[currentQuestionIndex]
 
   function handleAnswer(answer: QuizAnswer) {
-    const qId = QUESTIONS[currentQuestionIndex].id
+    const qId = questions[currentQuestionIndex].id
     const next = { ...answers, [qId]: answer }
     setAnswers(next)
 
-    if (Object.keys(next).length >= QUESTIONS.length) {
+    if (Object.keys(next).length >= questions.length) {
       const total = Object.values(next).reduce((sum, a) => sum + SCORE_MAP[a], 0)
       setResult(scoreToProfile(total))
       setStep('result')
@@ -157,7 +167,7 @@ export function RiskProfileQuiz({ isSaving, onComplete, onDismiss }: RiskProfile
 
   if (!currentQuestion) return null
 
-  const progress = (currentQuestionIndex / QUESTIONS.length) * 100
+  const progress = (currentQuestionIndex / questions.length) * 100
 
   return (
     <div className="rq-card">
@@ -165,7 +175,7 @@ export function RiskProfileQuiz({ isSaving, onComplete, onDismiss }: RiskProfile
         <div className="rq-progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <p className="rq-step-label">
-        Question {currentQuestionIndex + 1} of {QUESTIONS.length}
+        Question {currentQuestionIndex + 1} of {questions.length}
       </p>
       <p className="rq-question">{currentQuestion.text}</p>
       <div className="rq-options">

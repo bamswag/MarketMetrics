@@ -31,6 +31,7 @@ class InstrumentPricePoint(BaseModel):
 class InstrumentDetailResponse(BaseModel):
     symbol: str
     companyName: str
+    assetCategory: Optional[str] = None
     exchange: Optional[str] = None
     range: InstrumentRange = Field(default=InstrumentRange.six_months)
     latestQuote: InstrumentQuoteOut

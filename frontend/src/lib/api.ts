@@ -139,6 +139,7 @@ export type InstrumentRange = '1M' | '3M' | '6M' | '1Y' | '5Y'
 export type InstrumentDetailResponse = {
   symbol: string
   companyName: string
+  assetCategory?: string | null
   exchange?: string | null
   range: InstrumentRange
   latestQuote: {
