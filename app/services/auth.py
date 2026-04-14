@@ -301,8 +301,10 @@ def logout_all_user_sessions(db: Session, current_user: UserDB) -> None:
 def request_password_reset(db: Session, email: str) -> None:
     ensure_user_schema(db.get_bind())
 
-    user = db.query(UserDB).filter(UserDB.email == normalize_email(email)).first()
+    normalized_email = normalize_email(email)
+    user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
     if not user:
+        logger.info("Password reset requested for non-existent account: %s", normalized_email)
         return
 
     token = _generate_one_time_token()
@@ -310,11 +312,21 @@ def request_password_reset(db: Session, email: str) -> None:
     user.passwordResetTokenExpiresAt = _password_reset_expiry()
     db.commit()
 
-    send_password_reset_email(
+    logger.info(
+        "Password reset token created for %s; expires at %s",
+        user.email,
+        user.passwordResetTokenExpiresAt,
+    )
+
+    email_sent = send_password_reset_email(
         user.email,
         user.displayName,
         _password_reset_url(token),
     )
+    if email_sent:
+        logger.info("Password reset email delivery accepted for %s", user.email)
+    else:
+        logger.warning("Password reset email delivery was not accepted for %s", user.email)
 
 
 def reset_password_with_token(db: Session, token: str, new_password: str) -> None:

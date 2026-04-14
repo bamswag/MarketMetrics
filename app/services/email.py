@@ -63,6 +63,16 @@ def _send_transactional_email(
             response_payload.get("messageId", "no message id"),
         )
         return True
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "Brevo API rejected transactional email to %s with status %s: %s",
+            to_email,
+            exc.response.status_code,
+            exc.response.text,
+        )
+        if debug_action_url:
+            logger.info("Email action link for %s: %s", to_email, debug_action_url)
+        return False
     except Exception:
         logger.exception("Failed to send transactional email to %s via Brevo API", to_email)
         if debug_action_url:
