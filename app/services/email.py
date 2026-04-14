@@ -20,6 +20,12 @@ def _brevo_is_configured() -> bool:
     return bool(settings.brevo_api_key and settings.email_from_address)
 
 
+def _masked_api_key_suffix(value: str) -> str:
+    if not value:
+        return "missing"
+    return value[-6:]
+
+
 def _send_transactional_email(
     *,
     to_email: str,
@@ -45,6 +51,13 @@ def _send_transactional_email(
     }
 
     try:
+        logger.info(
+            "Attempting Brevo API email send to %s from %s via %s (api key suffix: %s)",
+            to_email,
+            settings.email_from_address,
+            settings.brevo_transactional_email_url,
+            _masked_api_key_suffix(settings.brevo_api_key),
+        )
         with httpx.Client(timeout=settings.brevo_timeout_seconds) as client:
             response = client.post(
                 settings.brevo_transactional_email_url,

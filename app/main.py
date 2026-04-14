@@ -1,9 +1,16 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, search
 from app.api.routes import simulations, watchlists, websocket_quotes
 from app.api.routes.auth import router as auth_router
 from app.core.config import settings
+
+logging.basicConfig(
+    level=getattr(logging, settings.app_log_level, logging.INFO),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 
 app = FastAPI(title="Market Metrics API")
 

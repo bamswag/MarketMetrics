@@ -109,12 +109,20 @@
   flex-shrink: 0;
 }
 
+.hero-gainer-chart {
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(242,247,251,0.98));
+  padding: 8px 4px 4px;
+  overflow: hidden;
+  margin: 0 -4px;
+}
+
 .hero-gainer-price-row {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 14px 0;
-  border-top: 1px solid var(--panel-border);
+  padding: 4px 0 8px;
 }
 
 .hero-gainer-price-label {
@@ -149,10 +157,23 @@
 /* Skeleton loader */
 
 .hero-gainer-skeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.skeleton-chart-placeholder {
+  width: 100%;
+  height: 180px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(20,32,51,0.07) 25%, rgba(20,32,51,0.12) 50%, rgba(20,32,51,0.07) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+.hero-gainer-skeleton-body {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 8px 0;
 }
 
 .skeleton-logo {

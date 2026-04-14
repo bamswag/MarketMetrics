@@ -139,6 +139,10 @@ class Settings:
         return os.getenv("EMAIL_FROM_ADDRESS", "noreply@marketmetrics.app")
 
     @property
+    def app_log_level(self) -> str:
+        return os.getenv("APP_LOG_LEVEL", "INFO").upper()
+
+    @property
     def password_reset_token_expire_minutes(self) -> int:
         return int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "60"))
 
