@@ -50,12 +50,14 @@ import type {
   MoversResponse,
   PriceAlertCreatePayload,
   PriceAlertUpdatePayload,
+  RiskProfile,
   UserOut,
   WatchlistItemDetailedOut,
 } from '../lib/api'
 import { formatCurrency } from '../lib/formatters'
 import { AccountPage } from '../pages/AccountPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { RiskProfileQuiz } from '../components/RiskProfileQuiz'
 
 const InstrumentPage = lazy(() =>
   import('../pages/InstrumentPage').then((module) => ({ default: module.InstrumentPage })),
@@ -206,6 +208,7 @@ function AppContent() {
   const [alertActionError, setAlertActionError] = useState('')
   const [pendingAlertActionId, setPendingAlertActionId] = useState('')
   const [pendingAlertAction, setPendingAlertAction] = useState<PendingAlertAction>(null)
+  const [showRiskQuiz, setShowRiskQuiz] = useState(false)
 
   const alertSocketsRef = useRef<Map<string, WebSocket>>(new Map())
   const alertReconnectTimersRef = useRef<Map<string, number>>(new Map())
@@ -960,6 +963,25 @@ function AppContent() {
     }
   }
 
+  async function handleUpdateRiskProfile(profile: RiskProfile) {
+    if (!token) {
+      throw new Error('Log in first to save your risk profile.')
+    }
+
+    try {
+      const updatedUser = await updateUserPreferences(token, { riskProfile: profile })
+      updateCurrentUserCache(token, updatedUser)
+      setShowRiskQuiz(false)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        handleSessionExpired('Your session expired. Log in again to update settings.')
+        return
+      }
+
+      throw error
+    }
+  }
+
   async function handleUpdateAccountProfile(payload: {
     displayName?: string
     email?: string
@@ -1252,12 +1274,22 @@ function AppContent() {
                   onPauseAlert={handlePauseAlert}
                   onResetAlert={handleResetAlert}
                   onResumeAlert={handleResumeAlert}
+                  onStartRiskQuiz={() => setShowRiskQuiz(true)}
+                  onRetakeRiskQuiz={() => setShowRiskQuiz(true)}
                   onUpdateAlert={handleUpdateAlert}
                   pendingAlertAction={pendingAlertAction}
                   pendingAlertActionId={pendingAlertActionId}
                   token={token}
                   watchlist={dashboardData.watchlist}
                 />
+                {showRiskQuiz ? (
+                  <div className="risk-quiz-overlay">
+                    <RiskProfileQuiz
+                      onComplete={handleUpdateRiskProfile}
+                      onDismiss={() => setShowRiskQuiz(false)}
+                    />
+                  </div>
+                ) : null}
               </>
             ) : (
               <Navigate replace to="/login" />
@@ -1308,6 +1340,7 @@ function AppContent() {
                 <SettingsPage
                   currentUser={currentUser}
                   onUpdateEmailNotifications={handleUpdateEmailNotifications}
+                  onUpdateRiskProfile={handleUpdateRiskProfile}
                 />
               </>
             ) : (
@@ -1329,6 +1362,7 @@ function AppContent() {
                   onUnauthorized={handleSessionExpired}
                   onUntrackSymbol={handleRemoveWatchlistSymbol}
                   onUpdateAlert={handleUpdateAlert}
+                  riskProfile={currentUser?.riskProfile as RiskProfile | null | undefined}
                   token={token || undefined}
                   trackedSymbols={dashboardData.watchlist}
                 />

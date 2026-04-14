@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
-import type { UserOut } from '../lib/api'
+import { RiskProfileBadge, RiskProfileQuiz } from '../components/RiskProfileQuiz'
+import type { RiskProfile, UserOut } from '../lib/api'
 import {
   assetCategoryLabel,
   marketTimeDisplayLabel,
@@ -12,10 +13,12 @@ import {
   type NumberFormatPreference,
 } from '../lib/marketPreferences'
 import '../styles/pages/ProfilePages.css'
+import '../styles/components/RiskProfileQuiz.css'
 
 type SettingsPageProps = {
   currentUser: UserOut | null
   onUpdateEmailNotifications?: (enabled: boolean) => Promise<void>
+  onUpdateRiskProfile?: (profile: RiskProfile) => Promise<void>
 }
 
 const ASSET_CATEGORY_OPTIONS: MarketAssetCategory[] = ['stocks', 'etfs', 'crypto']
@@ -24,10 +27,14 @@ const TRACKED_SORT_OPTIONS = ['newest', 'biggest_gain', 'biggest_loss', 'alphabe
 const PRICE_DISPLAY_OPTIONS = ['percent', 'change', 'both'] as const
 const MARKET_TIME_OPTIONS = ['local', 'exchange', 'utc'] as const
 
-export function SettingsPage({ currentUser, onUpdateEmailNotifications }: SettingsPageProps) {
+export function SettingsPage({ currentUser, onUpdateEmailNotifications, onUpdateRiskProfile }: SettingsPageProps) {
   const { preferences, togglePreferredAssetClass, updatePreferences } = useMarketPreferences()
   const [isTogglingEmail, setIsTogglingEmail] = useState(false)
   const [emailToggleError, setEmailToggleError] = useState('')
+  const [isRetakingProfile, setIsRetakingProfile] = useState(false)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+
+  const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
 
   const emailEnabled = currentUser?.emailNotificationsEnabled ?? false
 
@@ -234,6 +241,43 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
             </select>
           </label>
         </div>
+      </section>
+
+      {/* Risk profile */}
+      <section className="settings-section">
+        <div className="settings-section-header">
+          <h2 className="settings-section-title">Risk profile</h2>
+          {riskProfile && !isRetakingProfile ? (
+            <span className="neutral-pill">Set</span>
+          ) : (
+            <span className="neutral-pill">Personalisation</span>
+          )}
+        </div>
+        <p className="settings-section-note">
+          Your risk profile shapes the advisory messages you see across the app — on instrument pages, alerts, and your dashboard.
+        </p>
+
+        {isRetakingProfile || !riskProfile ? (
+          <RiskProfileQuiz
+            isSaving={isSavingProfile}
+            onComplete={async (profile) => {
+              if (!onUpdateRiskProfile) return
+              setIsSavingProfile(true)
+              try {
+                await onUpdateRiskProfile(profile)
+                setIsRetakingProfile(false)
+              } finally {
+                setIsSavingProfile(false)
+              }
+            }}
+            onDismiss={riskProfile ? () => setIsRetakingProfile(false) : undefined}
+          />
+        ) : (
+          <RiskProfileBadge
+            profile={riskProfile}
+            onRetake={() => setIsRetakingProfile(true)}
+          />
+        )}
       </section>
 
       {/* Account status */}

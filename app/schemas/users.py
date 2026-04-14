@@ -38,10 +38,12 @@ class UserOut(BaseModel):
     lastLoginAt: Optional[datetime] = None
     planName: str = "Free"
     accountStatus: str = "Active"
+    riskProfile: Optional[str] = None
 
 
 class UserPreferencesUpdate(BaseModel):
     emailNotificationsEnabled: Optional[bool] = None
+    riskProfile: Optional[str] = None
 
 
 class UserProfileUpdate(BaseModel):

@@ -1,4 +1,6 @@
 import { TrackedSymbolsPreview } from './TrackedSymbolsPreview'
+import { RiskProfileBadge } from './RiskProfileQuiz'
+import type { RiskProfile } from '../lib/api'
 import type { WatchlistItemDetailedOut } from '../lib/api'
 
 type DashboardHeroProps = {
@@ -7,6 +9,9 @@ type DashboardHeroProps = {
   isLoadingTrackedSymbols: boolean
   activeAlerts: number
   triggeredAlerts: number
+  riskProfile?: RiskProfile | null
+  onStartRiskQuiz?: () => void
+  onRetakeRiskQuiz?: () => void
 }
 
 export function DashboardHero({
@@ -15,6 +20,9 @@ export function DashboardHero({
   isLoadingTrackedSymbols,
   activeAlerts,
   triggeredAlerts,
+  riskProfile,
+  onStartRiskQuiz,
+  onRetakeRiskQuiz,
 }: DashboardHeroProps) {
   return (
     <section className="dashboard-hero page-section">
@@ -45,6 +53,22 @@ export function DashboardHero({
             <span className="dashboard-quick-stat-label">Triggered</span>
           </div>
         </div>
+
+        {/* Risk profile strip */}
+        {riskProfile ? (
+          <div className="dashboard-risk-strip">
+            <RiskProfileBadge profile={riskProfile} onRetake={onRetakeRiskQuiz} />
+          </div>
+        ) : onStartRiskQuiz ? (
+          <div className="dashboard-risk-prompt">
+            <p className="dashboard-risk-prompt-text">
+              <strong>Personalise your experience</strong> — take a 4-question quiz to set your investor risk profile and unlock tailored insights.
+            </p>
+            <button className="ghost-action dashboard-risk-quiz-btn" onClick={onStartRiskQuiz} type="button">
+              Set my risk profile
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="dashboard-metric-grid">

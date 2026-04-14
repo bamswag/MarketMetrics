@@ -6,6 +6,7 @@ import type {
   BulkAlertActionPayload,
   MoversResponse,
   PriceAlertUpdatePayload,
+  RiskProfile,
   UserOut,
   WatchlistItemDetailedOut,
 } from '../lib/api'
@@ -28,6 +29,8 @@ type DashboardPageProps = {
   onPauseAlert: (alertId: string) => Promise<void>
   onResetAlert: (alertId: string) => Promise<void>
   onResumeAlert: (alertId: string) => Promise<void>
+  onStartRiskQuiz?: () => void
+  onRetakeRiskQuiz?: () => void
   onUpdateAlert: (alertId: string, payload: PriceAlertUpdatePayload) => Promise<void>
   pendingAlertAction: PendingAlertAction
   pendingAlertActionId: string
@@ -49,6 +52,8 @@ export function DashboardPage({
   onPauseAlert,
   onResetAlert,
   onResumeAlert,
+  onStartRiskQuiz,
+  onRetakeRiskQuiz,
   onUpdateAlert,
   pendingAlertAction,
   pendingAlertActionId,
@@ -57,6 +62,7 @@ export function DashboardPage({
 }: DashboardPageProps) {
   const activeAlerts = alerts?.activeCount ?? 0
   const triggeredAlerts = alerts?.triggeredCount ?? 0
+  const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
 
   return (
     <div className="dashboard-shell">
@@ -64,6 +70,9 @@ export function DashboardPage({
         activeAlerts={activeAlerts}
         displayName={currentUser?.displayName}
         isLoadingTrackedSymbols={isLoadingDashboard}
+        onRetakeRiskQuiz={onRetakeRiskQuiz}
+        onStartRiskQuiz={onStartRiskQuiz}
+        riskProfile={riskProfile}
         trackedSymbols={watchlist}
         triggeredAlerts={triggeredAlerts}
       />

@@ -119,8 +119,20 @@ class Settings:
         return int(os.getenv("PREDICTION_FETCH_CONCURRENCY", "5"))
 
     @property
-    def sendgrid_api_key(self) -> str:
-        return os.getenv("SENDGRID_API_KEY", "")
+    def brevo_api_key(self) -> str:
+        return os.getenv("BREVO_API_KEY", "")
+
+    @property
+    def brevo_transactional_email_url(self) -> str:
+        return os.getenv("BREVO_TRANSACTIONAL_EMAIL_URL", "https://api.brevo.com/v3/smtp/email")
+
+    @property
+    def brevo_timeout_seconds(self) -> int:
+        return int(os.getenv("BREVO_TIMEOUT_SECONDS", "20"))
+
+    @property
+    def email_from_name(self) -> str:
+        return os.getenv("EMAIL_FROM_NAME", "MarketMetrics")
 
     @property
     def email_from_address(self) -> str:

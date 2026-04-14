@@ -109,6 +109,12 @@ def update_preferences(
     if payload.emailNotificationsEnabled is not None:
         current_user.emailNotificationsEnabled = payload.emailNotificationsEnabled
 
+    if payload.riskProfile is not None:
+        valid_profiles = {"conservative", "moderate", "aggressive"}
+        if payload.riskProfile not in valid_profiles:
+            raise HTTPException(status_code=400, detail="Invalid risk profile value.")
+        current_user.riskProfile = payload.riskProfile
+
     db.commit()
     db.refresh(current_user)
     return current_user

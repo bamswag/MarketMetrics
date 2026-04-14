@@ -35,4 +35,3 @@ python-multipart
 email-validator
 sqlalchemy
 psycopg2-binary
-sendgrid

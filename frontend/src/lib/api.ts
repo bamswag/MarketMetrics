@@ -34,10 +34,14 @@ export type UserOut = {
   lastLoginAt?: string | null
   planName?: string
   accountStatus?: string
+  riskProfile?: 'conservative' | 'moderate' | 'aggressive' | null
 }
+
+export type RiskProfile = 'conservative' | 'moderate' | 'aggressive'
 
 export type UserPreferencesPayload = {
   emailNotificationsEnabled?: boolean
+  riskProfile?: RiskProfile
 }
 
 export type AccountProfileUpdatePayload = {

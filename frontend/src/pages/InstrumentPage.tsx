@@ -13,14 +13,77 @@ import type {
   PriceAlert,
   PriceAlertCreatePayload,
   PriceAlertUpdatePayload,
+  RiskProfile,
   WatchlistItemDetailedOut,
 } from '../lib/api'
+import '../styles/components/RiskProfileQuiz.css'
 import {
   formatCurrencyWithPreferences,
   formatPriceChangeWithPreferences,
 } from '../lib/marketDisplay'
 import { formatCurrency } from '../lib/formatters'
 import '../styles/pages/InstrumentPage.css'
+
+type AdvisoryMessage = {
+  variant: 'caution' | 'info' | 'default'
+  icon: string
+  title: string
+  text: string
+} | null
+
+function getRiskAdvisory(
+  profile: RiskProfile | null,
+  isCrypto: boolean,
+  assetCategory: string,
+): AdvisoryMessage {
+  if (!profile) return null
+
+  if (isCrypto) {
+    if (profile === 'conservative') {
+      return {
+        variant: 'caution',
+        icon: '⚠️',
+        title: 'High volatility asset',
+        text: 'Cryptocurrency is among the most volatile asset classes. As a conservative investor, consider whether the risk level aligns with your goals before setting alerts or tracking this instrument.',
+      }
+    }
+    if (profile === 'moderate') {
+      return {
+        variant: 'default',
+        icon: '💡',
+        title: 'Volatility heads-up',
+        text: 'Cryptocurrency can deliver strong returns but also sharp drawdowns. Keep position sizes proportional to your overall portfolio.',
+      }
+    }
+    // aggressive — affirm
+    return {
+      variant: 'info',
+      icon: '📈',
+      title: 'High-volatility opportunity',
+      text: 'Crypto aligns with your appetite for higher-risk, higher-reward assets. Stay informed on market sentiment and liquidity.',
+    }
+  }
+
+  // ETF — affirm conservative/moderate, nudge aggressive
+  if (assetCategory === 'etf' || assetCategory === 'etfs') {
+    if (profile === 'aggressive') {
+      return {
+        variant: 'default',
+        icon: '💡',
+        title: 'Diversified instrument',
+        text: 'ETFs offer broad diversification and tend to smooth out single-stock risk. They may limit upside compared to concentrated positions — keep that in mind alongside your higher-growth goals.',
+      }
+    }
+    return {
+      variant: 'info',
+      icon: '✅',
+      title: 'Matches your profile',
+      text: 'ETFs typically offer diversified, lower-volatility exposure — a good fit for your investor profile.',
+    }
+  }
+
+  return null
+}
 
 type InstrumentPageProps = {
   onCreateAlert?: (payload: PriceAlertCreatePayload) => Promise<unknown>
@@ -30,6 +93,7 @@ type InstrumentPageProps = {
   onTrackSymbol?: (symbol: string) => Promise<void>
   onUntrackSymbol?: (symbol: string) => Promise<void>
   onUnauthorized?: (message: string) => void
+  riskProfile?: RiskProfile | null
   token?: string
   trackedSymbols?: WatchlistItemDetailedOut[]
 }
@@ -42,6 +106,7 @@ export function InstrumentPage({
   onTrackSymbol,
   onUnauthorized,
   onUntrackSymbol,
+  riskProfile,
   token,
   trackedSymbols = [],
 }: InstrumentPageProps) {
@@ -323,6 +388,11 @@ export function InstrumentPage({
     preferences,
   )
 
+  // Advisory logic
+  const assetCategory = instrumentDetail?.assetCategory?.toLowerCase() ?? ''
+  const isCrypto = assetCategory === 'crypto' || assetCategory === 'digital currency'
+  const advisory = getRiskAdvisory(riskProfile ?? null, isCrypto, assetCategory)
+
   return (
     <section className="instrument-page page-section">
       <div className="instrument-hero">
@@ -400,6 +470,16 @@ export function InstrumentPage({
         <div className="instrument-loading">
           <div className="instrument-loading-spinner" />
           <p>Loading chart data for {symbol}...</p>
+        </div>
+      ) : null}
+
+      {advisory ? (
+        <div className={`instrument-advisory ${advisory.variant === 'caution' ? 'instrument-advisory--caution' : advisory.variant === 'info' ? 'instrument-advisory--info' : ''}`}>
+          <span className="instrument-advisory-icon" aria-hidden="true">{advisory.icon}</span>
+          <div className="instrument-advisory-body">
+            <span className="instrument-advisory-title">{advisory.title}</span>
+            <p className="instrument-advisory-text">{advisory.text}</p>
+          </div>
         </div>
       ) : null}
 

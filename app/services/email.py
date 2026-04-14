@@ -1,6 +1,7 @@
 """Email delivery helpers for alerts and account actions.
 
-Uses SendGrid when configured and falls back to structured logging in development.
+Uses Brevo's transactional email API when configured and falls back to structured
+logging in development.
 """
 
 from __future__ import annotations
@@ -8,18 +9,15 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+import httpx
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_HAS_SENDGRID = False
-try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
 
-    _HAS_SENDGRID = True
-except ImportError:
-    logger.info("sendgrid package not installed — email notifications disabled")
+def _brevo_is_configured() -> bool:
+    return bool(settings.brevo_api_key and settings.email_from_address)
 
 
 def _send_transactional_email(
@@ -29,39 +27,44 @@ def _send_transactional_email(
     html_content: str,
     debug_action_url: Optional[str] = None,
 ) -> bool:
-    api_key = settings.sendgrid_api_key
-    if not api_key:
+    if not _brevo_is_configured():
         if debug_action_url:
             logger.info("Email action link for %s: %s", to_email, debug_action_url)
         else:
-            logger.debug("No SENDGRID_API_KEY set — skipping transactional email to %s", to_email)
+            logger.debug("BREVO_API_KEY is missing — skipping transactional email to %s", to_email)
         return False
 
-    if not _HAS_SENDGRID:
-        logger.warning("sendgrid package not installed — cannot send email")
-        if debug_action_url:
-            logger.info("Email action link for %s: %s", to_email, debug_action_url)
-        return False
-
-    from_email = settings.email_from_address
-    message = Mail(
-        from_email=from_email,
-        to_emails=to_email,
-        subject=subject,
-        html_content=html_content,
-    )
+    payload = {
+        "sender": {
+            "name": settings.email_from_name,
+            "email": settings.email_from_address,
+        },
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_content,
+    }
 
     try:
-        client = SendGridAPIClient(api_key)
-        response = client.send(message)
+        with httpx.Client(timeout=settings.brevo_timeout_seconds) as client:
+            response = client.post(
+                settings.brevo_transactional_email_url,
+                headers={
+                    "accept": "application/json",
+                    "api-key": settings.brevo_api_key,
+                    "content-type": "application/json",
+                },
+                json=payload,
+            )
+        response.raise_for_status()
+        response_payload = response.json() if response.content else {}
         logger.info(
-            "Transactional email sent to %s (status %s)",
+            "Transactional email sent to %s via Brevo API (%s)",
             to_email,
-            response.status_code,
+            response_payload.get("messageId", "no message id"),
         )
         return True
     except Exception:
-        logger.exception("Failed to send transactional email to %s", to_email)
+        logger.exception("Failed to send transactional email to %s via Brevo API", to_email)
         if debug_action_url:
             logger.info("Email action link for %s: %s", to_email, debug_action_url)
         return False

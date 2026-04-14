@@ -21,6 +21,7 @@ class UserDB(Base):
     passwordResetTokenExpiresAt = Column(DateTime, nullable=True)
     pendingEmailTokenHash = Column(String, nullable=True)
     pendingEmailTokenExpiresAt = Column(DateTime, nullable=True)
+    riskProfile = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
     lastLoginAt = Column(DateTime, nullable=True)
 
