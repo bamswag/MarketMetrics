@@ -18,7 +18,19 @@ class Settings:
 
     @property
     def database_url(self) -> str:
-        return os.getenv("DATABASE_URL", "sqlite:///./marketmetrics.db")
+        configured_url = os.getenv("DATABASE_URL", "").strip()
+        if configured_url:
+            return configured_url
+
+        running_on_render = bool(
+            os.getenv("RENDER")
+            or os.getenv("RENDER_SERVICE_ID")
+            or os.getenv("RENDER_EXTERNAL_URL")
+        )
+        if running_on_render:
+            raise RuntimeError("DATABASE_URL must be set for Render deployments.")
+
+        return "sqlite:///./marketmetrics.db"
 
     @property
     def jwt_secret(self) -> str:

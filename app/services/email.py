@@ -51,7 +51,7 @@ def _send_transactional_email(
     }
 
     try:
-        logger.info(
+        logger.warning(
             "Attempting Brevo API email send to %s from %s via %s (api key suffix: %s)",
             to_email,
             settings.email_from_address,
@@ -70,7 +70,7 @@ def _send_transactional_email(
             )
         response.raise_for_status()
         response_payload = response.json() if response.content else {}
-        logger.info(
+        logger.warning(
             "Transactional email sent to %s via Brevo API (%s)",
             to_email,
             response_payload.get("messageId", "no message id"),
@@ -84,12 +84,12 @@ def _send_transactional_email(
             exc.response.text,
         )
         if debug_action_url:
-            logger.info("Email action link for %s: %s", to_email, debug_action_url)
+            logger.warning("Email action link for %s: %s", to_email, debug_action_url)
         return False
     except Exception:
         logger.exception("Failed to send transactional email to %s via Brevo API", to_email)
         if debug_action_url:
-            logger.info("Email action link for %s: %s", to_email, debug_action_url)
+            logger.warning("Email action link for %s: %s", to_email, debug_action_url)
         return False
 
 
