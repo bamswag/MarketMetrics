@@ -8,11 +8,14 @@ from app.api.routes import alerts, forecasts, growth_projections, health, instru
 from app.api.routes import simulations, watchlists, websocket_quotes
 from app.api.routes.auth import router as auth_router
 from app.core.config import settings
+from app.core.database import database_runtime_summary
 
 logging.basicConfig(
     level=getattr(logging, settings.app_log_level, logging.INFO),
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Market Metrics API")
 
@@ -46,6 +49,11 @@ else:
     @app.get("/")
     def root():
         return {"message": "MarketMetrics API is running. Visit /docs"}
+
+
+@app.on_event("startup")
+def log_runtime_environment() -> None:
+    logger.info("MarketMetrics API starting with database %s", database_runtime_summary())
 
 if __name__ == "__main__":
     import uvicorn

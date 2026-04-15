@@ -22,3 +22,16 @@ engine = create_engine(DATABASE_URL, connect_args=connect_args, **_pool_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+
+def database_runtime_summary() -> str:
+    url = engine.url
+    dialect = engine.dialect.name
+    database_name = url.database or ""
+
+    if dialect == "sqlite":
+        return f"{dialect}:///{database_name}"
+
+    host = url.host or "unknown-host"
+    port = f":{url.port}" if url.port else ""
+    return f"{dialect}://{host}{port}/{database_name}"
