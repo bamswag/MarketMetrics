@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import type { TooltipProps } from 'recharts'
 
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
@@ -20,6 +21,22 @@ type InstrumentChartCardProps = {
 }
 
 const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
+const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
+
+function ChartTooltipContent({ active, payload, label }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null
+  const value = Number(payload[0].value ?? 0)
+  return (
+    <div className="instrument-tooltip">
+      <span className="instrument-tooltip-date">{typeof label === 'string' ? formatLongDate(label) : ''}</span>
+      <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
+    </div>
+  )
+}
+
+function formatYAxisTick(value: number) {
+  return formatCurrency(value)
+}
 
 export function InstrumentChartCard({
   instrumentDetail,
@@ -31,13 +48,14 @@ export function InstrumentChartCard({
       sampleChartSeries(
         instrumentDetail.historicalSeries,
         getMaxChartPoints(selectedRange),
-      ),
+      ).filter((p) => Number.isFinite(p.close)),
     [instrumentDetail.historicalSeries, selectedRange],
   )
 
   const yDomain = useMemo((): [number, number] => {
     if (chartSeries.length === 0) return [0, 1]
-    const prices = chartSeries.map((p) => p.close)
+    const prices = chartSeries.map((p) => p.close).filter((v) => Number.isFinite(v))
+    if (prices.length === 0) return [0, 1]
     const min = Math.min(...prices)
     const max = Math.max(...prices)
     const yPad = (max - min) * 0.07 || 1
@@ -96,30 +114,19 @@ export function InstrumentChartCard({
                 axisLine={false}
                 dataKey="date"
                 minTickGap={40}
-                tick={{ fill: '#687487', fontSize: 12 }}
+                tick={AXIS_TICK}
                 tickFormatter={formatShortDate}
                 tickLine={false}
               />
               <YAxis
                 axisLine={false}
                 domain={yDomain}
-                tick={{ fill: '#687487', fontSize: 12 }}
-                tickFormatter={(value: number) => formatCurrency(value)}
+                tick={AXIS_TICK}
+                tickFormatter={formatYAxisTick}
                 tickLine={false}
                 width={85}
               />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (!active || !payload?.length) return null
-                  const value = Number(payload[0].value ?? 0)
-                  return (
-                    <div className="instrument-tooltip">
-                      <span className="instrument-tooltip-date">{typeof label === 'string' ? formatLongDate(label) : ''}</span>
-                      <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
-                    </div>
-                  )
-                }}
-              />
+              <Tooltip content={ChartTooltipContent} />
               <Area
                 dataKey="close"
                 fill="url(#chartFill)"
