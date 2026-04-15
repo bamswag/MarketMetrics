@@ -8,8 +8,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { TooltipProps } from 'recharts'
-
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
@@ -23,9 +21,15 @@ type InstrumentChartCardProps = {
 const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
 const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
 
-function ChartTooltipContent({ active, payload, label }: TooltipProps<number, string>) {
+type ChartTooltipContentProps = {
+  active?: boolean
+  payload?: Array<{ value?: number | string | null }>
+  label?: string | number
+}
+
+function ChartTooltipContent({ active, payload, label }: ChartTooltipContentProps) {
   if (!active || !payload?.length) return null
-  const value = Number(payload[0].value ?? 0)
+  const value = Number(payload[0]?.value ?? 0)
   return (
     <div className="instrument-tooltip">
       <span className="instrument-tooltip-date">{typeof label === 'string' ? formatLongDate(label) : ''}</span>
