@@ -1,12 +1,13 @@
-import { TrackedSymbolsPreview } from './TrackedSymbolsPreview'
 import { RiskProfileBadge } from './RiskProfileQuiz'
-import type { RiskProfile } from '../lib/api'
-import type { WatchlistItemDetailedOut } from '../lib/api'
+import { TopGainerCard } from './TopGainerCard'
+import type { Mover, RiskProfile, WatchlistItemDetailedOut } from '../lib/api'
 
 type DashboardHeroProps = {
   displayName?: string
   trackedSymbols: WatchlistItemDetailedOut[]
-  isLoadingTrackedSymbols: boolean
+  isLoadingMovers: boolean
+  topGainer: Mover | null
+  topGainerSeries: { date: string; close: number }[]
   activeAlerts: number
   triggeredAlerts: number
   riskProfile?: RiskProfile | null
@@ -17,7 +18,9 @@ type DashboardHeroProps = {
 export function DashboardHero({
   displayName,
   trackedSymbols,
-  isLoadingTrackedSymbols,
+  isLoadingMovers,
+  topGainer,
+  topGainerSeries,
   activeAlerts,
   triggeredAlerts,
   riskProfile,
@@ -72,11 +75,25 @@ export function DashboardHero({
       </div>
 
       <div className="dashboard-metric-grid">
-        <TrackedSymbolsPreview
-          isLoading={isLoadingTrackedSymbols}
-          trackedSymbols={trackedSymbols}
-          variant="hero"
-        />
+        <article className="display-card">
+          <p className="section-label">Top gainer this week</p>
+          {isLoadingMovers && !topGainer ? (
+            <div className="hero-gainer-skeleton">
+              <div className="skeleton-chart-placeholder" />
+              <div className="hero-gainer-skeleton-body">
+                <div className="skeleton-logo" />
+                <div className="skeleton-lines">
+                  <div className="skeleton-line skeleton-line--wide" />
+                  <div className="skeleton-line skeleton-line--narrow" />
+                </div>
+              </div>
+            </div>
+          ) : topGainer ? (
+            <TopGainerCard topGainer={topGainer} topGainerSeries={topGainerSeries} />
+          ) : (
+            <p className="empty-state">Market data will appear here shortly.</p>
+          )}
+        </article>
       </div>
     </section>
   )

@@ -1318,6 +1318,7 @@ function AppContent() {
                   pendingAlertAction={pendingAlertAction}
                   pendingAlertActionId={pendingAlertActionId}
                   token={token}
+                  topGainerSeries={landingTopGainerSeries}
                   watchlist={dashboardData.watchlist}
                 />
                 {showRiskQuiz ? (

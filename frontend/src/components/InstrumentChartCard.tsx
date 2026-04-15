@@ -35,13 +35,13 @@ export function InstrumentChartCard({
     [instrumentDetail.historicalSeries, selectedRange],
   )
 
-  const { minPrice, maxPrice } = useMemo(() => {
-    if (chartSeries.length === 0) return { minPrice: 0, maxPrice: 0 }
+  const yDomain = useMemo((): [number, number] => {
+    if (chartSeries.length === 0) return [0, 1]
     const prices = chartSeries.map((p) => p.close)
     const min = Math.min(...prices)
     const max = Math.max(...prices)
-    const padding = (max - min) * 0.08
-    return { minPrice: Math.max(0, min - padding), maxPrice: max + padding }
+    const yPad = (max - min) * 0.07 || 1
+    return [Math.max(0, min - yPad), max + yPad]
   }, [chartSeries])
 
   const firstClose = chartSeries.length > 0 ? chartSeries[0].close : 0
@@ -102,7 +102,7 @@ export function InstrumentChartCard({
               />
               <YAxis
                 axisLine={false}
-                domain={[minPrice, maxPrice]}
+                domain={yDomain}
                 tick={{ fill: '#687487', fontSize: 12 }}
                 tickFormatter={(value: number) => formatCurrency(value)}
                 tickLine={false}
