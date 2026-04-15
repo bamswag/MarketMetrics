@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
@@ -113,9 +113,8 @@ export function InstrumentPage({
   const { preferences } = useMarketPreferences()
   const params = useParams()
   const symbol = params.symbol?.toUpperCase() ?? ''
-  const onUnauthorizedEvent = useEffectEvent((message: string) => {
-    onUnauthorized?.(message)
-  })
+  const onUnauthorizedRef = useRef(onUnauthorized)
+  onUnauthorizedRef.current = onUnauthorized
 
   const [selectedRange, setSelectedRange] = useState<InstrumentRange>(
     () => preferences.defaultChartRange,
@@ -148,7 +147,7 @@ export function InstrumentPage({
 
   const isTracked = trackedSymbols.some((item) => item.symbol === symbol)
 
-  const loadSymbolAlerts = useEffectEvent(async () => {
+  const loadSymbolAlerts = useCallback(async () => {
     if (!token || !symbol) {
       setSymbolAlerts([])
       return
@@ -168,7 +167,7 @@ export function InstrumentPage({
     } finally {
       setIsLoadingSymbolAlerts(false)
     }
-  })
+  }, [token, symbol])
 
   useEffect(() => {
     setSelectedRange(preferences.defaultChartRange)
@@ -191,7 +190,7 @@ export function InstrumentPage({
 
   useEffect(() => {
     void loadSymbolAlerts()
-  }, [symbol, token, loadSymbolAlerts])
+  }, [loadSymbolAlerts])
 
   useEffect(() => {
     if (!instrumentDetail?.latestQuote.price || alertTargetPrice) {
@@ -227,7 +226,7 @@ export function InstrumentPage({
         }
 
         if (error instanceof ApiError && error.status === 401) {
-          onUnauthorizedEvent('Your session expired. Log in again to view instrument charts.')
+          onUnauthorizedRef.current?.('Your session expired. Log in again to view instrument charts.')
           return
         }
 
