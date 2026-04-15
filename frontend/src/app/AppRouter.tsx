@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-route
 import { AlertToastStack } from '../components/AlertToastStack'
 import type { AlertToast } from '../components/AlertToastStack'
 import { AppHeader } from '../components/AppHeader'
+import { ScrollToTop } from '../components/ScrollToTop'
 import { AuthActions } from '../components/AuthActions'
 import { GlobalSearch } from '../components/GlobalSearch'
 import { DashboardPage } from '../pages/DashboardPage'
@@ -1179,6 +1180,7 @@ function AppContent() {
 
   return (
     <>
+      <ScrollToTop />
       {token ? (
         <AlertToastStack onDismiss={dismissAlertToast} toasts={alertToasts} />
       ) : null}
