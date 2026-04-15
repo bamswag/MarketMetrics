@@ -5,7 +5,7 @@
 
 .dashboard-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(60px, 0.92fr);
   gap: 24px;
   padding: 36px;
   background:

@@ -1,9 +1,9 @@
 .app-shell {
   display: grid;
   gap: 28px;
-  max-width: 1380px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 10px 32px 32px;
+  padding: 10px 16px 32px;
   position: relative;
 }
 
