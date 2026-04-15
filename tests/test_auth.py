@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 import app.core.websocket_auth as ws_auth_module
 import app.orm_models  # noqa: F401
 from app.api.routes import websocket_quotes as ws_quotes_router
+from app.core.config import settings
 from app.core.database import Base
 from app.core.db_dependencies import get_db
 from app.main import app
@@ -192,7 +193,9 @@ class AuthTests(BaseAPITestCase):
             follow_redirects=False,
         )
         self.assertEqual(response.status_code, 307)
-        self.assertTrue(response.headers["location"].startswith("http://127.0.0.1:5173/#token="))
+        self.assertTrue(
+            response.headers["location"].startswith(f"{settings.frontend_base_url.rstrip('/')}/#token=")
+        )
 
         with self.TestingSessionLocal() as db:
             user = db.query(UserDB).filter_by(email="googleuser@example.com").first()

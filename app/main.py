@@ -1,8 +1,10 @@
 import logging
 import os
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, search
 from app.api.routes import simulations, watchlists, websocket_quotes
@@ -41,9 +43,30 @@ app.include_router(watchlists.router)
 app.include_router(alerts.router)
 
 # Serve React frontend static files
-static_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
-if os.path.isdir(static_dir):
-    app.mount('/', StaticFiles(directory=static_dir, html=True), name='frontend')
+static_dir = Path(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")).resolve()
+if static_dir.is_dir():
+    assets_dir = static_dir / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
+
+    @app.get("/favicon.svg", include_in_schema=False)
+    def frontend_favicon():
+        return FileResponse(static_dir / "favicon.svg")
+
+    @app.get("/icons.svg", include_in_schema=False)
+    def frontend_icons():
+        return FileResponse(static_dir / "icons.svg")
+
+    @app.get("/", include_in_schema=False)
+    def frontend_root():
+        return FileResponse(static_dir / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def frontend_app(full_path: str):
+        requested_file = static_dir / full_path
+        if requested_file.is_file():
+            return FileResponse(requested_file)
+        return FileResponse(static_dir / "index.html")
 else:
     # Fallback: if frontend/dist doesn't exist, just log a warning
     @app.get("/")
