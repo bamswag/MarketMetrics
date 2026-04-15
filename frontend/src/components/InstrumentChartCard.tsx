@@ -21,13 +21,9 @@ type InstrumentChartCardProps = {
 const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
 const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
 
-type ChartTooltipContentProps = {
-  active?: boolean
-  payload?: Array<{ value?: number | string | null }>
-  label?: string | number
-}
-
-function ChartTooltipContent({ active, payload, label }: ChartTooltipContentProps) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ChartTooltipContent(props: any) {
+  const { active, payload, label } = props ?? {}
   if (!active || !payload?.length) return null
   const value = Number(payload[0]?.value ?? 0)
   return (
