@@ -101,10 +101,11 @@ function TopGainerCard({ topGainer, topGainerSeries }: TopGainerCardProps) {
                   border: '1px solid #e2e8f0',
                   background: '#fff',
                 }}
-                formatter={(v: number) => [formatCurrency(v), 'Price']}
-                labelFormatter={(label: string) => {
-                  if (!label) return ''
-                  return new Date(label).toLocaleDateString('en-GB', {
+                formatter={(v: any) => [formatCurrency(v as number), 'Price']}
+                labelFormatter={(label: any) => {
+                  const labelStr = String(label ?? '')
+                  if (!labelStr) return ''
+                  return new Date(labelStr).toLocaleDateString('en-GB', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
