@@ -262,6 +262,11 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(payload["pendingEmail"], "newprofile@example.com")
         self.assertIsNotNone(payload["emailVerifiedAt"])
         mock_send_email.assert_called_once()
+        _, _, verification_url = mock_send_email.call_args.args
+        self.assertEqual(
+            verification_url,
+            f"{settings.frontend_base_url.rstrip('/')}/verify-email/email-change-token",
+        )
 
         with self.TestingSessionLocal() as db:
             user = db.query(UserDB).filter_by(email="profilechange@example.com").first()
@@ -324,6 +329,11 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(unknown_response.status_code, 200)
         self.assertEqual(known_response.json(), unknown_response.json())
         mock_send_email.assert_called_once()
+        _, _, reset_url = mock_send_email.call_args.args
+        self.assertEqual(
+            reset_url,
+            f"{settings.frontend_base_url.rstrip('/')}/reset-password/password-reset-token",
+        )
 
     @patch("app.services.auth.send_password_reset_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="live-reset-token")

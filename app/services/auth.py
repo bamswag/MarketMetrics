@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 from secrets import token_urlsafe
 from typing import Optional
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 from uuid import uuid4
 
 import httpx
@@ -115,13 +115,13 @@ def _hash_one_time_token(token: str) -> str:
 
 
 def _password_reset_url(token: str) -> str:
-    query = urlencode({"token": token})
-    return f"{settings.frontend_base_url.rstrip('/')}/reset-password?{query}"
+    token_path = quote(token, safe="")
+    return f"{settings.frontend_base_url.rstrip('/')}/reset-password/{token_path}"
 
 
 def _email_verification_url(token: str) -> str:
-    query = urlencode({"token": token})
-    return f"{settings.frontend_base_url.rstrip('/')}/verify-email?{query}"
+    token_path = quote(token, safe="")
+    return f"{settings.frontend_base_url.rstrip('/')}/verify-email/{token_path}"
 
 
 def _next_session_version(user: UserDB) -> int:

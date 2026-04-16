@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 import '../styles/pages/AuthPages.css'
 
@@ -9,8 +9,9 @@ type ResetPasswordPageProps = {
 }
 
 export function ResetPasswordPage({ onResetPassword }: ResetPasswordPageProps) {
+  const { token: tokenParam } = useParams<{ token?: string }>()
   const [searchParams] = useSearchParams()
-  const resetToken = searchParams.get('token') ?? ''
+  const resetToken = tokenParam ?? searchParams.get('token') ?? ''
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)

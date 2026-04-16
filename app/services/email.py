@@ -131,7 +131,12 @@ def _build_password_reset_email_html(display_name: str, action_url: str) -> str:
             </a>
         </p>
         <p style="color: #666; margin: 0 0 8px;">If you did not request this, you can safely ignore this email.</p>
-        <p style="font-size: 13px; color: #999; word-break: break-all;">{action_url}</p>
+        <p style="color: #666; margin: 0 0 8px;">If the button does not open, copy and paste this full link into your browser:</p>
+        <div style="padding: 14px 16px; border-radius: 18px; background: #f3f6f8; border: 1px solid rgba(15, 118, 110, 0.12);">
+            <a href="{action_url}" style="font-size: 13px; line-height: 1.7; color: #0f766e; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
+                {action_url}
+            </a>
+        </div>
     </div>
     """
 
@@ -147,7 +152,12 @@ def _build_email_verification_html(display_name: str, action_url: str) -> str:
             </a>
         </p>
         <p style="color: #666; margin: 0 0 8px;">Your current sign-in email will stay active until this change is verified.</p>
-        <p style="font-size: 13px; color: #999; word-break: break-all;">{action_url}</p>
+        <p style="color: #666; margin: 0 0 8px;">If the button does not open, copy and paste this full link into your browser:</p>
+        <div style="padding: 14px 16px; border-radius: 18px; background: #f8f4f1; border: 1px solid rgba(201, 106, 69, 0.12);">
+            <a href="{action_url}" style="font-size: 13px; line-height: 1.7; color: #c96a45; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
+                {action_url}
+            </a>
+        </div>
     </div>
     """
 

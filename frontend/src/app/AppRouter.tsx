@@ -1262,10 +1262,28 @@ function AppContent() {
           element={
             <>
               {token ? authenticatedHeader : guestHeader}
+              <ResetPasswordPage onResetPassword={handleResetPasswordWithToken} />
+            </>
+          }
+          path="/reset-password/:token"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
               <VerifyEmailPage onVerify={handleVerifyPendingEmailToken} />
             </>
           }
           path="/verify-email"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <VerifyEmailPage onVerify={handleVerifyPendingEmailToken} />
+            </>
+          }
+          path="/verify-email/:token"
         />
         <Route
           element={
