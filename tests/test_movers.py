@@ -2,7 +2,7 @@ import asyncio
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-from app.integrations.alpaca.market_data import fetch_snapshots
+from app.integrations.alpaca.market_data import fetch_snapshots, fetch_top_movers
 from app.services.market_overview import get_market_movers
 
 try:
@@ -326,3 +326,72 @@ class AlpacaBatchSnapshotFallbackTests(BaseAPITestCase):
         self.assertEqual(set(payload.keys()), {"NVDA", "META"})
         self.assertEqual(payload["NVDA"]["changePercent"], "2.72%")
         self.assertEqual(mock_fetch_snapshot.await_count, 2)
+
+
+class AlpacaTopMoversRankingTests(BaseAPITestCase):
+    @patch("app.integrations.alpaca.market_data.fetch_snapshots", new_callable=AsyncMock)
+    def test_fetch_top_movers_only_returns_negative_entries_for_losers_and_sorts_them(
+        self,
+        mock_fetch_snapshots,
+    ):
+        mock_fetch_snapshots.return_value = {
+            "BTC/USD": {
+                "price": 74500.0,
+                "change": 131.61,
+                "changePercent": "0.18%",
+                "volume": 123_000,
+            },
+            "ETH/USD": {
+                "price": 2340.0,
+                "change": -16.68,
+                "changePercent": "-0.71%",
+                "volume": 98_200,
+            },
+            "AVAX/USD": {
+                "price": 9.72,
+                "change": 0.31,
+                "changePercent": "3.30%",
+                "volume": 66_100,
+            },
+            "DOGE/USD": {
+                "price": 0.15,
+                "change": -0.02,
+                "changePercent": "-12.50%",
+                "volume": 88_400,
+            },
+            "SOL/USD": {
+                "price": 142.5,
+                "change": -4.2,
+                "changePercent": "-2.94%",
+                "volume": 77_100,
+            },
+        }
+
+        payload = asyncio.run(
+            fetch_top_movers(
+                ["BTC/USD", "ETH/USD", "AVAX/USD", "DOGE/USD", "SOL/USD"],
+                top_n=3,
+                asset_class_map={
+                    "BTC/USD": "crypto",
+                    "ETH/USD": "crypto",
+                    "AVAX/USD": "crypto",
+                    "DOGE/USD": "crypto",
+                    "SOL/USD": "crypto",
+                },
+            )
+        )
+
+        self.assertEqual(
+            [item["symbol"] for item in payload["top_gainers"]],
+            ["AVAX/USD", "BTC/USD"],
+        )
+        self.assertEqual(
+            [item["symbol"] for item in payload["top_losers"]],
+            ["DOGE/USD", "SOL/USD", "ETH/USD"],
+        )
+        self.assertTrue(
+            all(item["change_amount"] < 0 for item in payload["top_losers"])
+        )
+        self.assertTrue(
+            all(item["change_percent"].startswith("-") for item in payload["top_losers"])
+        )
