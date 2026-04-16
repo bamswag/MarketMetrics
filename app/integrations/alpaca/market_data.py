@@ -13,6 +13,9 @@ class AlpacaMarketDataError(Exception):
     pass
 
 
+_CRYPTO_SNAPSHOT_BATCH_SIZE = 50
+
+
 def _require_credentials() -> Dict[str, str]:
     if not settings.alpaca_api_key or not settings.alpaca_secret_key:
         raise AlpacaMarketDataError(
@@ -63,6 +66,11 @@ def _to_crypto_data_symbol(symbol: str) -> str:
     if s.endswith("USD"):
         return f"{s[:-3]}/USD"
     return s
+
+
+def _chunked(values: List[str], size: int) -> Iterable[List[str]]:
+    for index in range(0, len(values), size):
+        yield values[index : index + size]
 
 
 async def _fetch_crypto_bars(
@@ -279,11 +287,43 @@ async def fetch_snapshots(
         if missing:
             result.update(await _fetch_snapshots_individually(missing))
 
-    for symbol in crypto_symbols:
-        try:
-            result[symbol] = await fetch_snapshot(symbol, asset_class="crypto")
-        except AlpacaMarketDataError:
-            continue
+    if crypto_symbols:
+        batched_crypto_results: Dict[str, Dict[str, Any]] = {}
+        for batch in _chunked(crypto_symbols, _CRYPTO_SNAPSHOT_BATCH_SIZE):
+            api_symbols = [_to_crypto_data_symbol(symbol) for symbol in batch]
+            try:
+                data = await _request_json(
+                    base_url=settings.alpaca_data_base_url,
+                    path="/v1beta3/crypto/us/snapshots",
+                    params={"symbols": ",".join(api_symbols)},
+                )
+            except AlpacaMarketDataError:
+                data = {}
+
+            snapshots = data.get("snapshots") or {} if isinstance(data, dict) else {}
+            for symbol, api_symbol in zip(batch, api_symbols):
+                snapshot = snapshots.get(api_symbol)
+                if not snapshot:
+                    continue
+                normalized = _normalize_snapshot(symbol, snapshot)
+                if normalized["price"] is not None:
+                    batched_crypto_results[symbol] = normalized
+
+            missing_crypto_symbols = [symbol for symbol in batch if symbol not in batched_crypto_results]
+            if missing_crypto_symbols:
+                fallback_results = await asyncio.gather(
+                    *(
+                        fetch_snapshot(symbol, asset_class="crypto")
+                        for symbol in missing_crypto_symbols
+                    ),
+                    return_exceptions=True,
+                )
+                for symbol, payload in zip(missing_crypto_symbols, fallback_results):
+                    if isinstance(payload, Exception):
+                        continue
+                    batched_crypto_results[symbol] = payload
+
+        result.update(batched_crypto_results)
 
     return result
 

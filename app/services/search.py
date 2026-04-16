@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from app.core.config import settings
+from app.integrations.alpaca.assets import fetch_assets_catalog
 
 
 _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
+_MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 1800.0
 _CRYPTO_QUOTE_SUFFIXES = ("USD",)
 _ETF_NAME_HINTS = (
     " ETF",
@@ -204,6 +206,8 @@ _symbol_catalog_cache_index: Dict[str, Dict[str, Any]] = _build_symbol_index(
     _symbol_catalog_cache_data
 )
 _symbol_catalog_last_check_monotonic: float = 0.0
+_dynamic_crypto_mover_universe_cache: List[str] = []
+_dynamic_crypto_mover_universe_last_refresh_monotonic: float = 0.0
 
 
 def _catalog_path() -> Path:
@@ -396,6 +400,70 @@ def get_mover_universe_symbols_by_category() -> Dict[str, List[str]]:
     return {
         category: list(symbols)
         for category, symbols in DEFAULT_MOVER_UNIVERSE_BY_CATEGORY.items()
+    }
+
+
+def _extract_dynamic_crypto_mover_symbols(catalog: Iterable[Dict[str, Any]]) -> List[str]:
+    symbols: List[str] = []
+    seen: set[str] = set()
+
+    for raw_item in catalog:
+        item = _normalize_catalog_item(raw_item)
+        if item.get("asset_class") != "crypto":
+            continue
+        if not bool(item.get("tradable", True)):
+            continue
+        if str(item.get("status", "active")).strip().lower() != "active":
+            continue
+
+        symbol = normalize_catalog_symbol(item.get("symbol"), "crypto")
+        if not symbol or not symbol.endswith("/USD") or symbol in seen:
+            continue
+
+        seen.add(symbol)
+        symbols.append(symbol)
+
+    return sorted(symbols)
+
+
+async def get_dynamic_mover_universe_symbols_by_category(
+    *, force_refresh: bool = False
+) -> Dict[str, List[str]]:
+    global _dynamic_crypto_mover_universe_cache
+    global _dynamic_crypto_mover_universe_last_refresh_monotonic
+
+    now = time.monotonic()
+    if (
+        not force_refresh
+        and _dynamic_crypto_mover_universe_cache
+        and (now - _dynamic_crypto_mover_universe_last_refresh_monotonic)
+        < _MOVER_UNIVERSE_REFRESH_TTL_SECONDS
+    ):
+        return {
+            "stocks": list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["stocks"]),
+            "crypto": list(_dynamic_crypto_mover_universe_cache),
+            "etfs": list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["etfs"]),
+        }
+
+    crypto_symbols: List[str] = []
+    try:
+        crypto_symbols = _extract_dynamic_crypto_mover_symbols(await fetch_assets_catalog())
+    except Exception:
+        crypto_symbols = []
+
+    if not crypto_symbols:
+        crypto_symbols = _extract_dynamic_crypto_mover_symbols(load_symbol_catalog(force=force_refresh))
+
+    if not crypto_symbols:
+        crypto_symbols = list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["crypto"])
+
+    _dynamic_crypto_mover_universe_cache = list(crypto_symbols)
+    _dynamic_crypto_mover_universe_last_refresh_monotonic = now
+
+    return {
+        "stocks": list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["stocks"]),
+        "crypto": list(_dynamic_crypto_mover_universe_cache),
+        "etfs": list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["etfs"]),
     }
 
 

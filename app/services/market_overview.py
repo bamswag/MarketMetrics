@@ -14,7 +14,7 @@ from app.schemas.movers import (
 )
 from app.services.price_history import get_daily_close_series_cached
 from app.services.search import (
-    get_mover_universe_symbols_by_category,
+    get_dynamic_mover_universe_symbols_by_category,
     get_symbol_asset_class,
     get_symbol_metadata,
 )
@@ -171,7 +171,7 @@ def _build_category_buckets(
 
 
 async def _build_market_movers(limit: int) -> MoversResponse:
-    mover_universe_by_category = get_mover_universe_symbols_by_category()
+    mover_universe_by_category = await get_dynamic_mover_universe_symbols_by_category()
     mover_universe = [
         symbol
         for category in MOVER_CATEGORY_ORDER

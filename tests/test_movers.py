@@ -327,6 +327,41 @@ class AlpacaBatchSnapshotFallbackTests(BaseAPITestCase):
         self.assertEqual(payload["NVDA"]["changePercent"], "2.72%")
         self.assertEqual(mock_fetch_snapshot.await_count, 2)
 
+    @patch("app.integrations.alpaca.market_data.fetch_snapshot", new_callable=AsyncMock)
+    @patch("app.integrations.alpaca.market_data._request_json", new_callable=AsyncMock)
+    def test_fetch_snapshots_batches_crypto_symbols_before_falling_back(
+        self,
+        mock_request_json,
+        mock_fetch_snapshot,
+    ):
+        mock_request_json.return_value = {
+            "snapshots": {
+                "BTC/USD": {
+                    "latestTrade": {"p": 74500.0},
+                    "dailyBar": {"v": 123_000, "t": "2026-04-16T00:00:00Z"},
+                    "prevDailyBar": {"c": 74368.39, "t": "2026-04-15T00:00:00Z"},
+                },
+                "ETH/USD": {
+                    "latestTrade": {"p": 2340.0},
+                    "dailyBar": {"v": 98_200, "t": "2026-04-16T00:00:00Z"},
+                    "prevDailyBar": {"c": 2356.68, "t": "2026-04-15T00:00:00Z"},
+                },
+            }
+        }
+
+        payload = asyncio.run(
+            fetch_snapshots(
+                ["BTC/USD", "ETH/USD"],
+                asset_class_map={"BTC/USD": "crypto", "ETH/USD": "crypto"},
+            )
+        )
+
+        self.assertEqual(set(payload.keys()), {"BTC/USD", "ETH/USD"})
+        self.assertEqual(payload["BTC/USD"]["symbol"], "BTC/USD")
+        self.assertEqual(payload["ETH/USD"]["symbol"], "ETH/USD")
+        mock_request_json.assert_awaited_once()
+        mock_fetch_snapshot.assert_not_awaited()
+
 
 class AlpacaTopMoversRankingTests(BaseAPITestCase):
     @patch("app.integrations.alpaca.market_data.fetch_snapshots", new_callable=AsyncMock)
