@@ -40,9 +40,9 @@ npm run build
 
 ## Notes
 
-- The frontend expects the FastAPI backend to be running.
-- By default it points to `http://127.0.0.1:8000`.
-- You can override the backend URL with `VITE_API_BASE_URL`.
+- During development, the frontend defaults to `http://127.0.0.1:8000`.
+- In production, the frontend falls back to the current site origin so a full-stack Render deployment can talk to its co-hosted API without an extra env override.
+- You can still override the backend URL with `VITE_API_BASE_URL`.
 
 ## Main folders
 

@@ -1,4 +1,7 @@
-const FALLBACK_API_URL = import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''
+const FALLBACK_API_URL =
+  import.meta.env.DEV
+    ? 'http://127.0.0.1:8000'
+    : (typeof window !== 'undefined' ? window.location.origin : '')
 const INSTRUMENT_DETAIL_CACHE_TTL_MS = 60_000
 
 type InstrumentDetailCacheEntry = {
