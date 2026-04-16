@@ -3,6 +3,7 @@ const FALLBACK_API_URL =
     ? 'http://127.0.0.1:8000'
     : (typeof window !== 'undefined' ? window.location.origin : '')
 const INSTRUMENT_DETAIL_CACHE_TTL_MS = 60_000
+const INSTRUMENT_DETAIL_CACHE_MAX_SIZE = 40
 
 type InstrumentDetailCacheEntry = {
   expiresAt: number
@@ -11,6 +12,26 @@ type InstrumentDetailCacheEntry = {
 
 const instrumentDetailCache = new Map<string, InstrumentDetailCacheEntry>()
 const instrumentDetailInflight = new Map<string, Promise<InstrumentDetailResponse>>()
+
+function pruneInstrumentDetailCache(now = Date.now()): void {
+  for (const [key, entry] of instrumentDetailCache.entries()) {
+    if (entry.expiresAt <= now) {
+      instrumentDetailCache.delete(key)
+    }
+  }
+
+  if (instrumentDetailCache.size <= INSTRUMENT_DETAIL_CACHE_MAX_SIZE) {
+    return
+  }
+
+  const targetSize = Math.floor(INSTRUMENT_DETAIL_CACHE_MAX_SIZE / 2)
+  for (const key of instrumentDetailCache.keys()) {
+    if (instrumentDetailCache.size <= targetSize) {
+      break
+    }
+    instrumentDetailCache.delete(key)
+  }
+}
 
 export type LoginResponse = {
   access_token: string
@@ -571,6 +592,7 @@ export async function fetchInstrumentDetail(
   symbol: string,
   range: InstrumentRange,
 ): Promise<InstrumentDetailResponse> {
+  pruneInstrumentDetailCache()
   const key = instrumentDetailCacheKey(symbol, range)
   const cachedEntry = instrumentDetailCache.get(key)
   if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
@@ -591,10 +613,12 @@ export async function fetchInstrumentDetail(
     )
 
     const payload = await parseResponse<InstrumentDetailResponse>(response)
+    instrumentDetailCache.delete(key)
     instrumentDetailCache.set(key, {
       expiresAt: Date.now() + INSTRUMENT_DETAIL_CACHE_TTL_MS,
       payload,
     })
+    pruneInstrumentDetailCache()
     return payload
   })()
 

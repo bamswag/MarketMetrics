@@ -16,6 +16,11 @@ HistoryCacheKey = Tuple[str, str, Optional[str], Optional[str]]
 _history_cache: Dict[HistoryCacheKey, Tuple[float, List[Tuple[date, float]]]] = {}
 _history_locks: Dict[HistoryCacheKey, asyncio.Lock] = {}
 
+# Historical series can be much larger than quote snapshots, so keep this cache
+# intentionally smaller and short-lived to avoid steady process growth.
+_CACHE_MAX_SIZE = 128
+_CACHE_HARD_TTL_SECONDS = 600
+
 
 def _history_cache_key(
     symbol: str,
@@ -29,6 +34,27 @@ def _history_cache_key(
         start.isoformat() if start else None,
         end.isoformat() if end else None,
     )
+
+
+def _evict_stale_and_overflow() -> None:
+    """Remove expired history entries, then trim to a bounded size."""
+    now = time.time()
+
+    stale = [
+        key
+        for key, (cached_at, _) in _history_cache.items()
+        if now - cached_at > _CACHE_HARD_TTL_SECONDS
+    ]
+    for key in stale:
+        _history_cache.pop(key, None)
+        _history_locks.pop(key, None)
+
+    if len(_history_cache) > _CACHE_MAX_SIZE:
+        sorted_keys = sorted(_history_cache, key=lambda key: _history_cache[key][0])
+        evict_count = len(_history_cache) - _CACHE_MAX_SIZE // 2
+        for key in sorted_keys[:evict_count]:
+            _history_cache.pop(key, None)
+            _history_locks.pop(key, None)
 
 
 async def fetch_daily_close_series(
@@ -72,6 +98,10 @@ async def get_daily_close_series_cached(
 
         payload = await fetch_daily_close_series(symbol, start=start, end=end)
         _history_cache[key] = (time.time(), payload)
+
+        # Evict on write so cleanup stays incremental on the hot path.
+        _evict_stale_and_overflow()
+
         return list(payload)
 
 

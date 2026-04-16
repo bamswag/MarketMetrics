@@ -154,6 +154,17 @@ def _resolve_frontend_origin(frontend_origin: Optional[str]) -> str:
     return origin
 
 
+def resolve_google_redirect_uri(request_origin: Optional[str] = None) -> str:
+    if request_origin is not None:
+        normalized_origin = request_origin.strip().rstrip("/")
+        parsed = urlparse(normalized_origin)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise GoogleAuthError("Backend origin is invalid.")
+        return f"{parsed.scheme}://{parsed.netloc}/auth/google/callback"
+
+    return settings.google_oauth_redirect_uri.strip()
+
+
 def register_user(db: Session, email: str, password: str, display_name: str) -> UserDB:
     ensure_user_schema(db.get_bind())
 
@@ -436,7 +447,9 @@ def build_google_authorization_url(
     intent: str = "login",
     accepted_terms: bool = False,
     frontend_origin: Optional[str] = None,
+    request_origin: Optional[str] = None,
 ) -> str:
+    redirect_uri = resolve_google_redirect_uri(request_origin)
     state_token = _build_google_state_token(
         return_to,
         intent=intent,
@@ -446,7 +459,7 @@ def build_google_authorization_url(
     params = urlencode(
         {
             "client_id": settings.google_client_id,
-            "redirect_uri": settings.google_oauth_redirect_uri,
+            "redirect_uri": redirect_uri,
             "response_type": "code",
             "scope": "openid email profile",
             "prompt": "select_account",
@@ -500,9 +513,11 @@ def _decode_google_state_token(state_token: str) -> dict[str, object]:
 async def exchange_google_code_for_userinfo(
     code: str,
     state_token: str,
+    request_origin: Optional[str] = None,
 ) -> tuple[dict, dict[str, object]]:
     _require_google_oauth_config()
     google_state = _decode_google_state_token(state_token)
+    redirect_uri = resolve_google_redirect_uri(request_origin)
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -512,7 +527,7 @@ async def exchange_google_code_for_userinfo(
                     "code": code,
                     "client_id": settings.google_client_id,
                     "client_secret": settings.google_client_secret,
-                    "redirect_uri": settings.google_oauth_redirect_uri,
+                    "redirect_uri": redirect_uri,
                     "grant_type": "authorization_code",
                 },
                 headers={"Accept": "application/json"},

@@ -87,6 +87,8 @@ const initialDashboardData: DashboardData = {
 }
 
 const DASHBOARD_CACHE_TTL_MS = 30_000
+const TRIGGERED_ALERT_DEDUPE_TTL_MS = 6 * 60 * 60 * 1000
+const TRIGGERED_ALERT_DEDUPE_MAX_SIZE = 500
 
 type DashboardCacheEntry = {
   token: string
@@ -216,7 +218,29 @@ function AppContent() {
 
   const alertSocketsRef = useRef<Map<string, WebSocket>>(new Map())
   const alertReconnectTimersRef = useRef<Map<string, number>>(new Map())
-  const triggeredAlertIdsRef = useRef<Set<string>>(new Set())
+  const triggeredAlertIdsRef = useRef<Map<string, number>>(new Map())
+
+  const pruneTriggeredAlertIds = useEffectEvent(() => {
+    const now = Date.now()
+
+    for (const [alertId, seenAt] of triggeredAlertIdsRef.current.entries()) {
+      if (now - seenAt > TRIGGERED_ALERT_DEDUPE_TTL_MS) {
+        triggeredAlertIdsRef.current.delete(alertId)
+      }
+    }
+
+    if (triggeredAlertIdsRef.current.size <= TRIGGERED_ALERT_DEDUPE_MAX_SIZE) {
+      return
+    }
+
+    const targetSize = Math.floor(TRIGGERED_ALERT_DEDUPE_MAX_SIZE / 2)
+    for (const alertId of triggeredAlertIdsRef.current.keys()) {
+      if (triggeredAlertIdsRef.current.size <= targetSize) {
+        break
+      }
+      triggeredAlertIdsRef.current.delete(alertId)
+    }
+  })
 
   const handleSessionExpired = useEffectEvent((message: string) => {
     for (const timeoutId of alertReconnectTimersRef.current.values()) {
@@ -703,11 +727,13 @@ function AppContent() {
       return
     }
 
+    pruneTriggeredAlertIds()
+
     if (triggeredAlertIdsRef.current.has(payload.data.id)) {
       return
     }
 
-    triggeredAlertIdsRef.current.add(payload.data.id)
+    triggeredAlertIdsRef.current.set(payload.data.id, Date.now())
     showTriggeredAlertNotification({
       id: payload.data.id,
       symbol: payload.data.symbol,

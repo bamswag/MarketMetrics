@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status, Depends
+from fastapi import APIRouter, HTTPException, Query, Request, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -39,6 +39,18 @@ from app.services.auth import (
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _request_origin(request: Request) -> str:
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    forwarded_host = request.headers.get("x-forwarded-host")
+    scheme = (forwarded_proto or request.url.scheme).split(",")[0].strip()
+    host = (
+        forwarded_host
+        or request.headers.get("host")
+        or request.url.netloc
+    ).split(",")[0].strip()
+    return f"{scheme}://{host}"
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
@@ -178,6 +190,7 @@ def verify_email(payload: EmailVerificationRequest, db: Session = Depends(get_db
 
 @router.get("/google/login")
 def google_login(
+    request: Request,
     return_to: str = Query(default="/", alias="returnTo"),
     intent: str = Query(default="login"),
     accepted_terms: bool = Query(default=False, alias="acceptedTerms"),
@@ -189,6 +202,7 @@ def google_login(
             intent=intent,
             accepted_terms=accepted_terms,
             frontend_origin=frontend_origin,
+            request_origin=_request_origin(request),
         )
     except GoogleAuthError as exc:
         redirect_path = "/signup" if intent == "signup" else "/login"
@@ -205,6 +219,7 @@ def google_login(
 
 @router.get("/google/callback")
 async def google_callback(
+    request: Request,
     code: str,
     state: str,
     db: Session = Depends(get_db),
@@ -212,7 +227,11 @@ async def google_callback(
     fallback_path = "/login"
     fallback_frontend_origin = None
     try:
-        google_userinfo, google_state = await exchange_google_code_for_userinfo(code, state)
+        google_userinfo, google_state = await exchange_google_code_for_userinfo(
+            code,
+            state,
+            request_origin=_request_origin(request),
+        )
         fallback_path = "/signup" if google_state["intent"] == "signup" else "/login"
         fallback_frontend_origin = google_state.get("frontendOrigin") or None
         user = get_or_create_google_user(

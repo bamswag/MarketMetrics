@@ -4,12 +4,51 @@ import os
 import tempfile
 import unittest
 from datetime import date
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 try:
     from test_auth import BaseAPITestCase, ML_DEPENDENCIES_AVAILABLE, _generate_synthetic_rows
 except ModuleNotFoundError:
     from tests.test_auth import BaseAPITestCase, ML_DEPENDENCIES_AVAILABLE, _generate_synthetic_rows
+
+
+class ForecastModelCacheTests(unittest.TestCase):
+    def setUp(self):
+        from app.forecasting import training
+
+        training._loaded_model_cache.clear()
+
+    def tearDown(self):
+        from app.forecasting import training
+
+        training._loaded_model_cache.clear()
+
+    def test_loaded_model_cache_evicts_old_versions(self):
+        from app.forecasting import training
+
+        class DummyJoblib:
+            def load(self, path):
+                return {"primaryModel": f"bundle:{Path(path).parent.name}"}
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for version in ("v1", "v2", "v3"):
+                version_dir = root / version
+                version_dir.mkdir(parents=True, exist_ok=True)
+                (version_dir / "model.joblib").write_text("dummy")
+                (version_dir / "metadata.json").write_text(json.dumps({"modelVersion": version}))
+
+            with patch.object(training, "_require_ml_dependencies", return_value={"joblib": DummyJoblib()}), patch.object(
+                training,
+                "_version_dir",
+                side_effect=lambda version: root / version,
+            ):
+                training.load_trained_model("v1")
+                training.load_trained_model("v2")
+                training.load_trained_model("v3")
+
+        self.assertEqual(list(training._loaded_model_cache.keys()), ["v2", "v3"])
 
 
 @unittest.skipUnless(ML_DEPENDENCIES_AVAILABLE, "ML dependencies are not installed")

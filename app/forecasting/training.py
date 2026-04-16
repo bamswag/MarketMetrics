@@ -5,6 +5,7 @@ import json
 import math
 import os
 import warnings
+from collections import OrderedDict
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -1064,7 +1065,13 @@ async def train_random_forest_forecaster(
     return metadata
 
 
-_loaded_model_cache: Dict[str, Tuple[int, Any, Any, Any, Any]] = {}
+_LOADED_MODEL_CACHE_MAX_SIZE = 2
+_loaded_model_cache: "OrderedDict[str, Tuple[int, Any, Any, Any, Any]]" = OrderedDict()
+
+
+def _prune_loaded_model_cache() -> None:
+    while len(_loaded_model_cache) > _LOADED_MODEL_CACHE_MAX_SIZE:
+        _loaded_model_cache.popitem(last=False)
 
 
 def _resolve_model_version(model_version: Optional[str]) -> str:
@@ -1094,6 +1101,7 @@ def load_trained_model(model_version: Optional[str] = None):
     current_mtime_ns = model_path.stat().st_mtime_ns
     cached = _loaded_model_cache.get(version)
     if cached and cached[0] == current_mtime_ns:
+        _loaded_model_cache.move_to_end(version)
         _, bundle, metadata, importances, calibration = cached
         return bundle, metadata, importances, calibration
 
@@ -1118,6 +1126,8 @@ def load_trained_model(model_version: Optional[str] = None):
         feature_importances,
         interval_calibration,
     )
+    _loaded_model_cache.move_to_end(version)
+    _prune_loaded_model_cache()
     return model_bundle, metadata, feature_importances, interval_calibration
 
 

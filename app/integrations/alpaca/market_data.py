@@ -361,6 +361,13 @@ async def fetch_company_name(symbol: str) -> str:
     return _normalize_symbol(symbol)
 
 
+def _change_percent_value(value: Any) -> Optional[float]:
+    try:
+        return float(str(value).replace("%", ""))
+    except Exception:
+        return None
+
+
 async def fetch_top_movers(
     symbols: Iterable[str],
     *,
@@ -374,7 +381,8 @@ async def fetch_top_movers(
         price = snapshot.get("price")
         change = snapshot.get("change")
         change_percent = snapshot.get("changePercent")
-        if price is None or change is None or change_percent is None:
+        change_percent_value = _change_percent_value(change_percent)
+        if price is None or change is None or change_percent is None or change_percent_value is None:
             continue
         movers.append(
             {
@@ -382,17 +390,31 @@ async def fetch_top_movers(
                 "price": price,
                 "change_amount": change,
                 "change_percent": change_percent,
+                "change_percent_value": change_percent_value,
                 "volume": snapshot.get("volume"),
             }
         )
 
-    sorted_movers = sorted(
-        movers,
-        key=lambda item: float(str(item["change_percent"]).replace("%", "")),
+    gainers = sorted(
+        [item for item in movers if item["change_percent_value"] > 0],
+        key=lambda item: item["change_percent_value"],
         reverse=True,
     )
+    losers = sorted(
+        [item for item in movers if item["change_percent_value"] < 0],
+        key=lambda item: item["change_percent_value"],
+    )
+
+    def _public_shape(item: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "symbol": item["symbol"],
+            "price": item["price"],
+            "change_amount": item["change_amount"],
+            "change_percent": item["change_percent"],
+            "volume": item["volume"],
+        }
 
     return {
-        "top_gainers": sorted_movers[:top_n],
-        "top_losers": list(reversed(sorted_movers[-top_n:])),
+        "top_gainers": [_public_shape(item) for item in gainers[:top_n]],
+        "top_losers": [_public_shape(item) for item in losers[:top_n]],
     }

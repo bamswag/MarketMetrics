@@ -176,6 +176,13 @@ class AuthTests(BaseAPITestCase):
             response.headers["location"],
             "https://accounts.google.com/o/oauth2/v2/auth?client_id=test",
         )
+        mock_build_google_url.assert_called_once_with(
+            "/",
+            intent="login",
+            accepted_terms=False,
+            frontend_origin=None,
+            request_origin="http://testserver",
+        )
 
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
     def test_google_callback_creates_user_and_redirects_with_token(self, mock_exchange_google_code):
@@ -195,6 +202,11 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(response.status_code, 307)
         self.assertTrue(
             response.headers["location"].startswith(f"{settings.frontend_base_url.rstrip('/')}/#token=")
+        )
+        mock_exchange_google_code.assert_awaited_once_with(
+            "google-code",
+            "signed-state",
+            request_origin="http://testserver",
         )
 
         with self.TestingSessionLocal() as db:
