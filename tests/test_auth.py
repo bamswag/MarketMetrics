@@ -77,6 +77,8 @@ class BaseAPITestCase(unittest.TestCase):
         price_history_service._history_locks.clear()
         market_overview_service._movers_cache.clear()
         market_overview_service._movers_cache_locks.clear()
+        market_overview_service._featured_mover_cache.clear()
+        market_overview_service._featured_mover_cache_locks.clear()
 
     def register_and_login(self, email="tester@example.com", password="password123", display_name="Tester"):
         register_response = self.client.post(

@@ -2,16 +2,36 @@ const FALLBACK_API_URL =
   import.meta.env.DEV
     ? 'http://127.0.0.1:8000'
     : (typeof window !== 'undefined' ? window.location.origin : '')
+const FEATURED_MOVER_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_MAX_SIZE = 40
+
+type FeaturedMoverCacheEntry = {
+  expiresAt: number
+  payload: FeaturedMoverResponse
+}
 
 type InstrumentDetailCacheEntry = {
   expiresAt: number
   payload: InstrumentDetailResponse
 }
 
+const featuredMoverCache = new Map<string, FeaturedMoverCacheEntry>()
+const featuredMoverInflight = new Map<string, Promise<FeaturedMoverResponse>>()
 const instrumentDetailCache = new Map<string, InstrumentDetailCacheEntry>()
 const instrumentDetailInflight = new Map<string, Promise<InstrumentDetailResponse>>()
+
+function featuredMoverCacheKey(selection: FeaturedMoverSelection): string {
+  return `${selection.period}:${selection.direction}:${selection.asset}`
+}
+
+function pruneFeaturedMoverCache(now = Date.now()): void {
+  for (const [key, entry] of featuredMoverCache.entries()) {
+    if (entry.expiresAt <= now) {
+      featuredMoverCache.delete(key)
+    }
+  }
+}
 
 function pruneInstrumentDetailCache(now = Date.now()): void {
   for (const [key, entry] of instrumentDetailCache.entries()) {
@@ -127,6 +147,29 @@ export type MoversResponse = {
   losers: Mover[]
   gainersByCategory?: MoversByCategory
   losersByCategory?: MoversByCategory
+  source: string
+}
+
+export type FeaturedMoverPeriod = 'day' | 'week' | 'month'
+export type FeaturedMoverDirection = 'gainer' | 'loser'
+export type FeaturedMoverAsset = 'all' | 'stocks' | 'crypto' | 'etfs'
+
+export type FeaturedMoverSelection = {
+  period: FeaturedMoverPeriod
+  direction: FeaturedMoverDirection
+  asset: FeaturedMoverAsset
+}
+
+export type FeaturedMoverResponse = {
+  period: FeaturedMoverPeriod
+  direction: FeaturedMoverDirection
+  asset: FeaturedMoverAsset
+  title: string
+  mover: Mover | null
+  historicalSeries: Array<{
+    date: string
+    close: number
+  }>
   source: string
 }
 
@@ -546,6 +589,49 @@ export async function fetchMovers(
     authHeadersIfPresent(token),
     signal,
   )
+}
+
+export async function fetchFeaturedMover(
+  selection: FeaturedMoverSelection,
+  signal?: AbortSignal,
+): Promise<FeaturedMoverResponse> {
+  pruneFeaturedMoverCache()
+  const key = featuredMoverCacheKey(selection)
+  const cachedEntry = featuredMoverCache.get(key)
+  if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
+    return cachedEntry.payload
+  }
+
+  const inflightRequest = featuredMoverInflight.get(key)
+  if (inflightRequest) {
+    return inflightRequest
+  }
+
+  const requestPromise = (async () => {
+    const params = new URLSearchParams({
+      period: selection.period,
+      direction: selection.direction,
+      asset: selection.asset,
+    })
+    const response = await safeFetch(`${getApiUrl()}/movers/featured?${params.toString()}`, {
+      signal,
+    })
+    const payload = await parseResponse<FeaturedMoverResponse>(response)
+    featuredMoverCache.set(key, {
+      expiresAt: Date.now() + FEATURED_MOVER_CACHE_TTL_MS,
+      payload,
+    })
+    pruneFeaturedMoverCache()
+    return payload
+  })()
+
+  featuredMoverInflight.set(key, requestPromise)
+
+  try {
+    return await requestPromise
+  } finally {
+    featuredMoverInflight.delete(key)
+  }
 }
 
 export async function fetchWatchlist(

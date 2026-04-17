@@ -28,7 +28,6 @@ import {
   deleteWatchlistItem,
   fetchAlerts,
   fetchCurrentUser,
-  fetchInstrumentDetail,
   fetchMovers,
   fetchWatchlist,
   getApiUrl,
@@ -206,7 +205,6 @@ function AppContent() {
   const [landingMovers, setLandingMovers] = useState<MoversResponse | null>(null)
   const [landingMoversError, setLandingMoversError] = useState('')
   const [isLoadingLandingMovers, setIsLoadingLandingMovers] = useState(false)
-  const [landingTopGainerSeries, setLandingTopGainerSeries] = useState<{ date: string; close: number }[]>([])
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>(
     () => getInitialNotificationPermission(),
   )
@@ -341,40 +339,6 @@ function AppContent() {
       cancelled = true
     }
   }, [token])
-
-  useEffect(() => {
-    if (!landingMovers) return
-
-    const all = [
-      ...(landingMovers.gainersByCategory?.stocks ?? landingMovers.gainers ?? []),
-      ...(landingMovers.gainersByCategory?.crypto ?? []),
-      ...(landingMovers.gainersByCategory?.etfs ?? []),
-    ]
-    if (all.length === 0) return
-
-    const topGainer = all.reduce((best, m) => {
-      return parseFloat(m.change_percent ?? '0') > parseFloat(best.change_percent ?? '0') ? m : best
-    }, all[0])
-
-    let cancelled = false
-
-    async function loadTopGainerSeries() {
-      try {
-        const detail = await fetchInstrumentDetail(undefined, topGainer.symbol, '1M')
-        if (!cancelled && detail.historicalSeries.length > 0) {
-          setLandingTopGainerSeries(detail.historicalSeries)
-        }
-      } catch {
-        // Silently fall back to the generated sparkline
-      }
-    }
-
-    void loadTopGainerSeries()
-
-    return () => {
-      cancelled = true
-    }
-  }, [landingMovers])
 
   useEffect(() => {
     if (!token) {
@@ -1223,7 +1187,6 @@ function AppContent() {
                   isLoadingMovers={isLoadingLandingMovers}
                   movers={landingMovers}
                   moversError={landingMoversError}
-                  topGainerSeries={landingTopGainerSeries}
                 />
               </>
             )
@@ -1364,7 +1327,6 @@ function AppContent() {
                   pendingAlertAction={pendingAlertAction}
                   pendingAlertActionId={pendingAlertActionId}
                   token={token}
-                  topGainerSeries={landingTopGainerSeries}
                   watchlist={dashboardData.watchlist}
                 />
                 {showRiskQuiz ? (

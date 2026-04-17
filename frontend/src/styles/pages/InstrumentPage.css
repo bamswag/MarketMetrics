@@ -457,6 +457,87 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+.instrument-chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.instrument-chart-type-select {
+  height: 44px;
+  padding: 0 0.9rem;
+  border: none;
+  border-radius: 14px;
+  background: rgba(20, 32, 51, 0.05);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.instrument-chart-type-select:hover {
+  background: rgba(20, 32, 51, 0.09);
+}
+
+.instrument-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px 0;
+  flex-wrap: wrap;
+}
+
+.instrument-chart-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1.5px solid;
+}
+
+.instrument-chart-legend-pill--price {
+  color: #0a6560;
+  border-color: rgba(15, 118, 110, 0.3);
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.instrument-chart-legend-pill--ma30 {
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.instrument-chart-legend-pill--ma50 {
+  color: #1e40af;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.instrument-chart-legend-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.instrument-chart-legend-swatch--price {
+  background: #0f766e;
+}
+
+.instrument-chart-legend-swatch--ma30 {
+  background: #f59e0b;
+}
+
+.instrument-chart-legend-swatch--ma50 {
+  background: #3b82f6;
+}
+
 .instrument-chart-frame {
   padding: 12px 20px 8px;
 }
@@ -482,6 +563,20 @@
   font-size: 1.05rem;
   color: #fff;
   font-weight: 700;
+}
+
+.instrument-tooltip-ma {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.instrument-tooltip-ma--30 {
+  color: #f59e0b;
+}
+
+.instrument-tooltip-ma--50 {
+  color: #60a5fa;
 }
 
 .instrument-chart-footer {

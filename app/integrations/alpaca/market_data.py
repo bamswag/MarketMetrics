@@ -185,6 +185,77 @@ async def fetch_daily_close_series(
     return [(row["date"], row["close"]) for row in rows]
 
 
+async def fetch_intraday_close_series(
+    symbol: str,
+    *,
+    asset_class: str = "us_equity",
+) -> List[Tuple[datetime, float]]:
+    normalized_symbol = _normalize_symbol(symbol)
+    now = datetime.utcnow().replace(microsecond=0)
+
+    if asset_class == "crypto":
+        api_symbol = _to_crypto_data_symbol(normalized_symbol)
+        start = now - timedelta(hours=24)
+        data = await _request_json(
+            base_url=settings.alpaca_data_base_url,
+            path="/v1beta3/crypto/us/bars",
+            params={
+                "symbols": api_symbol,
+                "timeframe": "15Min",
+                "start": f"{start.isoformat()}Z",
+                "end": f"{now.isoformat()}Z",
+                "limit": 200,
+                "sort": "asc",
+            },
+        )
+        bars = data.get("bars", {}).get(api_symbol) or []
+    else:
+        start = now - timedelta(days=2)
+        data = await _request_json(
+            base_url=settings.alpaca_data_base_url,
+            path=f"/v2/stocks/{normalized_symbol}/bars",
+            params={
+                "timeframe": "15Min",
+                "start": f"{start.isoformat()}Z",
+                "end": f"{now.isoformat()}Z",
+                "adjustment": "all",
+                "feed": settings.alpaca_data_feed,
+                "limit": 200,
+                "sort": "asc",
+            },
+        )
+        bars = data.get("bars") or []
+
+    points: List[Tuple[datetime, float]] = []
+    for bar in bars:
+        timestamp = bar.get("t")
+        close = bar.get("c")
+        if not timestamp or close is None:
+            continue
+        points.append(
+            (
+                datetime.fromisoformat(timestamp.replace("Z", "+00:00")),
+                float(close),
+            )
+        )
+
+    if not points:
+        raise AlpacaMarketDataError("No intraday bar data is available for that symbol.")
+
+    if asset_class != "crypto":
+        latest_session_day = max(point_dt.date() for point_dt, _ in points)
+        points = [
+            (point_dt, close)
+            for point_dt, close in points
+            if point_dt.date() == latest_session_day
+        ]
+
+    if not points:
+        raise AlpacaMarketDataError("No intraday bar data is available for that symbol.")
+
+    return points
+
+
 def _extract_snapshot_price(snapshot: Dict[str, Any]) -> Optional[float]:
     latest_trade = snapshot.get("latestTrade") or {}
     daily_bar = snapshot.get("dailyBar") or {}

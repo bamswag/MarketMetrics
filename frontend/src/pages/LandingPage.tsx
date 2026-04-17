@@ -1,24 +1,9 @@
 import { Link } from 'react-router-dom'
 
 import { DailyMoversSection } from '../components/DailyMoversSection'
-import { TopGainerCard } from '../components/TopGainerCard'
-import type { Mover, MoversResponse } from '../lib/api'
+import { FeaturedMoverCard } from '../components/FeaturedMoverCard'
+import type { MoversResponse } from '../lib/api'
 import '../styles/pages/LandingPage.css'
-
-function getTopGainer(movers: MoversResponse | null): Mover | null {
-  if (!movers) return null
-  const all = [
-    ...(movers.gainersByCategory?.stocks ?? movers.gainers ?? []),
-    ...(movers.gainersByCategory?.crypto ?? []),
-    ...(movers.gainersByCategory?.etfs ?? []),
-  ]
-  if (all.length === 0) return null
-  return all.reduce<Mover>((best, m) => {
-    const pct = parseFloat(m.change_percent ?? '0')
-    const bestPct = parseFloat(best.change_percent ?? '0')
-    return pct > bestPct ? m : best
-  }, all[0])
-}
 
 
 const FEATURE_CARDS = [
@@ -65,12 +50,9 @@ type LandingPageProps = {
   isLoadingMovers: boolean
   movers: MoversResponse | null
   moversError: string
-  topGainerSeries?: { date: string; close: number }[]
 }
 
-export function LandingPage({ isLoadingMovers, movers, moversError, topGainerSeries = [] }: LandingPageProps) {
-  const topGainer = getTopGainer(movers)
-
+export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPageProps) {
   return (
     <div className="landing-shell">
       <section className="landing-hero page-section">
@@ -114,24 +96,7 @@ export function LandingPage({ isLoadingMovers, movers, moversError, topGainerSer
 
         <div className="landing-display">
           <article className="display-card">
-            <p className="section-label">Top gainer this week</p>
-
-            {isLoadingMovers && !topGainer ? (
-              <div className="hero-gainer-skeleton">
-                <div className="skeleton-chart-placeholder" />
-                <div className="hero-gainer-skeleton-body">
-                  <div className="skeleton-logo" />
-                  <div className="skeleton-lines">
-                    <div className="skeleton-line skeleton-line--wide" />
-                    <div className="skeleton-line skeleton-line--narrow" />
-                  </div>
-                </div>
-              </div>
-            ) : topGainer ? (
-              <TopGainerCard topGainer={topGainer} topGainerSeries={topGainerSeries} />
-            ) : (
-              <p className="empty-state">Market data will appear here shortly.</p>
-            )}
+            <FeaturedMoverCard />
           </article>
         </div>
       </section>

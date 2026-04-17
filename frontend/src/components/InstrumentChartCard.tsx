@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,6 +12,8 @@ import {
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
+
+type ChartType = 'price' | 'ma-overlay'
 
 type InstrumentChartCardProps = {
   instrumentDetail: InstrumentDetailResponse
@@ -25,11 +28,23 @@ const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
 function ChartTooltipContent(props: any) {
   const { active, payload, label } = props ?? {}
   if (!active || !payload?.length) return null
-  const value = Number(payload[0]?.value ?? 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const priceEntry = payload.find((p: any) => p.dataKey === 'close')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ma30Entry = payload.find((p: any) => p.dataKey === 'ma30')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ma50Entry = payload.find((p: any) => p.dataKey === 'ma50')
+  const value = Number(priceEntry?.value ?? payload[0]?.value ?? 0)
   return (
     <div className="instrument-tooltip">
       <span className="instrument-tooltip-date">{typeof label === 'string' ? formatLongDate(label) : ''}</span>
       <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
+      {ma30Entry?.value != null && (
+        <span className="instrument-tooltip-ma instrument-tooltip-ma--30">EMA30 {formatCurrency(Number(ma30Entry.value))}</span>
+      )}
+      {ma50Entry?.value != null && (
+        <span className="instrument-tooltip-ma instrument-tooltip-ma--50">EMA50 {formatCurrency(Number(ma50Entry.value))}</span>
+      )}
     </div>
   )
 }
@@ -43,6 +58,8 @@ export function InstrumentChartCard({
   selectedRange,
   onSelectRange,
 }: InstrumentChartCardProps) {
+  const [chartType, setChartType] = useState<ChartType>('price')
+
   const chartSeries = useMemo(
     () =>
       sampleChartSeries(
@@ -51,6 +68,26 @@ export function InstrumentChartCard({
       ).filter((p) => Number.isFinite(p.close)),
     [instrumentDetail.historicalSeries, selectedRange],
   )
+
+  // EMA (Exponential Moving Average) — different smoothing factors mean EMA30 and EMA50
+  // produce distinct values from point 1 onwards, so both lines are visible for the full chart.
+  const chartData = useMemo(() => {
+    if (chartType === 'price') return chartSeries
+    const alpha30 = 2 / (30 + 1)
+    const alpha50 = 2 / (50 + 1)
+    let ema30 = 0
+    let ema50 = 0
+    return chartSeries.map((p, i) => {
+      if (i === 0) {
+        ema30 = p.close
+        ema50 = p.close
+      } else {
+        ema30 = p.close * alpha30 + ema30 * (1 - alpha30)
+        ema50 = p.close * alpha50 + ema50 * (1 - alpha50)
+      }
+      return { ...p, ma30: ema30, ma50: ema50 }
+    })
+  }, [chartSeries, chartType])
 
   const yDomain = useMemo((): [number, number] => {
     if (chartSeries.length === 0) return [0, 1]
@@ -81,24 +118,52 @@ export function InstrumentChartCard({
           </div>
         </div>
 
-        <div className="instrument-range-bar">
-          {RANGE_OPTIONS.map((rangeOption) => (
-            <button
-              className={selectedRange === rangeOption ? 'instrument-range-btn instrument-range-btn--active' : 'instrument-range-btn'}
-              key={rangeOption}
-              onClick={() => onSelectRange(rangeOption)}
-              type="button"
-            >
-              {rangeOption}
-            </button>
-          ))}
+        <div className="instrument-chart-controls">
+          <select
+            className="instrument-chart-type-select"
+            onChange={(e) => setChartType(e.target.value as ChartType)}
+            value={chartType}
+          >
+            <option value="price">Regular</option>
+            <option value="ma-overlay">MA Overlay</option>
+          </select>
+
+          <div className="instrument-range-bar">
+            {RANGE_OPTIONS.map((rangeOption) => (
+              <button
+                className={selectedRange === rangeOption ? 'instrument-range-btn instrument-range-btn--active' : 'instrument-range-btn'}
+                key={rangeOption}
+                onClick={() => onSelectRange(rangeOption)}
+                type="button"
+              >
+                {rangeOption}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {chartSeries.length > 0 ? (
+      {chartType === 'ma-overlay' && (
+        <div className="instrument-chart-legend">
+          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--price">
+            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--price" />
+            Price
+          </span>
+          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma30">
+            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma30" />
+            30-day EMA
+          </span>
+          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma50">
+            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma50" />
+            50-day EMA
+          </span>
+        </div>
+      )}
+
+      {chartData.length > 0 ? (
         <div className="instrument-chart-frame">
           <ResponsiveContainer height={380} width="100%">
-            <AreaChart data={chartSeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="chartLine" x1="0" x2="1" y1="0" y2="0">
                   <stop offset="0%" stopColor={isRangePositive ? '#0f766e' : '#b14f2b'} />
@@ -136,6 +201,28 @@ export function InstrumentChartCard({
                 strokeWidth={2.5}
                 type="monotone"
               />
+              {chartType === 'ma-overlay' && (
+                <>
+                  <Line
+                    connectNulls
+                    dataKey="ma30"
+                    dot={false}
+                    isAnimationActive={false}
+                    stroke="#f59e0b"
+                    strokeWidth={1.8}
+                    type="monotone"
+                  />
+                  <Line
+                    connectNulls
+                    dataKey="ma50"
+                    dot={false}
+                    isAnimationActive={false}
+                    stroke="#3b82f6"
+                    strokeWidth={1.8}
+                    type="monotone"
+                  />
+                </>
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -2,11 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import time
-from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, Iterable, List, Optional, Union
 
-from app.integrations.alpaca.market_data import fetch_top_movers
+from app.integrations.alpaca.market_data import (
+    fetch_intraday_close_series,
+    fetch_snapshots,
+    fetch_top_movers,
+)
 from app.schemas.movers import (
+    FeaturedMoverAsset,
+    FeaturedMoverDirection,
+    FeaturedMoverPeriod,
+    FeaturedMoverResponse,
+    FeaturedMoverSeriesPoint,
     Mover,
     MoverCategoryBuckets,
     MoversResponse,
@@ -23,9 +32,26 @@ MOVERS_CACHE_TTL_SECONDS = 45
 SPARKLINE_LOOKBACK_DAYS = 14
 SPARKLINE_POINTS = 5
 MOVER_CATEGORY_ORDER = ("stocks", "crypto", "etfs")
+FEATURED_MOVER_LOOKBACK_DAYS = {
+    FeaturedMoverPeriod.week: 7,
+    FeaturedMoverPeriod.month: 30,
+}
+FEATURED_MOVER_CACHE_TTL_SECONDS = {
+    FeaturedMoverPeriod.day: 45,
+    FeaturedMoverPeriod.week: 300,
+    FeaturedMoverPeriod.month: 300,
+}
 
 _movers_cache: Dict[int, tuple[float, MoversResponse]] = {}
 _movers_cache_locks: Dict[int, asyncio.Lock] = {}
+_featured_mover_cache: Dict[
+    tuple[str, str, str],
+    tuple[float, FeaturedMoverResponse],
+] = {}
+_featured_mover_cache_locks: Dict[
+    tuple[str, str, str],
+    asyncio.Lock,
+] = {}
 
 
 def _to_float(value: Any) -> Optional[float]:
@@ -40,6 +66,131 @@ def _to_int(value: Any) -> Optional[int]:
         return int(float(value))
     except Exception:
         return None
+
+
+def _to_percent_string(value: float) -> str:
+    return f"{value:.2f}%"
+
+
+def _featured_mover_title(
+    period: FeaturedMoverPeriod,
+    direction: FeaturedMoverDirection,
+    asset: FeaturedMoverAsset,
+) -> str:
+    asset_prefix = {
+        FeaturedMoverAsset.all: "",
+        FeaturedMoverAsset.stocks: "stock ",
+        FeaturedMoverAsset.crypto: "crypto ",
+        FeaturedMoverAsset.etfs: "ETF ",
+    }[asset]
+    period_suffix = {
+        FeaturedMoverPeriod.day: "today",
+        FeaturedMoverPeriod.week: "this week",
+        FeaturedMoverPeriod.month: "this month",
+    }[period]
+    return f"Top {asset_prefix}{direction.value} {period_suffix}".strip()
+
+
+def _categories_for_asset(asset: FeaturedMoverAsset) -> tuple[str, ...]:
+    if asset == FeaturedMoverAsset.all:
+        return MOVER_CATEGORY_ORDER
+    return (asset.value,)
+
+
+def _build_featured_mover(
+    item: Dict[str, Any],
+    metadata_map: Dict[str, Dict[str, Any]],
+) -> Mover:
+    symbol = str(item.get("symbol") or "").strip().upper()
+    metadata = metadata_map.get(symbol)
+    return Mover(
+        symbol=item.get("symbol") or symbol,
+        name=metadata.get("name") if metadata else None,
+        price=_to_float(item.get("price")),
+        change_amount=_to_float(item.get("change_amount")),
+        change_percent=item.get("change_percent"),
+        volume=_to_int(item.get("volume")),
+        sparklineSeries=[],
+    )
+
+
+def _build_featured_series(
+    points: Iterable[tuple[Union[date, datetime], float]],
+) -> List[FeaturedMoverSeriesPoint]:
+    series: List[FeaturedMoverSeriesPoint] = []
+    for point_date, close in points:
+        timestamp = (
+            point_date
+            if isinstance(point_date, datetime)
+            else datetime.combine(point_date, datetime.min.time())
+        )
+        series.append(FeaturedMoverSeriesPoint(date=timestamp, close=float(close)))
+    return series
+
+
+async def _rank_period_candidates(
+    symbols: List[str],
+    *,
+    window_days: int,
+    direction: FeaturedMoverDirection,
+    asset_class_map: Dict[str, str],
+) -> List[Dict[str, Any]]:
+    if not symbols:
+        return []
+
+    snapshots = await fetch_snapshots(symbols, asset_class_map=asset_class_map)
+    start_date = date.today() - timedelta(days=window_days - 1)
+    semaphore = asyncio.Semaphore(8)
+
+    async def evaluate(symbol: str) -> Optional[Dict[str, Any]]:
+        snapshot = snapshots.get(symbol)
+        price = _to_float(snapshot.get("price") if snapshot else None)
+        if price is None:
+            return None
+
+        async with semaphore:
+            try:
+                history = await get_daily_close_series_cached(
+                    symbol,
+                    start=start_date,
+                    end=date.today(),
+                )
+            except Exception:
+                return None
+
+        if not history:
+            return None
+
+        base_close = _to_float(history[0][1])
+        if base_close in (None, 0):
+            return None
+
+        change_amount = price - base_close
+        change_percent_value = (change_amount / base_close) * 100
+        if direction == FeaturedMoverDirection.gainer and change_percent_value <= 0:
+            return None
+        if direction == FeaturedMoverDirection.loser and change_percent_value >= 0:
+            return None
+
+        return {
+            "symbol": symbol,
+            "price": price,
+            "change_amount": round(change_amount, 4),
+            "change_percent": _to_percent_string(change_percent_value),
+            "change_percent_value": change_percent_value,
+            "volume": _to_int(snapshot.get("volume") if snapshot else None),
+        }
+
+    ranked = [
+        item
+        for item in await asyncio.gather(*(evaluate(symbol) for symbol in symbols))
+        if item is not None
+    ]
+    ranked.sort(
+        key=lambda item: item["change_percent_value"],
+        reverse=direction == FeaturedMoverDirection.gainer,
+    )
+    return ranked
 
 
 async def _build_sparkline_series(symbol: str) -> List[MoverSparklinePoint]:
@@ -225,6 +376,86 @@ async def _build_market_movers(limit: int) -> MoversResponse:
     )
 
 
+async def _build_featured_mover_response(
+    period: FeaturedMoverPeriod,
+    direction: FeaturedMoverDirection,
+    asset: FeaturedMoverAsset,
+) -> FeaturedMoverResponse:
+    mover_universe_by_category = await get_dynamic_mover_universe_symbols_by_category()
+    categories = _categories_for_asset(asset)
+    symbols = [
+        symbol
+        for category in categories
+        for symbol in mover_universe_by_category.get(category, [])
+    ]
+    asset_class_map = _build_asset_class_map(symbols)
+    title = _featured_mover_title(period, direction, asset)
+
+    featured_item: Optional[Dict[str, Any]] = None
+    if period == FeaturedMoverPeriod.day:
+        ranked = await fetch_top_movers(
+            symbols,
+            top_n=1,
+            asset_class_map=asset_class_map,
+        )
+        featured_items = (
+            ranked.get("top_gainers")
+            if direction == FeaturedMoverDirection.gainer
+            else ranked.get("top_losers")
+        ) or []
+        featured_item = featured_items[0] if featured_items else None
+    else:
+        window_days = FEATURED_MOVER_LOOKBACK_DAYS[period]
+        ranked_items = await _rank_period_candidates(
+            symbols,
+            window_days=window_days,
+            direction=direction,
+            asset_class_map=asset_class_map,
+        )
+        featured_item = ranked_items[0] if ranked_items else None
+
+    if not featured_item:
+        return FeaturedMoverResponse(
+            period=period,
+            direction=direction,
+            asset=asset,
+            title=title,
+            mover=None,
+            historicalSeries=[],
+            source="alpaca",
+        )
+
+    symbol = str(featured_item["symbol"]).strip().upper()
+    metadata_map = _build_metadata_map([featured_item])
+    asset_class = asset_class_map.get(symbol, get_symbol_asset_class(symbol))
+
+    if period == FeaturedMoverPeriod.day:
+        try:
+            chart_points = await fetch_intraday_close_series(symbol, asset_class=asset_class)
+        except Exception:
+            chart_points = []
+    else:
+        window_days = FEATURED_MOVER_LOOKBACK_DAYS[period]
+        try:
+            chart_points = await get_daily_close_series_cached(
+                symbol,
+                start=date.today() - timedelta(days=window_days - 1),
+                end=date.today(),
+            )
+        except Exception:
+            chart_points = []
+
+    return FeaturedMoverResponse(
+        period=period,
+        direction=direction,
+        asset=asset,
+        title=title,
+        mover=_build_featured_mover(featured_item, metadata_map),
+        historicalSeries=_build_featured_series(chart_points),
+        source="alpaca",
+    )
+
+
 async def get_market_movers(limit: int = 5) -> MoversResponse:
     now = time.time()
 
@@ -243,4 +474,36 @@ async def get_market_movers(limit: int = 5) -> MoversResponse:
 
         payload = await _build_market_movers(limit)
         _movers_cache[limit] = (time.time(), payload)
+        return payload
+
+
+async def get_featured_mover(
+    *,
+    period: FeaturedMoverPeriod,
+    direction: FeaturedMoverDirection,
+    asset: FeaturedMoverAsset,
+) -> FeaturedMoverResponse:
+    cache_key = (period.value, direction.value, asset.value)
+    cache_ttl = FEATURED_MOVER_CACHE_TTL_SECONDS[period]
+    now = time.time()
+
+    if cache_key in _featured_mover_cache:
+        cached_at, payload = _featured_mover_cache[cache_key]
+        if now - cached_at < cache_ttl:
+            return payload
+
+    lock = _featured_mover_cache_locks.setdefault(cache_key, asyncio.Lock())
+    async with lock:
+        now = time.time()
+        if cache_key in _featured_mover_cache:
+            cached_at, payload = _featured_mover_cache[cache_key]
+            if now - cached_at < cache_ttl:
+                return payload
+
+        payload = await _build_featured_mover_response(
+            period=period,
+            direction=direction,
+            asset=asset,
+        )
+        _featured_mover_cache[cache_key] = (time.time(), payload)
         return payload

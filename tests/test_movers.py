@@ -3,7 +3,12 @@ from datetime import date
 from unittest.mock import AsyncMock, patch
 
 from app.integrations.alpaca.market_data import fetch_snapshots, fetch_top_movers
-from app.services.market_overview import get_market_movers
+from app.schemas.movers import (
+    FeaturedMoverAsset,
+    FeaturedMoverDirection,
+    FeaturedMoverPeriod,
+)
+from app.services.market_overview import get_featured_mover, get_market_movers
 
 try:
     from test_auth import BaseAPITestCase
@@ -12,6 +17,44 @@ except ModuleNotFoundError:
 
 
 class MoversRouteTests(BaseAPITestCase):
+    @patch("app.api.routes.movers.get_featured_mover", new_callable=AsyncMock)
+    def test_featured_mover_route_is_available_without_authentication(
+        self,
+        mock_get_featured_mover,
+    ):
+        mock_get_featured_mover.return_value = {
+            "period": "week",
+            "direction": "gainer",
+            "asset": "all",
+            "title": "Top gainer this week",
+            "mover": {
+                "symbol": "NVDA",
+                "name": "NVIDIA Corporation",
+                "price": 912.33,
+                "change_amount": 24.19,
+                "change_percent": "2.72%",
+                "volume": 1_245_333,
+                "sparklineSeries": [],
+            },
+            "historicalSeries": [
+                {"date": "2026-04-01T00:00:00", "close": 882.11},
+                {"date": "2026-04-02T00:00:00", "close": 890.45},
+            ],
+            "source": "alpaca",
+        }
+
+        response = self.client.get("/movers/featured?period=week&direction=gainer&asset=all")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["title"], "Top gainer this week")
+        self.assertEqual(payload["mover"]["symbol"], "NVDA")
+        mock_get_featured_mover.assert_awaited_once_with(
+            period=FeaturedMoverPeriod.week,
+            direction=FeaturedMoverDirection.gainer,
+            asset=FeaturedMoverAsset.all,
+        )
+
     @patch("app.api.routes.movers.get_market_movers", new_callable=AsyncMock)
     def test_movers_route_is_available_without_authentication(self, mock_get_market_movers):
         mock_get_market_movers.return_value = {
@@ -289,6 +332,125 @@ class MoversServiceTests(BaseAPITestCase):
         bac = next((item for item in payload.losers if item.symbol == "BAC"), None)
         self.assertIsNotNone(bac)
         self.assertEqual(bac.sparklineSeries, [])
+
+    @patch("app.services.market_overview.fetch_intraday_close_series", new_callable=AsyncMock)
+    @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
+    @patch("app.services.market_overview.get_dynamic_mover_universe_symbols_by_category", new_callable=AsyncMock)
+    def test_featured_day_mover_uses_selected_direction_asset_and_intraday_series(
+        self,
+        mock_get_dynamic_mover_universe_symbols_by_category,
+        mock_fetch_top_movers,
+        mock_fetch_intraday_close_series,
+    ):
+        mock_get_dynamic_mover_universe_symbols_by_category.return_value = {
+            "stocks": ["NVDA", "AAPL"],
+            "crypto": ["BTC/USD"],
+            "etfs": ["QQQ"],
+        }
+        mock_fetch_top_movers.return_value = {
+            "top_gainers": [
+                {
+                    "symbol": "QQQ",
+                    "price": 502.11,
+                    "change_amount": 9.64,
+                    "change_percent": "1.96%",
+                    "volume": 812_111,
+                }
+            ],
+            "top_losers": [],
+        }
+        mock_fetch_intraday_close_series.return_value = [
+            (date(2026, 4, 16), 491.11),
+            (date(2026, 4, 17), 502.11),
+        ]
+
+        payload = asyncio.run(
+            get_featured_mover(
+                period=FeaturedMoverPeriod.day,
+                direction=FeaturedMoverDirection.gainer,
+                asset=FeaturedMoverAsset.etfs,
+            )
+        )
+
+        self.assertEqual(payload.title, "Top ETF gainer today")
+        self.assertIsNotNone(payload.mover)
+        self.assertEqual(payload.mover.symbol, "QQQ")
+        self.assertEqual(len(payload.historicalSeries), 2)
+        mock_fetch_top_movers.assert_awaited_once()
+        awaited_kwargs = mock_fetch_top_movers.await_args.kwargs
+        self.assertEqual(awaited_kwargs["top_n"], 1)
+        self.assertEqual(awaited_kwargs["asset_class_map"]["QQQ"], "us_equity")
+        mock_fetch_intraday_close_series.assert_awaited_once_with("QQQ", asset_class="us_equity")
+
+    @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)
+    @patch("app.services.market_overview.fetch_snapshots", new_callable=AsyncMock)
+    @patch("app.services.market_overview.get_dynamic_mover_universe_symbols_by_category", new_callable=AsyncMock)
+    def test_featured_month_loser_picks_worst_performer_for_asset_scope(
+        self,
+        mock_get_dynamic_mover_universe_symbols_by_category,
+        mock_fetch_snapshots,
+        mock_get_daily_close_series_cached,
+    ):
+        mock_get_dynamic_mover_universe_symbols_by_category.return_value = {
+            "stocks": ["NFLX", "AAPL", "AMD"],
+            "crypto": ["BTC/USD"],
+            "etfs": ["QQQ"],
+        }
+        mock_fetch_snapshots.return_value = {
+            "NFLX": {"price": 92.0, "volume": 101},
+            "AAPL": {"price": 97.0, "volume": 102},
+            "AMD": {"price": 99.0, "volume": 103},
+        }
+
+        async def history_side_effect(symbol, start=None, end=None):
+            mapping = {
+                "NFLX": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 92.0)],
+                "AAPL": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 97.0)],
+                "AMD": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 99.0)],
+            }
+            return mapping[symbol]
+
+        mock_get_daily_close_series_cached.side_effect = history_side_effect
+
+        payload = asyncio.run(
+            get_featured_mover(
+                period=FeaturedMoverPeriod.month,
+                direction=FeaturedMoverDirection.loser,
+                asset=FeaturedMoverAsset.stocks,
+            )
+        )
+
+        self.assertEqual(payload.title, "Top stock loser this month")
+        self.assertIsNotNone(payload.mover)
+        self.assertEqual(payload.mover.symbol, "NFLX")
+        self.assertEqual(payload.mover.change_percent, "-8.00%")
+        self.assertEqual(len(payload.historicalSeries), 2)
+
+    @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
+    @patch("app.services.market_overview.get_dynamic_mover_universe_symbols_by_category", new_callable=AsyncMock)
+    def test_featured_mover_returns_empty_payload_when_no_candidate_exists(
+        self,
+        mock_get_dynamic_mover_universe_symbols_by_category,
+        mock_fetch_top_movers,
+    ):
+        mock_get_dynamic_mover_universe_symbols_by_category.return_value = {
+            "stocks": [],
+            "crypto": [],
+            "etfs": [],
+        }
+        mock_fetch_top_movers.return_value = {"top_gainers": [], "top_losers": []}
+
+        payload = asyncio.run(
+            get_featured_mover(
+                period=FeaturedMoverPeriod.day,
+                direction=FeaturedMoverDirection.loser,
+                asset=FeaturedMoverAsset.crypto,
+            )
+        )
+
+        self.assertEqual(payload.title, "Top crypto loser today")
+        self.assertIsNone(payload.mover)
+        self.assertEqual(payload.historicalSeries, [])
 
 
 class AlpacaBatchSnapshotFallbackTests(BaseAPITestCase):
