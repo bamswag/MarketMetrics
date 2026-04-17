@@ -223,6 +223,22 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      const trimmedQuery = query.trim()
+      if (trimmedQuery.length >= 1) {
+        setIsOpen(false)
+        setHasTyped(false)
+        setActiveIndex(-1)
+        setResults([])
+        setSearchError('')
+        setIsFocused(false)
+        setDidFilterOutSearchResults(false)
+        navigate(`/search-results/${encodeURIComponent(trimmedQuery)}`)
+      }
+      return
+    }
+
     if (!isOpen || displayedResults.length === 0) {
       if (event.key === 'Escape') {
         setIsOpen(false)
@@ -242,15 +258,6 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       setActiveIndex((currentIndex) =>
         currentIndex <= 0 ? displayedResults.length - 1 : currentIndex - 1,
       )
-      return
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      const selectedResult = displayedResults[activeIndex] ?? displayedResults[0]
-      if (selectedResult) {
-        selectResult(selectedResult)
-      }
       return
     }
 

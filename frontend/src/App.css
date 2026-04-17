@@ -366,7 +366,6 @@
 
 .landing-hero,
 .panel,
-.daily-movers-section,
 .dashboard-hero-card,
 .display-card,
 .feature-card,
@@ -382,7 +381,6 @@
 .landing-copy,
 .dashboard-hero-copy,
 .panel,
-.daily-movers-section,
 .feature-card,
 .process-card,
 .auth-panel,
@@ -699,19 +697,15 @@
 }
 
 .daily-movers-section {
-  padding: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(15, 118, 110, 0.11), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 252, 0.96)),
-    var(--panel-bg);
+  min-width: 0;
 }
 
-.daily-movers-panel {
+.daily-movers-section--landing {
+  padding: 12px 4px 8px;
+}
+
+.daily-movers-section--dashboard {
   grid-column: span 12;
-  min-width: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 250, 252, 0.96)),
-    var(--panel-bg);
 }
 
 .panel-wide {
@@ -958,17 +952,34 @@
 }
 
 .daily-movers-columns {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
-.daily-movers-panel .daily-movers-columns,
-.daily-movers-section .daily-movers-columns {
-  grid-template-columns: 1fr;
+.daily-mover-card {
+  box-shadow: var(--panel-shadow);
+}
+
+.daily-mover-card-header {
+  align-items: center;
+}
+
+.daily-mover-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.daily-mover-card-link {
+  min-height: 40px;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .mover-group {
   border-radius: 24px;
   border: 1px solid var(--panel-border);
+  padding: 20px;
 }
 
 .mover-group .panel-header-copy {
@@ -1768,8 +1779,17 @@
     padding: 14px;
   }
 
-  .daily-movers-section {
-    padding: 20px;
+  .daily-mover-card-header {
+    align-items: flex-start;
+  }
+
+  .daily-mover-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .daily-movers-section--landing {
+    padding: 4px 0 0;
   }
 }
 

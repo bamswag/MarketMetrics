@@ -14,6 +14,6 @@ async def company_search(
     query = q.strip()
     results = [
         CompanySearchResult(**build_search_result(item))
-        for item in search_symbol_catalog(query)
+        for item in search_symbol_catalog(query, limit=50)
     ]
     return CompanySearchResponse(query=query, results=results)

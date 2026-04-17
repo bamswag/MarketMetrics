@@ -13,6 +13,7 @@ from app.schemas.movers import (
 from app.services.market_overview import get_featured_mover, get_market_movers
 
 router = APIRouter(prefix="/movers", tags=["Movers"])
+MAX_MOVERS_LIMIT = 30
 
 
 @router.get("/featured", response_model=FeaturedMoverResponse)
@@ -34,7 +35,7 @@ async def get_featured_mover_route(
 
 
 @router.get("/", response_model=MoversResponse)
-async def get_movers(limit: int = Query(default=5, ge=1, le=10)):
+async def get_movers(limit: int = Query(default=5, ge=1, le=MAX_MOVERS_LIMIT)):
     try:
         return await get_market_movers(limit)
     except AlpacaMarketDataError as exc:

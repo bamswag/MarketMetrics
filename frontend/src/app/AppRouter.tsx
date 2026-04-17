@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState, type ChangeEvent } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { AlertToastStack } from '../components/AlertToastStack'
 import type { AlertToast } from '../components/AlertToastStack'
@@ -14,6 +14,7 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LegalPage } from '../pages/LegalPage'
 import { LoginPage } from '../pages/LoginPage'
+import { MoversDirectionPage } from '../pages/MoversDirectionPage'
 import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { SignupPage } from '../pages/SignupPage'
 import { TrackedSymbolsPage } from '../pages/TrackedSymbolsPage'
@@ -172,8 +173,54 @@ function RouteLoadingState() {
   return <div className="empty-state page-loader">Loading interface...</div>
 }
 
+function SearchResultsHeaderInput() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const match = location.pathname.match(/^\/search-results\/(.+)$/)
+  const urlQuery = match ? decodeURIComponent(match[1]).toUpperCase() : ''
+  const [value, setValue] = useState(urlQuery)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setValue(urlQuery)
+  }, [urlQuery])
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value.toUpperCase()
+    setValue(v)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (v.trim().length < 1) return
+    debounceRef.current = setTimeout(() => {
+      navigate(`/search-results/${encodeURIComponent(v.trim())}`, { replace: true })
+    }, 400)
+  }
+
+  return (
+    <div className="global-search">
+      <div className="global-search-shell">
+        <input
+          aria-label="Search instruments"
+          className="global-search-input"
+          onChange={handleChange}
+          placeholder="Search symbols or company names"
+          type="text"
+          value={value}
+        />
+      </div>
+    </div>
+  )
+}
+
 function AppContent() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isSearchResultsPage = location.pathname.startsWith('/search-results/')
   const apiUrl = getApiUrl()
   const frontendOrigin = typeof window === 'undefined' ? '' : window.location.origin
   const loginGoogleParams = new URLSearchParams({
@@ -1182,7 +1229,7 @@ function AppContent() {
     <AppHeader
       actions={<AuthActions />}
       bannerMessage={flashMessage}
-      center={<GlobalSearch token={token || undefined} />}
+      center={isSearchResultsPage ? <SearchResultsHeaderInput /> : <GlobalSearch token={token || undefined} />}
     />
   )
 
@@ -1198,7 +1245,7 @@ function AppContent() {
         </>
       }
       bannerMessage={flashMessage}
-      center={<GlobalSearch onUnauthorized={handleSessionExpired} token={token} />}
+      center={isSearchResultsPage ? <SearchResultsHeaderInput /> : <GlobalSearch onUnauthorized={handleSessionExpired} token={token} />}
     />
   )
 
@@ -1431,6 +1478,30 @@ function AppContent() {
             )
           }
           path="/settings"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <MoversDirectionPage
+                direction="gainers"
+                token={token || undefined}
+              />
+            </>
+          }
+          path="/movers/gainers"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <MoversDirectionPage
+                direction="losers"
+                token={token || undefined}
+              />
+            </>
+          }
+          path="/movers/losers"
         />
         <Route
           element={

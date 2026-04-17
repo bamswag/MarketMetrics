@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 
 import { SearchResultCard } from '../components/SearchResultCard'
+import { TopResultCard } from '../components/TopResultCard'
 import type { CompanySearchResult } from '../lib/api'
 import { createWatchlistItem, fetchSearchResults } from '../lib/api'
 import { assetCategoryLabel } from '../lib/marketPreferences'
@@ -23,11 +24,8 @@ export function SearchResultsPage({
   onUnauthorized,
 }: SearchResultsPageProps) {
   const { query: rawQuery = '' } = useParams<{ query: string }>()
-  const navigate = useNavigate()
-
   const query = decodeURIComponent(rawQuery).toUpperCase()
 
-  const [inputValue, setInputValue] = useState(query)
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all')
   const [allResults, setAllResults] = useState<CompanySearchResult[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -35,9 +33,6 @@ export function SearchResultsPage({
   const [pageIndex, setPageIndex] = useState(1)
   const [addingSymbol, setAddingSymbol] = useState<string | null>(null)
   const [addedSymbols, setAddedSymbols] = useState<Set<string>>(new Set())
-
-  const inputRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Fetch results when query changes
   useEffect(() => {
@@ -72,24 +67,6 @@ export function SearchResultsPage({
   useEffect(() => {
     setPageIndex(1)
   }, [activeCategory])
-
-  // Debounce input → navigate to new search
-  function handleInputChange(value: string) {
-    setInputValue(value.toUpperCase())
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (value.trim().length < 1) return
-    debounceRef.current = setTimeout(() => {
-      navigate(`/search-results/${encodeURIComponent(value.trim().toUpperCase())}`, { replace: true })
-    }, 400)
-  }
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
-    }
-  }, [])
 
   // Group results by asset category
   const resultsByCategory = useMemo(() => {
@@ -211,34 +188,9 @@ export function SearchResultsPage({
 
   return (
     <div className="search-results-shell">
-      {/* Sticky header */}
+      {/* Sticky header — tabs only; search input lives in the AppHeader */}
       <div className="search-results-header">
         <div className="search-results-header-inner page-section">
-          <div className="search-results-input-row">
-            <div className="search-results-input-wrap">
-              <span className="search-results-input-icon" aria-hidden="true">⌕</span>
-              <input
-                aria-label="Refine search"
-                className="search-results-input"
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder="Search symbols or company names"
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-              />
-              {isLoading && (
-                <span className="search-results-input-status">Searching…</span>
-              )}
-            </div>
-            {!isLoading && !error && (
-              <span className="search-results-total">
-                {allResults.length === 0
-                  ? 'No results'
-                  : `${allResults.length} result${allResults.length !== 1 ? 's' : ''}`}
-              </span>
-            )}
-          </div>
-
           {/* Category tabs */}
           <div className="search-results-tabs" role="tablist">
             {TABS.filter((t) => t.key === 'all' || counts[t.key] > 0).map((tab) => (
@@ -278,22 +230,67 @@ export function SearchResultsPage({
 
         {/* Skeleton loading */}
         {isLoading && (
-          <div className="search-results-grid">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div className="search-result-card search-result-card--skeleton" key={i}>
-                <div className="search-result-skeleton search-result-skeleton--logo" />
-                <div className="search-result-skeleton search-result-skeleton--title" />
-                <div className="search-result-skeleton search-result-skeleton--meta" />
-                <div className="search-result-skeleton search-result-skeleton--price" />
+          <>
+            <div className="top-result-card top-result-card--skeleton instrument-surface">
+              <div className="top-result-eyebrow">
+                <span className="search-result-skeleton" style={{ width: 80, height: 20, borderRadius: 999 }} />
               </div>
-            ))}
-          </div>
+              <div className="top-result-link">
+                <div className="top-result-left">
+                  <span className="search-result-skeleton search-result-skeleton--logo top-result-skeleton-logo" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span className="search-result-skeleton" style={{ width: 120, height: 28, borderRadius: 6 }} />
+                    <span className="search-result-skeleton" style={{ width: 180, height: 14 }} />
+                    <span className="search-result-skeleton" style={{ width: 100, height: 12 }} />
+                  </div>
+                </div>
+                <div className="top-result-right">
+                  <div className="top-result-stats">
+                    <span className="search-result-skeleton top-result-skeleton-price" />
+                  </div>
+                  <span className="search-result-skeleton" style={{ height: 96, display: 'block', borderRadius: 10 }} />
+                </div>
+              </div>
+            </div>
+            <div className="search-results-grid">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div className="search-result-card search-result-card--skeleton" key={i}>
+                  <div className="search-result-skeleton search-result-skeleton--logo" />
+                  <div className="search-result-skeleton search-result-skeleton--title" />
+                  <div className="search-result-skeleton search-result-skeleton--meta" />
+                  <div className="search-result-skeleton search-result-skeleton--price" />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Top Result hero card (All tab) */}
+        {!isLoading && !error && activeCategory === 'all' && allResults.length > 0 && (
+          <TopResultCard
+            isAddingWatchlist={addingSymbol === allResults[0].symbol}
+            isTracked={trackedSet.has(allResults[0].symbol)}
+            onAddWatchlist={handleAddWatchlist}
+            result={allResults[0]}
+            token={token}
+          />
         )}
 
         {/* Grouped sections (All tab) */}
         {!isLoading && !error && activeCategory === 'all' && renderGroupedSections()}
 
-        {/* Flat filtered grid (specific category tab) */}
+        {/* Top Result hero card (specific category tab) */}
+        {!isLoading && !error && activeCategory !== 'all' && filteredResults.length > 0 && (
+          <TopResultCard
+            isAddingWatchlist={addingSymbol === filteredResults[0].symbol}
+            isTracked={trackedSet.has(filteredResults[0].symbol)}
+            onAddWatchlist={handleAddWatchlist}
+            result={filteredResults[0]}
+            token={token}
+          />
+        )}
+
+        {/* Flat filtered grid (specific category tab) — skip first since it's the Top Result */}
         {!isLoading && !error && activeCategory !== 'all' && (
           <>
             {filteredResults.length === 0 ? (
@@ -302,9 +299,9 @@ export function SearchResultsPage({
                   No {assetCategoryLabel(activeCategory as 'stocks' | 'etfs' | 'crypto')} results for "{query}"
                 </p>
               </div>
-            ) : (
-              renderGrid(displayedResults)
-            )}
+            ) : filteredResults.length > 1 ? (
+              renderGrid(displayedResults.slice(1))
+            ) : null}
           </>
         )}
 

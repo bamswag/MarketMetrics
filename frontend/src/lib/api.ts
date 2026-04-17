@@ -671,6 +671,13 @@ export async function fetchMovers(
   )
 }
 
+export async function fetchPublicMovers(
+  limit = 5,
+  signal?: AbortSignal,
+): Promise<MoversResponse> {
+  return fetchMovers(undefined, limit, signal)
+}
+
 export async function fetchFeaturedMover(
   selection: FeaturedMoverSelection,
   signal?: AbortSignal,

@@ -1,87 +1,15 @@
 import { Link } from 'react-router-dom'
 
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
-import type { MoversByCategory, MoversResponse } from '../lib/api'
+import type { MoversResponse } from '../lib/api'
 import { assetCategoryLabel, isAssetCategoryEnabled } from '../lib/marketPreferences'
-import { MoverSparklineCard } from './MoverSparklineCard'
+import { DailyMoverCard, DEFAULT_MOVER_CATEGORIES } from './DailyMoverCard'
 
 type DailyMoversSectionProps = {
   error?: string
   isLoading: boolean
   movers: MoversResponse | null
   variant: 'dashboard' | 'landing'
-}
-
-type MoverGroupProps = {
-  categoryItems?: MoversByCategory
-  fallbackItems: MoversResponse['gainers']
-  visibleCategories: typeof CATEGORY_ORDER
-  subtitle: string
-  title: string
-  tone: 'positive' | 'negative'
-}
-
-const CATEGORY_ORDER = [
-  { key: 'stocks', label: 'Stocks' },
-  { key: 'crypto', label: 'Crypto' },
-  { key: 'etfs', label: 'ETFs' },
-] satisfies Array<{
-  key: keyof MoversByCategory
-  label: string
-}>
-
-function MoverGroup({
-  categoryItems,
-  fallbackItems,
-  visibleCategories,
-  subtitle,
-  title,
-  tone,
-}: MoverGroupProps) {
-  const itemsByCategory: MoversByCategory = {
-    stocks: categoryItems?.stocks.slice(0, 3) ?? fallbackItems,
-    crypto: categoryItems?.crypto.slice(0, 3) ?? [],
-    etfs: categoryItems?.etfs.slice(0, 3) ?? [],
-  }
-
-  return (
-    <div className={`mover-group mover-group--${tone}`}>
-      <div className="panel-header-copy">
-        <p className="section-label">{subtitle}</p>
-        <h3 className="subsection-title">{title}</h3>
-      </div>
-
-      <div
-        className="mover-category-columns"
-        style={{ gridTemplateColumns: `repeat(${visibleCategories.length}, minmax(0, 1fr))` }}
-      >
-        {visibleCategories.map(({ key, label }) => {
-          const items = itemsByCategory[key]
-
-          return (
-            <div className="mover-category-column" key={key}>
-              <div className="mover-category-header">
-                <span className="mover-category-badge">
-                  {label}
-                  <span className="mover-category-count">{items.length}/3</span>
-                </span>
-              </div>
-
-              <div className="mover-card-list">
-                {items.length > 0 ? (
-                  items.map((item) => (
-                    <MoverSparklineCard item={item} key={item.symbol} tone={tone} />
-                  ))
-                ) : (
-                  <p className="mover-category-empty">No movers are available right now.</p>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
 }
 
 export function DailyMoversSection({
@@ -95,13 +23,13 @@ export function DailyMoversSection({
   const losers = movers?.losers.slice(0, 3) ?? []
   const gainersByCategory = movers?.gainersByCategory
   const losersByCategory = movers?.losersByCategory
-  const visibleCategories = CATEGORY_ORDER.filter(({ key }) =>
+  const visibleCategories = DEFAULT_MOVER_CATEGORIES.filter(({ key }) =>
     isAssetCategoryEnabled(key, preferences.preferredAssetClasses),
   )
   const sectionClassName =
     variant === 'landing'
-      ? 'daily-movers-section page-section'
-      : 'panel daily-movers-panel'
+      ? 'daily-movers-section daily-movers-section--landing page-section'
+      : 'daily-movers-section daily-movers-section--dashboard'
 
   return (
     <section className={sectionClassName}>
@@ -141,7 +69,12 @@ export function DailyMoversSection({
       {movers ? (
         <>
           <div className="daily-movers-columns">
-            <MoverGroup
+            <DailyMoverCard
+              action={(
+                <Link className="ghost-action daily-mover-card-link" to="/movers/gainers">
+                  View all gainers
+                </Link>
+              )}
               categoryItems={gainersByCategory}
               fallbackItems={gainers}
               visibleCategories={visibleCategories}
@@ -149,7 +82,12 @@ export function DailyMoversSection({
               title="Leading today"
               tone="positive"
             />
-            <MoverGroup
+            <DailyMoverCard
+              action={(
+                <Link className="ghost-action daily-mover-card-link" to="/movers/losers">
+                  View all losers
+                </Link>
+              )}
               categoryItems={losersByCategory}
               fallbackItems={losers}
               visibleCategories={visibleCategories}

@@ -7,6 +7,8 @@ type SideNavProps = {
 
 const AUTH_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
+  { to: '/movers/gainers', label: 'Gainers' },
+  { to: '/movers/losers', label: 'Losers' },
   { to: '/tracked-symbols', label: 'Tracked Symbols' },
   { to: '/account', label: 'Account' },
   { to: '/settings', label: 'Settings' },
@@ -14,6 +16,8 @@ const AUTH_LINKS = [
 
 const GUEST_LINKS = [
   { to: '/', label: 'Home' },
+  { to: '/movers/gainers', label: 'Gainers' },
+  { to: '/movers/losers', label: 'Losers' },
   { to: '/login', label: 'Login' },
   { to: '/signup', label: 'Sign Up' },
 ]

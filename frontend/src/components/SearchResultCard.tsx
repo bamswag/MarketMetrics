@@ -33,11 +33,12 @@ function getTone(changePercent: string | null | undefined): Tone {
 
 function formatPrice(price: number | null | undefined): string {
   if (price == null) return '—'
+  const maxFractionDigits = price >= 1000 ? 0 : price >= 10 ? 2 : 4
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: price >= 1000 ? 0 : price >= 10 ? 2 : 4,
+    minimumFractionDigits: Math.min(2, maxFractionDigits),
+    maximumFractionDigits: maxFractionDigits,
   }).format(price)
 }
 

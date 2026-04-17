@@ -1,49 +1,8 @@
 [
   {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Bitcoin",
-    "status": "active",
-    "symbol": "BTC/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Ethereum",
-    "status": "active",
-    "symbol": "ETH/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Dogecoin",
-    "status": "inactive",
-    "symbol": "DOGE/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "XRP / Bitcoin",
-    "status": "active",
-    "symbol": "XRP/BTC",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Avalanche",
-    "status": "active",
-    "symbol": "AVAX/USD",
-    "tradable": false
-  },
-  {
     "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Apple Inc.",
-    "status": "active",
     "symbol": "AAPL",
     "tradable": true
   },
@@ -281,8 +240,29 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
+    "name": "Bitcoin",
+    "symbol": "BTC/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Ethereum",
+    "symbol": "ETH/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
     "name": "Solana",
     "symbol": "SOL/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Dogecoin",
+    "symbol": "DOGE/USD",
     "tradable": true
   },
   {
@@ -302,6 +282,13 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
+    "name": "Avalanche",
+    "symbol": "AVAX/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
     "name": "Chainlink",
     "symbol": "LINK/USD",
     "tradable": true
@@ -311,6 +298,14 @@
     "exchange": "CRYPTO",
     "name": "Polkadot",
     "symbol": "DOT/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "XRP / Bitcoin",
+    "status": "active",
+    "symbol": "XRP/BTC",
     "tradable": true
   }
 ]

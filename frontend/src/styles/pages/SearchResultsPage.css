@@ -6,16 +6,18 @@
 /* ── Sticky Header ── */
 .search-results-header {
   position: sticky;
-  top: 0;
-  z-index: 100;
+  /* Sit just below the AppHeader (.top-shell sticky top:8px + ~96px height) */
+  top: 106px;
+  z-index: 10;
   background: var(--panel-bg);
   border-bottom: 1px solid var(--panel-border);
-  box-shadow: 0 2px 12px rgba(13, 27, 45, 0.06);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(13, 27, 45, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 16px 16px;
 }
 
 .search-results-header-inner {
-  padding-top: 16px;
+  padding-top: 4px;
   padding-bottom: 0;
 }
 
@@ -134,8 +136,8 @@
 
 /* ── Body ── */
 .search-results-body {
-  padding-top: 32px;
-  padding-bottom: 64px;
+  padding-top: 28px;
+  padding-bottom: 72px;
 }
 
 /* ── Results Grid ── */
@@ -420,14 +422,180 @@
   min-width: 200px;
 }
 
+/* ── Top Result Card ── */
+.top-result-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  max-width: 75%;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.top-result-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(13, 27, 45, 0.1);
+}
+
+.top-result-eyebrow {
+  padding: 14px 20px 0;
+}
+
+.top-result-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(201, 106, 69, 0.1);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.top-result-link {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 20px 24px 18px;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Left side */
+.top-result-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.top-result-logo-wrap .mover-logo {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 18px !important;
+  font-size: 1.3rem !important;
+}
+
+.top-result-logo-wrap .mover-logo-img {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 18px !important;
+}
+
+.top-result-logo-wrap .mover-logo-mark {
+  font-size: 1.3rem !important;
+}
+
+.top-result-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.top-result-symbol {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.top-result-name {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  opacity: 0.72;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.top-result-meta {
+  font-size: 0.76rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* Right side */
+.top-result-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.top-result-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.top-result-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.top-result-pill {
+  font-size: 0.85rem !important;
+  padding: 4px 10px !important;
+}
+
+.top-result-chart {
+  width: 100%;
+  margin-top: 4px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 6px 0 4px;
+}
+
+/* Skeleton sizes */
+.top-result-skeleton-price {
+  width: 130px;
+  height: 30px;
+  border-radius: 6px;
+}
+
+.top-result-skeleton-pill {
+  width: 70px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.top-result-skeleton-logo {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 18px !important;
+  flex-shrink: 0;
+}
+
+.top-result-card--skeleton {
+  pointer-events: none;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
 /* ── Responsive header adjustments ── */
+@media (max-width: 980px) {
+  .search-results-header {
+    /* Shorter header on mobile — top-bar collapses to single column */
+    top: 180px;
+  }
+}
+
 @media (max-width: 720px) {
-  .search-results-header-inner {
-    padding-top: 12px;
+  .search-results-header {
+    top: 0;
+    border-radius: 0;
   }
 
-  .search-results-input-row {
-    margin-bottom: 10px;
+  .search-results-header-inner {
+    padding-top: 4px;
   }
 
   .search-results-tab {
@@ -437,5 +605,17 @@
 
   .search-results-body {
     padding-top: 24px;
+  }
+
+  .top-result-link {
+    grid-template-columns: 1fr;
+  }
+
+  .top-result-symbol {
+    font-size: 1.5rem;
+  }
+
+  .top-result-price {
+    font-size: 1.4rem;
   }
 }

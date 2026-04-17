@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -385,14 +386,52 @@ def is_chartable_instrument(item: Optional[Dict[str, Any]]) -> bool:
     return is_active and is_tradable
 
 
+def _levenshtein(a: str, b: str) -> int:
+    """Iterative Levenshtein distance — O(m*n), no recursion."""
+    if a == b:
+        return 0
+    if len(a) < len(b):
+        a, b = b, a
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for ca in a:
+        curr = [prev[0] + 1]
+        for j, cb in enumerate(b):
+            curr.append(min(prev[j + 1] + 1, curr[j] + 1, prev[j] + (ca != cb)))
+        prev = curr
+    return prev[-1]
+
+
+def _fuzzy_symbol_threshold(query_len: int) -> int:
+    """Allowed edit distance for symbol comparisons (more generous — symbols are short & unique)."""
+    if query_len <= 3:
+        return 0
+    if query_len <= 7:
+        return 2   # catches GOGLE→GOOGL, TSLS→TSLA, APPLLE→AAPL via symbol
+    return 2
+
+
+def _fuzzy_name_threshold(query_len: int) -> int:
+    """Allowed edit distance for name-word comparisons (more conservative to avoid noise)."""
+    if query_len <= 3:
+        return 0
+    if query_len <= 6:
+        return 1   # APPLLE→apple, NETFLX→netflix
+    return 2       # MICROSFOT→microsoft
+
+
 def _match_score(item: Dict[str, Any], query: str) -> float:
     normalized_query = query.strip().lower()
     symbol = item.get("symbol", "").lower()
     name = item.get("name", "").lower()
+    # Strip pair suffix for crypto (BTC/USD → btc) so symbol matching is cleaner
+    symbol_root = symbol.split("/")[0] if "/" in symbol else symbol
 
-    if normalized_query == symbol:
+    # ── Exact / substring matches (high confidence) ──
+    if normalized_query in (symbol, symbol_root):
         return 1.0
-    if symbol.startswith(normalized_query):
+    if symbol.startswith(normalized_query) or symbol_root.startswith(normalized_query):
         return 0.96
     if normalized_query in symbol:
         return 0.9
@@ -400,6 +439,44 @@ def _match_score(item: Dict[str, Any], query: str) -> float:
         return 0.86
     if normalized_query in name:
         return 0.75
+
+    # ── Structural heuristics ──
+    # Query extends the symbol (e.g. "GOOGLE" finds GOOGL, "SOLANA" finds SOL/USD)
+    if len(symbol_root) >= 3 and normalized_query.startswith(symbol_root):
+        return 0.68
+    # Query is a prefix of any significant word in the name
+    if len(normalized_query) >= 3 and any(
+        w.startswith(normalized_query) for w in name.split()
+    ):
+        return 0.62
+
+    # ── Fuzzy (typo-tolerant) matching ──
+    qlen = len(normalized_query)
+    sym_threshold = _fuzzy_symbol_threshold(qlen)
+    name_threshold = _fuzzy_name_threshold(qlen)
+
+    if sym_threshold > 0:
+        # Fuzzy symbol match — score by closeness so distance-1 always outranks distance-2
+        sym_dist = _levenshtein(normalized_query, symbol_root)
+        if sym_dist == 1:
+            return 0.62
+        if sym_dist == 2 and sym_threshold >= 2:
+            return 0.55
+
+    if name_threshold > 0:
+        # Fuzzy name-word match — split on non-word chars so "Netflix," → "Netflix"
+        # Min word length 4 avoids noise from short tokens like "Inc" or "the"
+        best_name_dist: Optional[int] = None
+        for word in re.split(r'\W+', name):
+            if len(word) >= 4:
+                d = _levenshtein(normalized_query, word)
+                if d <= name_threshold:
+                    best_name_dist = d if best_name_dist is None else min(best_name_dist, d)
+        if best_name_dist == 1:
+            return 0.52
+        if best_name_dist is not None:
+            return 0.47
+
     return 0.0
 
 
