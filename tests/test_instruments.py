@@ -61,7 +61,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["availableRanges"], ["1M", "3M", "6M", "1Y", "MAX"])
         self.assertEqual(payload["earliestAvailableDate"], "2025-01-10")
         self.assertEqual(payload["latestQuote"]["price"], 210.25)
-        self.assertEqual(len(payload["historicalSeries"]), 3)
+        self.assertEqual(len(payload["historicalSeries"]), 4)
 
     @patch("app.services.instruments.resolve_company_name")
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)

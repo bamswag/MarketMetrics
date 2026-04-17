@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type MoverLogoProps = {
   name?: string | null
@@ -150,18 +150,21 @@ const SYMBOL_DOMAINS: Record<string, string> = {
   LUV: 'southwest.com',
 }
 
-// CoinGecko image URLs for crypto symbols (direct links to known good images)
-const CRYPTO_IMAGE_URLS: Record<string, string> = {
-  'BTC/USD': 'https://assets.coingecko.com/coins/images/1/large.png',
-  'ETH/USD': 'https://assets.coingecko.com/coins/images/279/large.png',
-  'SOL/USD': 'https://assets.coingecko.com/coins/images/4128/large.png',
-  'DOGE/USD': 'https://assets.coingecko.com/coins/images/5/large.png',
-  'ADA/USD': 'https://assets.coingecko.com/coins/images/975/large.png',
-  'XRP/USD': 'https://assets.coingecko.com/coins/images/44/large.png',
-  'AVAX/USD': 'https://assets.coingecko.com/coins/images/9072/large.png',
-  'LINK/USD': 'https://assets.coingecko.com/coins/images/877/large.png',
-  'DOT/USD': 'https://assets.coingecko.com/coins/images/12171/large.png',
+// Map our symbol format (BTC/USD) to CoinGecko coin IDs
+const COINGECKO_COIN_IDS: Record<string, string> = {
+  'BTC/USD': 'bitcoin',
+  'ETH/USD': 'ethereum',
+  'SOL/USD': 'solana',
+  'DOGE/USD': 'dogecoin',
+  'ADA/USD': 'cardano',
+  'XRP/USD': 'ripple',
+  'AVAX/USD': 'avalanche-2',
+  'LINK/USD': 'chainlink',
+  'DOT/USD': 'polkadot',
 }
+
+// Cache for CoinGecko image URLs (symbol → image URL)
+const cryptoImageCache = new Map<string, string | null>()
 
 function getFaviconUrl(symbol: string): string | null {
   const domain = SYMBOL_DOMAINS[symbol]
@@ -169,8 +172,35 @@ function getFaviconUrl(symbol: string): string | null {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 }
 
-function getCoinGeckoUrl(symbol: string): string | null {
-  return CRYPTO_IMAGE_URLS[symbol] ?? null
+async function fetchCoinGeckoImageUrl(symbol: string): Promise<string | null> {
+  // Check cache first
+  if (cryptoImageCache.has(symbol)) {
+    return cryptoImageCache.get(symbol) ?? null
+  }
+
+  const coinId = COINGECKO_COIN_IDS[symbol]
+  if (!coinId) {
+    cryptoImageCache.set(symbol, null)
+    return null
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false`
+    )
+    if (!response.ok) {
+      cryptoImageCache.set(symbol, null)
+      return null
+    }
+
+    const data = await response.json()
+    const imageUrl = data.image?.large ?? null
+    cryptoImageCache.set(symbol, imageUrl)
+    return imageUrl
+  } catch (error) {
+    cryptoImageCache.set(symbol, null)
+    return null
+  }
 }
 
 function fallbackLabel(symbol: string) {
@@ -182,9 +212,30 @@ export function MoverLogo({ name, symbol }: MoverLogoProps) {
   const mark = BRAND_MARKS[normalizedSymbol]
   const label = mark?.label ?? fallbackLabel(normalizedSymbol)
 
-  // Determine source priority: CoinGecko first for crypto, then Google favicons
-  const coinGeckoUrl = getCoinGeckoUrl(normalizedSymbol)
+  // State for async CoinGecko fetch
+  const [coinGeckoUrl, setCoinGeckoUrl] = useState<string | null>(
+    cryptoImageCache.get(normalizedSymbol) ?? null
+  )
   const faviconUrl = getFaviconUrl(normalizedSymbol)
+
+  // Fetch CoinGecko image if symbol is a crypto pair
+  useEffect(() => {
+    // Skip if already cached (including null)
+    if (cryptoImageCache.has(normalizedSymbol)) {
+      return
+    }
+
+    let cancelled = false
+    fetchCoinGeckoImageUrl(normalizedSymbol).then((url) => {
+      if (!cancelled) {
+        setCoinGeckoUrl(url)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [normalizedSymbol])
 
   // Try sources in order: CoinGecko (crypto), Google favicon (all)
   const primaryUrl = coinGeckoUrl || faviconUrl
