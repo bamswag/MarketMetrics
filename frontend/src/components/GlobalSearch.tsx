@@ -325,6 +325,21 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
                 </button>
               ))
             : null}
+
+          {!searchError && !shouldShowRecentSearches && results.length > 0 && (
+            <button
+              className="search-view-all"
+              onClick={() => {
+                setIsOpen(false)
+                setHasTyped(false)
+                navigate(`/search-results/${encodeURIComponent(query.trim())}`)
+              }}
+              type="button"
+            >
+              <span>View all results for <strong>{query.trim()}</strong></span>
+              <span className="search-view-all-arrow" aria-hidden="true">→</span>
+            </button>
+          )}
         </div>
       ) : null}
     </div>

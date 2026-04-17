@@ -66,6 +66,10 @@ const InstrumentPage = lazy(() =>
   import('../pages/InstrumentPage').then((module) => ({ default: module.InstrumentPage })),
 )
 
+const SearchResultsPage = lazy(() =>
+  import('../pages/SearchResultsPage').then((module) => ({ default: module.SearchResultsPage })),
+)
+
 type DashboardData = {
   alerts: AlertListResponse | null
   movers: MoversResponse | null
@@ -1399,6 +1403,21 @@ function AppContent() {
             )
           }
           path="/settings"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <Suspense fallback={<RouteLoadingState />}>
+                <SearchResultsPage
+                  onUnauthorized={handleSessionExpired}
+                  token={token || undefined}
+                  trackedSymbols={dashboardData.watchlist.map((w) => w.symbol)}
+                />
+              </Suspense>
+            </>
+          }
+          path="/search-results/:query"
         />
         <Route
           element={

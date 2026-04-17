@@ -325,6 +325,45 @@
   font-size: 0.9rem;
 }
 
+.search-view-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 11px 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--panel-border);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.84rem;
+  color: var(--muted);
+  transition: background 150ms ease, color 150ms ease;
+  text-align: left;
+}
+
+.search-view-all:hover {
+  background: var(--soft-bg);
+  color: var(--accent);
+}
+
+.search-view-all strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.search-view-all-arrow {
+  font-size: 1rem;
+  color: var(--accent);
+  opacity: 0.7;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.search-view-all:hover .search-view-all-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
 .landing-hero,
 .panel,
 .daily-movers-section,
