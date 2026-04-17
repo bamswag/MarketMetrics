@@ -1,7 +1,10 @@
 import asyncio
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+import app.services.search as search_service
 from app.services.search import (
     DEFAULT_MOVER_UNIVERSE_BY_CATEGORY,
     get_dynamic_mover_universe_symbols_by_category,
@@ -110,3 +113,103 @@ class SearchServiceTests(unittest.TestCase):
         self.assertEqual(payload["stocks"], DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["stocks"])
         self.assertEqual(payload["etfs"], DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["etfs"])
         self.assertEqual(payload["crypto"], ["BTC/USD", "ETH/USD"])
+
+    @patch("app.services.search.fetch_assets_catalog", new_callable=AsyncMock)
+    def test_dynamic_mover_universe_persists_live_crypto_catalog(
+        self,
+        mock_fetch_assets_catalog,
+    ):
+        mock_fetch_assets_catalog.return_value = [
+            {
+                "symbol": "LTCUSD",
+                "name": "Litecoin",
+                "exchange": "CRYPTO",
+                "status": "active",
+                "tradable": True,
+                "class": "crypto",
+            },
+            {
+                "symbol": "UNI/USD",
+                "name": "Uniswap",
+                "exchange": "CRYPTO",
+                "status": "active",
+                "tradable": True,
+                "class": "crypto",
+            },
+            {
+                "symbol": "AAPL",
+                "name": "Apple Inc.",
+                "exchange": "NASDAQ",
+                "status": "active",
+                "tradable": True,
+                "class": "us_equity",
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            catalog_path = Path(temp_dir) / "symbol_catalog.json"
+            with patch("app.services.search._catalog_path", return_value=catalog_path):
+                payload = asyncio.run(
+                    get_dynamic_mover_universe_symbols_by_category(force_refresh=True)
+                )
+                catalog_symbols = {
+                    item["symbol"] for item in search_service.load_symbol_catalog(force=True)
+                }
+
+        self.assertIn("LTC/USD", payload["crypto"])
+        self.assertIn("UNI/USD", payload["crypto"])
+        self.assertIn("LTC/USD", catalog_symbols)
+        self.assertIn("UNI/USD", catalog_symbols)
+
+    @patch("app.services.search.fetch_assets_catalog", new_callable=AsyncMock)
+    def test_degraded_crypto_universe_cache_retries_quickly_after_fallback(
+        self,
+        mock_fetch_assets_catalog,
+    ):
+        mock_fetch_assets_catalog.side_effect = [
+            RuntimeError("temporary alpaca outage"),
+            [
+                {
+                    "symbol": "LTCUSD",
+                    "name": "Litecoin",
+                    "exchange": "CRYPTO",
+                    "status": "active",
+                    "tradable": True,
+                    "class": "crypto",
+                },
+                {
+                    "symbol": "AAPL",
+                    "name": "Apple Inc.",
+                    "exchange": "NASDAQ",
+                    "status": "active",
+                    "tradable": True,
+                    "class": "us_equity",
+                },
+            ],
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            catalog_path = Path(temp_dir) / "symbol_catalog.json"
+            with patch("app.services.search._catalog_path", return_value=catalog_path):
+                fallback_payload = asyncio.run(
+                    get_dynamic_mover_universe_symbols_by_category(force_refresh=True)
+                )
+                self.assertEqual(
+                    search_service._dynamic_crypto_mover_universe_ttl_seconds,
+                    search_service._DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS,
+                )
+                search_service._dynamic_crypto_mover_universe_last_refresh_monotonic -= (
+                    search_service._DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS + 1.0
+                )
+
+                recovered_payload = asyncio.run(
+                    get_dynamic_mover_universe_symbols_by_category(force_refresh=False)
+                )
+
+        self.assertTrue(
+            set(fallback_payload["crypto"]).issubset(
+                set(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["crypto"])
+            )
+        )
+        self.assertNotIn("LTC/USD", fallback_payload["crypto"])
+        self.assertIn("LTC/USD", recovered_payload["crypto"])

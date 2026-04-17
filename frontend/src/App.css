@@ -422,6 +422,10 @@
   gap: 18px;
 }
 
+.alerts-columns {
+  align-items: start;
+}
+
 .preview-tile,
 .metric-card,
 .feature-card,
@@ -850,6 +854,10 @@
 .tracked-symbols-preview-list {
   display: grid;
   gap: 12px;
+}
+
+.alerts-column {
+  align-content: start;
 }
 
 .mover-card-list {
@@ -1391,6 +1399,13 @@
   gap: 14px;
 }
 
+.alert-row--uniform {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 208px;
+}
+
 .alert-row--paused {
   opacity: 0.7;
 }
@@ -1409,6 +1424,8 @@
   display: flex;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .alert-row-checkbox {
@@ -1444,6 +1461,21 @@
 .alert-row--editing {
   border: 1px solid rgba(201, 106, 69, 0.3);
   background: rgba(201, 106, 69, 0.04);
+}
+
+.alert-row--selectable {
+  padding-top: 18px;
+}
+
+.alert-row--selectable .alert-row-checkbox {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 1;
+}
+
+.alert-row--selectable .alert-row-head {
+  padding-left: 34px;
 }
 
 .alert-edit-form {
@@ -1483,13 +1515,39 @@
 }
 
 .alert-row-actions {
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
 }
 
 .alert-row-time {
   font-size: 0.88rem;
 }
+
+.alert-row-head {
+  width: 100%;
+  min-width: 0;
+  min-height: 96px;
+  flex: 1 1 auto;
+}
+
+.alert-row-meta strong {
+  display: block;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.alert-row-meta p {
+  margin: 0;
+}
+
+.alert-row-actions .alert-inline-button {
+  width: 100%;
+  min-width: 0;
+ }
 
 .alert-history-panel {
   padding: 10px 0 4px;
@@ -1750,6 +1808,31 @@
 
   .alerts-notification-actions {
     justify-items: stretch;
+  }
+
+  .alert-row--uniform {
+    min-height: auto;
+  }
+
+  .alert-row--selectable {
+    padding-top: 16px;
+  }
+
+  .alert-row--selectable .alert-row-checkbox {
+    position: static;
+  }
+
+  .alert-row--selectable .alert-row-head {
+    padding-left: 0;
+  }
+
+  .alert-row-head {
+    min-height: auto;
+  }
+
+  .alert-row-actions {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
   }
 
   .alert-toast-stack {

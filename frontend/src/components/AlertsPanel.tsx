@@ -301,7 +301,10 @@ export function AlertsPanel({
                 }
 
                 return (
-                  <article className={`alert-row ${isUrgent ? 'alert-row--urgent' : ''}`} key={alert.id}>
+                  <article
+                    className={`alert-row alert-row--uniform ${onBulkAction ? 'alert-row--selectable' : ''} ${isUrgent ? 'alert-row--urgent' : ''}`.trim()}
+                    key={alert.id}
+                  >
                     {onBulkAction ? (
                       <label className="alert-row-checkbox">
                         <input checked={selectedIds.has(alert.id)} onChange={() => toggleSelection(alert.id)} type="checkbox" />
@@ -346,7 +349,10 @@ export function AlertsPanel({
                   const isResuming = pendingActionId === alert.id && pendingAction === 'resume'
 
                   return (
-                    <article className="alert-row alert-row--paused" key={alert.id}>
+                    <article
+                      className={`alert-row alert-row--uniform alert-row--paused ${onBulkAction ? 'alert-row--selectable' : ''}`.trim()}
+                      key={alert.id}
+                    >
                       {onBulkAction ? (
                         <label className="alert-row-checkbox">
                           <input checked={selectedIds.has(alert.id)} onChange={() => toggleSelection(alert.id)} type="checkbox" />
@@ -384,7 +390,10 @@ export function AlertsPanel({
                 const isExpanded = expandedHistoryId === alert.id
 
                 return (
-                  <article className="alert-row" key={alert.id}>
+                  <article
+                    className={`alert-row alert-row--uniform ${onBulkAction ? 'alert-row--selectable' : ''}`.trim()}
+                    key={alert.id}
+                  >
                     {onBulkAction ? (
                       <label className="alert-row-checkbox">
                         <input checked={selectedIds.has(alert.id)} onChange={() => toggleSelection(alert.id)} type="checkbox" />

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -11,6 +12,7 @@ from app.integrations.alpaca.assets import fetch_assets_catalog
 
 _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
 _MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 1800.0
+_DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 60.0
 _CRYPTO_QUOTE_SUFFIXES = ("USD",)
 _ETF_NAME_HINTS = (
     " ETF",
@@ -28,6 +30,8 @@ _ETF_NAME_HINTS = (
     " WISDOMTREE",
     " ARK ",
 )
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
@@ -208,6 +212,7 @@ _symbol_catalog_cache_index: Dict[str, Dict[str, Any]] = _build_symbol_index(
 _symbol_catalog_last_check_monotonic: float = 0.0
 _dynamic_crypto_mover_universe_cache: List[str] = []
 _dynamic_crypto_mover_universe_last_refresh_monotonic: float = 0.0
+_dynamic_crypto_mover_universe_ttl_seconds: float = _DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS
 
 
 def _catalog_path() -> Path:
@@ -216,6 +221,50 @@ def _catalog_path() -> Path:
 
 def _training_universe_path() -> Path:
     return settings.prediction_training_universe_path
+
+
+def _hydrate_symbol_catalog_cache(
+    catalog: Iterable[Dict[str, Any]],
+    *,
+    path: Optional[Path] = None,
+    mtime_ns: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    global _symbol_catalog_cache_path
+    global _symbol_catalog_cache_mtime_ns
+    global _symbol_catalog_cache_data
+    global _symbol_catalog_cache_index
+    global _symbol_catalog_last_check_monotonic
+
+    normalized_catalog = _merge_default_catalog_entries(catalog)
+    _symbol_catalog_cache_data = normalized_catalog
+    _symbol_catalog_cache_index = _build_symbol_index(normalized_catalog)
+    _symbol_catalog_last_check_monotonic = time.monotonic()
+    _symbol_catalog_cache_path = str(path.resolve()) if path else None
+    _symbol_catalog_cache_mtime_ns = mtime_ns
+    return list(_symbol_catalog_cache_data)
+
+
+def _catalog_entry_from_asset(asset: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    symbol = asset.get("symbol")
+    if not symbol:
+        return None
+
+    return {
+        "symbol": symbol,
+        "name": asset.get("name") or symbol,
+        "exchange": asset.get("exchange"),
+        "status": asset.get("status"),
+        "asset_class": asset.get("class") or asset.get("asset_class") or "us_equity",
+        "tradable": bool(asset.get("tradable", True)),
+    }
+
+
+def build_symbol_catalog_from_assets(assets: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [
+        entry
+        for entry in (_catalog_entry_from_asset(asset) for asset in assets)
+        if entry and entry.get("symbol")
+    ]
 
 
 def load_symbol_catalog(force: bool = False) -> List[Dict[str, Any]]:
@@ -249,12 +298,11 @@ def load_symbol_catalog(force: bool = False) -> List[Dict[str, Any]]:
 
             loaded = json.loads(path.read_text())
             if isinstance(loaded, list):
-                normalized_catalog = _merge_default_catalog_entries(loaded)
-                _symbol_catalog_cache_path = resolved_path
-                _symbol_catalog_cache_mtime_ns = current_mtime_ns
-                _symbol_catalog_cache_data = normalized_catalog
-                _symbol_catalog_cache_index = _build_symbol_index(normalized_catalog)
-                return list(_symbol_catalog_cache_data)
+                return _hydrate_symbol_catalog_cache(
+                    loaded,
+                    path=path,
+                    mtime_ns=current_mtime_ns,
+                )
         except Exception:
             return list(_symbol_catalog_cache_data)
     return list(_symbol_catalog_cache_data)
@@ -263,7 +311,13 @@ def load_symbol_catalog(force: bool = False) -> List[Dict[str, Any]]:
 def save_symbol_catalog(catalog: List[Dict[str, Any]]) -> Path:
     path = _catalog_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_merge_default_catalog_entries(catalog), indent=2, sort_keys=True))
+    normalized_catalog = _merge_default_catalog_entries(catalog)
+    path.write_text(json.dumps(normalized_catalog, indent=2, sort_keys=True))
+    _hydrate_symbol_catalog_cache(
+        normalized_catalog,
+        path=path,
+        mtime_ns=path.stat().st_mtime_ns,
+    )
     return path
 
 
@@ -431,13 +485,14 @@ async def get_dynamic_mover_universe_symbols_by_category(
 ) -> Dict[str, List[str]]:
     global _dynamic_crypto_mover_universe_cache
     global _dynamic_crypto_mover_universe_last_refresh_monotonic
+    global _dynamic_crypto_mover_universe_ttl_seconds
 
     now = time.monotonic()
     if (
         not force_refresh
         and _dynamic_crypto_mover_universe_cache
         and (now - _dynamic_crypto_mover_universe_last_refresh_monotonic)
-        < _MOVER_UNIVERSE_REFRESH_TTL_SECONDS
+        < _dynamic_crypto_mover_universe_ttl_seconds
     ):
         return {
             "stocks": list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["stocks"]),
@@ -446,16 +501,36 @@ async def get_dynamic_mover_universe_symbols_by_category(
         }
 
     crypto_symbols: List[str] = []
+    live_catalog: List[Dict[str, Any]] = []
     try:
-        crypto_symbols = _extract_dynamic_crypto_mover_symbols(await fetch_assets_catalog())
+        live_assets = await fetch_assets_catalog()
+        live_catalog = build_symbol_catalog_from_assets(live_assets)
+        crypto_symbols = _extract_dynamic_crypto_mover_symbols(live_catalog)
     except Exception:
         crypto_symbols = []
 
-    if not crypto_symbols:
-        crypto_symbols = _extract_dynamic_crypto_mover_symbols(load_symbol_catalog(force=force_refresh))
+    used_fallback = False
+    if crypto_symbols:
+        save_symbol_catalog(live_catalog)
+        _dynamic_crypto_mover_universe_ttl_seconds = _MOVER_UNIVERSE_REFRESH_TTL_SECONDS
+    else:
+        used_fallback = True
+        crypto_symbols = _extract_dynamic_crypto_mover_symbols(
+            load_symbol_catalog(force=force_refresh)
+        )
 
     if not crypto_symbols:
+        used_fallback = True
         crypto_symbols = list(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["crypto"])
+
+    if used_fallback:
+        _dynamic_crypto_mover_universe_ttl_seconds = (
+            _DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS
+        )
+        logger.warning(
+            "Using fallback crypto mover universe with %s symbols.",
+            len(crypto_symbols),
+        )
 
     _dynamic_crypto_mover_universe_cache = list(crypto_symbols)
     _dynamic_crypto_mover_universe_last_refresh_monotonic = now
