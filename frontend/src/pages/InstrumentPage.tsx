@@ -219,6 +219,9 @@ export function InstrumentPage({
           return
         }
 
+        if (response.range !== selectedRange) {
+          setSelectedRange(response.range)
+        }
         setInstrumentDetail(response)
       } catch (error) {
         if (cancelled) {

@@ -93,15 +93,6 @@ const SYMBOL_DOMAINS: Record<string, string> = {
   ARKK: 'ark-funds.com',
   TLT: 'ishares.com',
   GLD: 'spdrgoldshares.com',
-  'BTC/USD': 'bitcoin.org',
-  'ETH/USD': 'ethereum.org',
-  'SOL/USD': 'solana.com',
-  'DOGE/USD': 'dogecoin.com',
-  'ADA/USD': 'cardano.org',
-  'XRP/USD': 'ripple.com',
-  'AVAX/USD': 'avax.network',
-  'LINK/USD': 'chain.link',
-  'DOT/USD': 'polkadot.com',
   CRM: 'salesforce.com',
   ORCL: 'oracle.com',
   CSCO: 'cisco.com',
@@ -159,10 +150,27 @@ const SYMBOL_DOMAINS: Record<string, string> = {
   LUV: 'southwest.com',
 }
 
-function getLogoUrl(symbol: string): string | null {
+// CoinGecko image URLs for crypto symbols (direct links to known good images)
+const CRYPTO_IMAGE_URLS: Record<string, string> = {
+  'BTC/USD': 'https://assets.coingecko.com/coins/images/1/large.png',
+  'ETH/USD': 'https://assets.coingecko.com/coins/images/279/large.png',
+  'SOL/USD': 'https://assets.coingecko.com/coins/images/4128/large.png',
+  'DOGE/USD': 'https://assets.coingecko.com/coins/images/5/large.png',
+  'ADA/USD': 'https://assets.coingecko.com/coins/images/975/large.png',
+  'XRP/USD': 'https://assets.coingecko.com/coins/images/44/large.png',
+  'AVAX/USD': 'https://assets.coingecko.com/coins/images/9072/large.png',
+  'LINK/USD': 'https://assets.coingecko.com/coins/images/877/large.png',
+  'DOT/USD': 'https://assets.coingecko.com/coins/images/12171/large.png',
+}
+
+function getFaviconUrl(symbol: string): string | null {
   const domain = SYMBOL_DOMAINS[symbol]
   if (!domain) return null
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+}
+
+function getCoinGeckoUrl(symbol: string): string | null {
+  return CRYPTO_IMAGE_URLS[symbol] ?? null
 }
 
 function fallbackLabel(symbol: string) {
@@ -173,10 +181,22 @@ export function MoverLogo({ name, symbol }: MoverLogoProps) {
   const normalizedSymbol = symbol.trim().toUpperCase()
   const mark = BRAND_MARKS[normalizedSymbol]
   const label = mark?.label ?? fallbackLabel(normalizedSymbol)
-  const logoUrl = getLogoUrl(normalizedSymbol)
-  const [imgFailed, setImgFailed] = useState(false)
 
-  if (logoUrl && !imgFailed) {
+  // Determine source priority: CoinGecko first for crypto, then Google favicons
+  const coinGeckoUrl = getCoinGeckoUrl(normalizedSymbol)
+  const faviconUrl = getFaviconUrl(normalizedSymbol)
+
+  // Try sources in order: CoinGecko (crypto), Google favicon (all)
+  const primaryUrl = coinGeckoUrl || faviconUrl
+  const fallbackUrl = coinGeckoUrl && faviconUrl ? faviconUrl : null
+
+  const [primaryFailed, setPrimaryFailed] = useState(false)
+  const [fallbackFailed, setFallbackFailed] = useState(false)
+
+  const showPrimary = primaryUrl && !primaryFailed
+  const showFallback = fallbackUrl && !fallbackFailed && primaryFailed
+
+  if (showPrimary) {
     return (
       <span
         className="mover-logo mover-logo--image"
@@ -185,8 +205,24 @@ export function MoverLogo({ name, symbol }: MoverLogoProps) {
         <img
           alt={name ?? normalizedSymbol}
           className="mover-logo-img"
-          onError={() => setImgFailed(true)}
-          src={logoUrl}
+          onError={() => setPrimaryFailed(true)}
+          src={primaryUrl}
+        />
+      </span>
+    )
+  }
+
+  if (showFallback) {
+    return (
+      <span
+        className="mover-logo mover-logo--image"
+        title={name ?? normalizedSymbol}
+      >
+        <img
+          alt={name ?? normalizedSymbol}
+          className="mover-logo-img"
+          onError={() => setFallbackFailed(true)}
+          src={fallbackUrl}
         />
       </span>
     )

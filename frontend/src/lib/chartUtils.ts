@@ -1,6 +1,10 @@
 import type { InstrumentDetailResponse, InstrumentRange } from './api'
 
 export function getMaxChartPoints(selectedRange: InstrumentRange): number {
+  if (selectedRange === 'MAX') {
+    return 320
+  }
+
   if (selectedRange === '5Y') {
     return 260
   }

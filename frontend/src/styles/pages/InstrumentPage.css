@@ -451,6 +451,16 @@
   color: var(--text-main);
 }
 
+.instrument-range-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.instrument-range-btn:disabled:hover {
+  background: transparent;
+  color: var(--muted);
+}
+
 .instrument-range-btn--active {
   background: #fff;
   color: var(--text-main);
@@ -583,8 +593,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 28px 18px;
   border-top: 1px solid var(--panel-border);
+}
+
+.instrument-chart-footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
 }
 
 .instrument-chart-footer-note,

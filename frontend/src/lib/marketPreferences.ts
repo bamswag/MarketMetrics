@@ -32,7 +32,14 @@ export const DEFAULT_MARKET_PREFERENCES: MarketPreferences = {
 export const MARKET_PREFERENCES_STORAGE_KEY = 'marketmetrics.marketPreferences'
 
 function isInstrumentRange(value: unknown): value is InstrumentRange {
-  return value === '1M' || value === '3M' || value === '6M' || value === '1Y' || value === '5Y'
+  return (
+    value === '1M'
+    || value === '3M'
+    || value === '6M'
+    || value === '1Y'
+    || value === '5Y'
+    || value === 'MAX'
+  )
 }
 
 function isTrackedSymbolsSort(value: unknown): value is TrackedSymbolsSort {

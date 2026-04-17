@@ -201,7 +201,7 @@ export type WatchlistItemOut = {
   createdAt: string
 }
 
-export type InstrumentRange = '1M' | '3M' | '6M' | '1Y' | '5Y'
+export type InstrumentRange = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX'
 
 export type InstrumentDetailResponse = {
   symbol: string
@@ -209,6 +209,8 @@ export type InstrumentDetailResponse = {
   assetCategory?: string | null
   exchange?: string | null
   range: InstrumentRange
+  availableRanges: InstrumentRange[]
+  earliestAvailableDate?: string | null
   latestQuote: {
     price: number
     change?: number | null

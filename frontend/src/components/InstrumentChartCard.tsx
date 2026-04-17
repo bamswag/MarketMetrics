@@ -21,7 +21,15 @@ type InstrumentChartCardProps = {
   onSelectRange: (range: InstrumentRange) => void
 }
 
-const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
+const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y', 'MAX']
+const RANGE_LABELS: Record<InstrumentRange, string> = {
+  '1M': '1M',
+  '3M': '3M',
+  '6M': '6M',
+  '1Y': '1Y',
+  '5Y': '5Y',
+  MAX: 'MAX',
+}
 const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +67,10 @@ export function InstrumentChartCard({
   onSelectRange,
 }: InstrumentChartCardProps) {
   const [chartType, setChartType] = useState<ChartType>('price')
+  const availableRanges = useMemo(
+    () => new Set(instrumentDetail.availableRanges),
+    [instrumentDetail.availableRanges],
+  )
 
   const chartSeries = useMemo(
     () =>
@@ -114,7 +126,7 @@ export function InstrumentChartCard({
             <span className={`instrument-range-badge ${isRangePositive ? 'instrument-range-badge--up' : 'instrument-range-badge--down'}`}>
               {isRangePositive ? '+' : ''}{rangeChangePct}%
             </span>
-            <span className="instrument-range-label">over {selectedRange}</span>
+            <span className="instrument-range-label">over {RANGE_LABELS[selectedRange]}</span>
           </div>
         </div>
 
@@ -132,11 +144,12 @@ export function InstrumentChartCard({
             {RANGE_OPTIONS.map((rangeOption) => (
               <button
                 className={selectedRange === rangeOption ? 'instrument-range-btn instrument-range-btn--active' : 'instrument-range-btn'}
+                disabled={!availableRanges.has(rangeOption)}
                 key={rangeOption}
                 onClick={() => onSelectRange(rangeOption)}
                 type="button"
               >
-                {rangeOption}
+                {RANGE_LABELS[rangeOption]}
               </button>
             ))}
           </div>
@@ -231,11 +244,18 @@ export function InstrumentChartCard({
       )}
 
       <div className="instrument-chart-footer">
-        <span className="instrument-chart-footer-note">
-          {chartSeries.length === instrumentDetail.historicalSeries.length
-            ? `${chartSeries.length} data points`
-            : `${chartSeries.length} of ${instrumentDetail.historicalSeries.length} points sampled`}
-        </span>
+        <div className="instrument-chart-footer-meta">
+          <span className="instrument-chart-footer-note">
+            {chartSeries.length === instrumentDetail.historicalSeries.length
+              ? `${chartSeries.length} data points`
+              : `${chartSeries.length} of ${instrumentDetail.historicalSeries.length} points sampled`}
+          </span>
+          {instrumentDetail.earliestAvailableDate ? (
+            <span className="instrument-chart-footer-note">
+              History since {formatShortDate(instrumentDetail.earliestAvailableDate)}
+            </span>
+          ) : null}
+        </div>
         <span className="instrument-chart-footer-source">
           Source: {instrumentDetail.latestQuote.source ?? 'market data'}
         </span>

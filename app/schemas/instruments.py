@@ -13,6 +13,7 @@ class InstrumentRange(str, Enum):
     six_months = "6M"
     one_year = "1Y"
     five_years = "5Y"
+    max_range = "MAX"
 
 
 class InstrumentQuoteOut(BaseModel):
@@ -34,5 +35,7 @@ class InstrumentDetailResponse(BaseModel):
     assetCategory: Optional[str] = None
     exchange: Optional[str] = None
     range: InstrumentRange = Field(default=InstrumentRange.six_months)
+    availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    earliestAvailableDate: Optional[date] = None
     latestQuote: InstrumentQuoteOut
     historicalSeries: List[InstrumentPricePoint]

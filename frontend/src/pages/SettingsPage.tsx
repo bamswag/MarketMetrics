@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import { RiskProfileBadge, RiskProfileQuiz } from '../components/RiskProfileQuiz'
-import type { RiskProfile, UserOut } from '../lib/api'
+import type { InstrumentRange, RiskProfile, UserOut } from '../lib/api'
 import {
   assetCategoryLabel,
   marketTimeDisplayLabel,
@@ -22,7 +22,7 @@ type SettingsPageProps = {
 }
 
 const ASSET_CATEGORY_OPTIONS: MarketAssetCategory[] = ['stocks', 'etfs', 'crypto']
-const DEFAULT_CHART_RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', '5Y'] as const
+const DEFAULT_CHART_RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y', 'MAX']
 const TRACKED_SORT_OPTIONS = ['newest', 'biggest_gain', 'biggest_loss', 'alphabetical'] as const
 const PRICE_DISPLAY_OPTIONS = ['percent', 'change', 'both'] as const
 const MARKET_TIME_OPTIONS = ['local', 'exchange', 'utc'] as const
@@ -141,7 +141,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications, onUpdate
               className="workspace-select"
               onChange={(event) =>
                 updatePreferences({
-                  defaultChartRange: event.target.value as '1M' | '3M' | '6M' | '1Y' | '5Y',
+                  defaultChartRange: event.target.value as InstrumentRange,
                 })
               }
               value={preferences.defaultChartRange}
