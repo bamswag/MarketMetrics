@@ -120,7 +120,7 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
       cancelled = true
       abortController.abort()
     }
-  }, [direction, limit, movers, requestedLimit])
+  }, [direction, requestedLimit])
 
   useEffect(() => {
     setActiveCategory('all')

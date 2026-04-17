@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import WebSocket
 
 from app.core.auth import decode_access_token
@@ -5,11 +7,26 @@ from app.core.database import SessionLocal
 from app.orm_models.user import UserDB
 from app.services.auth import ensure_user_schema, get_user_by_id
 
+WEBSOCKET_AUTH_SUBPROTOCOL = "marketmetrics.jwt.v1"
+
+
+def _get_token_from_subprotocols(websocket: WebSocket) -> Optional[str]:
+    header_value = websocket.headers.get("sec-websocket-protocol", "")
+    if not header_value:
+        return None
+
+    for protocol in [item.strip() for item in header_value.split(",") if item.strip()]:
+        if protocol.startswith("bearer."):
+            return protocol[len("bearer."):]
+
+    return None
+
 async def get_user_from_ws(websocket: WebSocket) -> UserDB:
     """
     Accepts token via:
       - ?token=...
       - Authorization: Bearer ...
+      - Sec-WebSocket-Protocol: marketmetrics.jwt.v1, bearer.<token>
     """
     token = websocket.query_params.get("token")
 
@@ -17,6 +34,9 @@ async def get_user_from_ws(websocket: WebSocket) -> UserDB:
         auth = websocket.headers.get("authorization")
         if auth and auth.lower().startswith("bearer "):
             token = auth.split(" ", 1)[1].strip()
+
+    if not token:
+        token = _get_token_from_subprotocols(websocket)
 
     if not token:
         await websocket.close(code=4401)

@@ -196,6 +196,21 @@ class MoversRouteTests(BaseAPITestCase):
         self.assertIn("sparklineSeries", payload["gainers"][0])
         mock_get_market_movers.assert_awaited_once_with(3)
 
+    @patch("app.api.routes.movers.get_market_movers", new_callable=AsyncMock)
+    def test_movers_route_accepts_higher_limit_for_load_more(self, mock_get_market_movers):
+        mock_get_market_movers.return_value = {
+            "gainers": [],
+            "losers": [],
+            "gainersByCategory": {"stocks": [], "crypto": [], "etfs": []},
+            "losersByCategory": {"stocks": [], "crypto": [], "etfs": []},
+            "source": "alpaca",
+        }
+
+        response = self.client.get("/movers/?limit=20")
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_market_movers.assert_awaited_once_with(20)
+
 
 class MoversServiceTests(BaseAPITestCase):
     @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)

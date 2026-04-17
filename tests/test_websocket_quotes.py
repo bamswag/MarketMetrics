@@ -52,3 +52,31 @@ class WebSocketTests(BaseAPITestCase):
         self.assertEqual(first_message["data"]["symbol"], "AAPL")
         self.assertEqual(second_message["type"], "alert_triggered")
         self.assertEqual(second_message["data"]["symbol"], "AAPL")
+
+    @patch("app.api.routes.websocket_quotes.evaluate_alerts_for_quote")
+    @patch("app.api.routes.websocket_quotes.get_quote_cached", new_callable=AsyncMock)
+    def test_websocket_accepts_token_via_subprotocol_without_query_param(
+        self,
+        mock_get_quote_cached,
+        mock_evaluate_alerts,
+    ):
+        token = self.register_and_login()
+        mock_get_quote_cached.return_value = {
+            "symbol": "AAPL",
+            "price": 123.45,
+            "change": 1.23,
+            "changePercent": "1.01%",
+            "volume": 1000,
+            "latestTradingDay": "2024-04-01",
+            "source": "alpaca",
+        }
+        mock_evaluate_alerts.return_value = []
+
+        with self.client.websocket_connect(
+            "/ws/quotes/AAPL",
+            subprotocols=["marketmetrics.jwt.v1", f"bearer.{token}"],
+        ) as websocket:
+            first_message = websocket.receive_json()
+
+        self.assertEqual(first_message["type"], "quote")
+        self.assertEqual(first_message["data"]["symbol"], "AAPL")

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.database import SessionLocal
-from app.core.websocket_auth import get_user_from_ws
+from app.core.websocket_auth import WEBSOCKET_AUTH_SUBPROTOCOL, get_user_from_ws
 from app.integrations.alpaca.client import AlpacaMarketDataError
 from app.services.alerts import evaluate_alerts_for_quote
 from app.services.email import send_alert_email
@@ -21,6 +22,14 @@ TRANSIENT_BACKOFF_SECONDS = (5, 15, 30)
 POLL_SECONDS = 30
 QUOTE_CACHE_TTL_SECONDS = 20
 MAX_CONNECTION_SECONDS = 1800  # force-close connections open longer than 30 minutes
+
+
+def _accepted_websocket_subprotocol(websocket: WebSocket) -> Optional[str]:
+    header_value = websocket.headers.get("sec-websocket-protocol", "")
+    requested = {item.strip() for item in header_value.split(",") if item.strip()}
+    if WEBSOCKET_AUTH_SUBPROTOCOL in requested:
+        return WEBSOCKET_AUTH_SUBPROTOCOL
+    return None
 
 
 def _evaluate_alerts_sync(user_id: str, symbol: str, price: float):
@@ -81,7 +90,11 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
     accepted = False
     try:
         user = await get_user_from_ws(websocket)
-        await websocket.accept()
+        accepted_subprotocol = _accepted_websocket_subprotocol(websocket)
+        if accepted_subprotocol:
+            await websocket.accept(subprotocol=accepted_subprotocol)
+        else:
+            await websocket.accept()
         accepted = True
         symbol = symbol.upper()
         logger.info("WS authenticated user=%s symbol=%s", user.email, symbol)

@@ -397,11 +397,14 @@ export function getApiUrl(): string {
   return configuredUrl.replace(/\/+$/, '')
 }
 
-export function buildWebSocketUrl(path: string, token: string): string {
+export function buildWebSocketUrl(path: string): string {
   const url = new URL(path, getApiUrl())
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-  url.searchParams.set('token', token)
   return url.toString()
+}
+
+export function buildWebSocketProtocols(token: string): string[] {
+  return ['marketmetrics.jwt.v1', `bearer.${token}`]
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {

@@ -4,8 +4,8 @@ export type MarketAssetCategory = 'stocks' | 'etfs' | 'crypto'
 export type TrackedSymbolsSort = 'newest' | 'biggest_gain' | 'biggest_loss' | 'alphabetical'
 export type PriceDisplayMode = 'percent' | 'change' | 'both'
 export type MarketTimeDisplay = 'local' | 'exchange' | 'utc'
-export type CurrencyPreference = 'USD'
-export type NumberFormatPreference = 'locale'
+export type CurrencyPreference = 'USD' | 'GBP'
+export type NumberFormatPreference = 'locale' | 'compact'
 
 export type MarketPreferences = {
   preferredAssetClasses: MarketAssetCategory[]
@@ -101,10 +101,13 @@ export function normalizeMarketPreferences(value: unknown): MarketPreferences {
     marketTimeDisplay: isMarketTimeDisplay(rawValue.marketTimeDisplay)
       ? rawValue.marketTimeDisplay
       : DEFAULT_MARKET_PREFERENCES.marketTimeDisplay,
-    currency: rawValue.currency === 'USD' ? 'USD' : DEFAULT_MARKET_PREFERENCES.currency,
+    currency:
+      rawValue.currency === 'USD' || rawValue.currency === 'GBP'
+        ? rawValue.currency
+        : DEFAULT_MARKET_PREFERENCES.currency,
     numberFormat:
-      rawValue.numberFormat === 'locale'
-        ? 'locale'
+      rawValue.numberFormat === 'locale' || rawValue.numberFormat === 'compact'
+        ? rawValue.numberFormat
         : DEFAULT_MARKET_PREFERENCES.numberFormat,
   }
 }

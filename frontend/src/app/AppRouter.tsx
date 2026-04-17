@@ -22,6 +22,7 @@ import { UserMenu } from '../components/UserMenu'
 import { VerifyEmailPage } from '../pages/VerifyEmailPage'
 import {
   ApiError,
+  buildWebSocketProtocols,
   buildWebSocketUrl,
   changePassword,
   createAlert,
@@ -801,7 +802,8 @@ function AppContent() {
     }
 
     const socket = new WebSocket(
-      buildWebSocketUrl(`/ws/quotes/${encodeURIComponent(symbol)}`, token),
+      buildWebSocketUrl(`/ws/quotes/${encodeURIComponent(symbol)}`),
+      buildWebSocketProtocols(token),
     )
 
     alertSocketsRef.current.set(symbol, socket)
@@ -1470,7 +1472,6 @@ function AppContent() {
                 <SettingsPage
                   currentUser={currentUser}
                   onUpdateEmailNotifications={handleUpdateEmailNotifications}
-                  onUpdateRiskProfile={handleUpdateRiskProfile}
                 />
               </>
             ) : (

@@ -20,10 +20,13 @@ function resolveLocale() {
 }
 
 function buildCurrencyFormatter(preferences: MarketPreferences) {
+  const compact = preferences.numberFormat === 'compact'
   return new Intl.NumberFormat(resolveLocale(), {
     style: 'currency',
     currency: preferences.currency,
-    maximumFractionDigits: 2,
+    notation: compact ? 'compact' : 'standard',
+    maximumFractionDigits: compact ? 1 : 2,
+    minimumFractionDigits: compact ? 0 : 2,
   })
 }
 
