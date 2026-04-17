@@ -185,6 +185,23 @@ async def fetch_daily_close_series(
     return [(row["date"], row["close"]) for row in rows]
 
 
+async def fetch_earliest_daily_bar_date(
+    symbol: str,
+    *,
+    start: date,
+    end: Optional[date] = None,
+    asset_class: str = "us_equity",
+) -> date:
+    rows = await fetch_daily_bar_rows(
+        symbol,
+        start=start,
+        end=end,
+        limit=1,
+        asset_class=asset_class,
+    )
+    return rows[0]["date"]
+
+
 async def fetch_intraday_close_series(
     symbol: str,
     *,

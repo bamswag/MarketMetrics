@@ -42,12 +42,13 @@ export function SearchResultsPage({
   // Fetch results when query changes
   useEffect(() => {
     if (!query) return
+    const abortController = new AbortController()
     let cancelled = false
     setIsLoading(true)
     setError('')
     setPageIndex(1)
 
-    fetchSearchResults(token, query)
+    fetchSearchResults(token, query, abortController.signal)
       .then((res) => {
         if (!cancelled) {
           setAllResults(res.results)
@@ -61,7 +62,10 @@ export function SearchResultsPage({
         }
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      abortController.abort()
+    }
   }, [query, token])
 
   // Reset pagination when category changes
@@ -78,6 +82,14 @@ export function SearchResultsPage({
       navigate(`/search-results/${encodeURIComponent(value.trim().toUpperCase())}`, { replace: true })
     }, 400)
   }
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [])
 
   // Group results by asset category
   const resultsByCategory = useMemo(() => {

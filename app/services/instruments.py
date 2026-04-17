@@ -10,7 +10,10 @@ from app.schemas.instruments import (
     InstrumentQuoteOut,
     InstrumentRange,
 )
-from app.services.price_history import get_daily_close_series_cached, slice_series
+from app.services.price_history import (
+    get_daily_close_series_cached,
+    get_earliest_available_close_date_cached,
+)
 from app.services.search import (
     get_symbol_asset_class,
     get_symbol_metadata,
@@ -29,7 +32,6 @@ RANGE_WINDOWS_DAYS = {
     InstrumentRange.five_years: 365 * 5,
 }
 INSTRUMENT_DATA_TIMEOUT_SECONDS = 8.0
-FULL_HISTORY_LOOKBACK_START = date(1970, 1, 1)
 STANDARD_RANGE_ORDER = [
     InstrumentRange.one_month,
     InstrumentRange.three_months,
@@ -49,14 +51,10 @@ def resolve_history_window(selected_range: InstrumentRange) -> tuple[date | None
 
 
 def determine_available_ranges(
-    historical_series: list[tuple[date, float]],
+    earliest_available_date: date,
     *,
     end_date: date,
 ) -> list[InstrumentRange]:
-    if not historical_series:
-        return []
-
-    earliest_available_date = historical_series[0][0]
     available_ranges: list[InstrumentRange] = []
 
     for range_option in STANDARD_RANGE_ORDER:
@@ -101,12 +99,11 @@ async def get_instrument_detail(
     _, end_date = resolve_history_window(selected_range)
 
     try:
-        latest_quote, full_historical_series = await asyncio.wait_for(
+        latest_quote, earliest_available_date = await asyncio.wait_for(
             asyncio.gather(
                 get_quote_cached(canonical_symbol),
-                get_daily_close_series_cached(
+                get_earliest_available_close_date_cached(
                     canonical_symbol,
-                    start=FULL_HISTORY_LOOKBACK_START,
                     end=end_date,
                 ),
             ),
@@ -119,20 +116,31 @@ async def get_instrument_detail(
     except AlpacaMarketDataError:
         raise
 
-    if not full_historical_series:
-        raise ValueError("No historical price data is available for that instrument.")
-
     available_ranges = determine_available_ranges(
-        full_historical_series,
+        earliest_available_date,
         end_date=end_date,
     )
     effective_range = resolve_effective_range(selected_range, available_ranges)
     effective_start_date, effective_end_date = resolve_history_window(effective_range)
-    historical_series = (
-        slice_series(full_historical_series, effective_start_date, effective_end_date)
-        if effective_start_date is not None
-        else list(full_historical_series)
-    )
+
+    try:
+        historical_series = await asyncio.wait_for(
+            get_daily_close_series_cached(
+                canonical_symbol,
+                start=earliest_available_date if effective_start_date is None else effective_start_date,
+                end=effective_end_date,
+            ),
+            timeout=INSTRUMENT_DATA_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError as exc:
+        raise AlpacaMarketDataError(
+            "Timed out while loading market data for that instrument. Please try again."
+        ) from exc
+    except AlpacaMarketDataError:
+        raise
+
+    if not historical_series:
+        raise ValueError("No historical price data is available for that instrument.")
 
     return InstrumentDetailResponse(
         symbol=canonical_symbol,
@@ -141,7 +149,7 @@ async def get_instrument_detail(
         exchange=metadata.get("exchange"),
         range=effective_range,
         availableRanges=available_ranges,
-        earliestAvailableDate=full_historical_series[0][0],
+        earliestAvailableDate=earliest_available_date,
         latestQuote=InstrumentQuoteOut(
             price=float(latest_quote["price"]),
             change=latest_quote.get("change"),

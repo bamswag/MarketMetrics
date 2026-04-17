@@ -405,30 +405,33 @@ export function buildWebSocketUrl(path: string, token: string): string {
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
+  const bodyText = await response.text().catch(() => '')
+  const trimmedBody = bodyText.trim()
+
   if (!response.ok) {
     let detail = `Request failed with status ${response.status}`
 
-    try {
-      const payload = await response.json()
-      if (typeof payload?.detail === 'string') {
-        detail = payload.detail
+    if (trimmedBody) {
+      try {
+        const payload = JSON.parse(trimmedBody)
+        if (typeof payload?.detail === 'string') {
+          detail = payload.detail
+        }
+      } catch {
+        // Keep the fallback message when the error body isn't valid JSON.
       }
-    } catch {
-      // Keep the fallback message when the response body isn't JSON.
     }
 
     throw new ApiError(detail, response.status)
   }
 
-  const clonedResponse = response.clone()
   const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
 
   if (!contentType.includes('application/json')) {
-    const bodyPreview = (await clonedResponse.text().catch(() => '')).trim()
     if (
-      bodyPreview.startsWith('<!DOCTYPE html') ||
-      bodyPreview.startsWith('<html') ||
-      bodyPreview.includes('<body')
+      trimmedBody.startsWith('<!DOCTYPE html')
+      || trimmedBody.startsWith('<html')
+      || trimmedBody.includes('<body')
     ) {
       throw new Error(
         'The API returned HTML instead of JSON. This usually means the request hit the frontend app instead of the deployed backend route.',
@@ -441,13 +444,12 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   try {
-    return (await response.json()) as T
+    return JSON.parse(bodyText) as T
   } catch (error) {
-    const bodyPreview = (await clonedResponse.text().catch(() => '')).trim()
     if (
-      bodyPreview.startsWith('<!DOCTYPE html') ||
-      bodyPreview.startsWith('<html') ||
-      bodyPreview.includes('<body')
+      trimmedBody.startsWith('<!DOCTYPE html')
+      || trimmedBody.startsWith('<html')
+      || trimmedBody.includes('<body')
     ) {
       throw new Error(
         'The API returned HTML instead of JSON. This usually means the request hit the frontend app instead of the deployed backend route.',
@@ -755,6 +757,7 @@ export async function fetchInstrumentDetail(
   token: string | undefined,
   symbol: string,
   range: InstrumentRange,
+  signal?: AbortSignal,
 ): Promise<InstrumentDetailResponse> {
   pruneInstrumentDetailCache()
   const key = instrumentDetailCacheKey(symbol, range)
@@ -773,6 +776,7 @@ export async function fetchInstrumentDetail(
       `${getApiUrl()}/instruments/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}`,
       {
         headers: authHeadersIfPresent(token),
+        signal,
       },
     )
 

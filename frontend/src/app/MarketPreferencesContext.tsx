@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import {
@@ -46,16 +46,16 @@ export function MarketPreferencesProvider({ children }: MarketPreferencesProvide
     }
   }, [])
 
-  function updatePreferences(patch: Partial<MarketPreferences>) {
+  const updatePreferences = useCallback((patch: Partial<MarketPreferences>) => {
     setPreferences((currentPreferences) =>
       normalizeMarketPreferences({
         ...currentPreferences,
         ...patch,
       }),
     )
-  }
+  }, [])
 
-  function togglePreferredAssetClass(assetCategory: MarketAssetCategory) {
+  const togglePreferredAssetClass = useCallback((assetCategory: MarketAssetCategory) => {
     setPreferences((currentPreferences) => {
       const isEnabled = currentPreferences.preferredAssetClasses.includes(assetCategory)
       if (isEnabled && currentPreferences.preferredAssetClasses.length === 1) {
@@ -73,16 +73,19 @@ export function MarketPreferencesProvider({ children }: MarketPreferencesProvide
         preferredAssetClasses: nextPreferredAssetClasses,
       })
     })
-  }
+  }, [])
+
+  const contextValue = useMemo(
+    () => ({
+      preferences: preferences ?? DEFAULT_MARKET_PREFERENCES,
+      updatePreferences,
+      togglePreferredAssetClass,
+    }),
+    [preferences, togglePreferredAssetClass, updatePreferences],
+  )
 
   return (
-    <MarketPreferencesContext.Provider
-      value={{
-        preferences: preferences ?? DEFAULT_MARKET_PREFERENCES,
-        updatePreferences,
-        togglePreferredAssetClass,
-      }}
-    >
+    <MarketPreferencesContext.Provider value={contextValue}>
       {children}
     </MarketPreferencesContext.Provider>
   )

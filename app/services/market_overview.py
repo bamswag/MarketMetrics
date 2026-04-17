@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import gc
 import time
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -486,7 +485,6 @@ async def get_market_movers(limit: int = 5) -> MoversResponse:
 
         payload = await _build_market_movers(limit)
         _movers_cache[limit] = (time.time(), payload)
-        gc.collect()
         return payload
 
 
@@ -519,5 +517,4 @@ async def get_featured_mover(
             asset=asset,
         )
         _featured_mover_cache[cache_key] = (time.time(), payload)
-        gc.collect()
         return payload

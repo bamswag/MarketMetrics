@@ -59,9 +59,10 @@ export function SearchResultCard({
   const [detailLoading, setDetailLoading] = useState(true)
 
   useEffect(() => {
+    const abortController = new AbortController()
     let cancelled = false
     setDetailLoading(true)
-    fetchInstrumentDetail(token, result.symbol, '1M')
+    fetchInstrumentDetail(token, result.symbol, '1M', abortController.signal)
       .then((data) => {
         if (!cancelled) {
           setDetail(data)
@@ -71,7 +72,10 @@ export function SearchResultCard({
       .catch(() => {
         if (!cancelled) setDetailLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      abortController.abort()
+    }
   }, [result.symbol, token])
 
   const quote = detail?.latestQuote ?? null

@@ -7,19 +7,26 @@ from typing import Dict, List, Optional, Tuple
 
 from app.integrations.alpaca.market_data import (
     fetch_daily_bar_rows,
+    fetch_earliest_daily_bar_date as fetch_alpaca_earliest_daily_bar_date,
     fetch_daily_close_series as fetch_alpaca_daily_close_series,
 )
 from app.services.search import get_symbol_asset_class
 
 HistoryCacheKey = Tuple[str, str, Optional[str], Optional[str]]
+EarliestDateCacheKey = Tuple[str, str, Optional[str]]
 
 _history_cache: Dict[HistoryCacheKey, Tuple[float, List[Tuple[date, float]]]] = {}
 _history_locks: Dict[HistoryCacheKey, asyncio.Lock] = {}
+_earliest_date_cache: Dict[EarliestDateCacheKey, Tuple[float, date]] = {}
+_earliest_date_locks: Dict[EarliestDateCacheKey, asyncio.Lock] = {}
 
 # Historical series can be much larger than quote snapshots, so keep this cache
 # intentionally smaller and short-lived to avoid steady process growth.
 _CACHE_MAX_SIZE = 128
 _CACHE_HARD_TTL_SECONDS = 600
+_EARLIEST_DATE_CACHE_MAX_SIZE = 256
+_EARLIEST_DATE_CACHE_HARD_TTL_SECONDS = 6 * 60 * 60
+_FULL_HISTORY_LOOKBACK_START = date(1970, 1, 1)
 
 
 def _history_cache_key(
@@ -32,6 +39,18 @@ def _history_cache_key(
         symbol.strip().upper(),
         asset_class,
         start.isoformat() if start else None,
+        end.isoformat() if end else None,
+    )
+
+
+def _earliest_date_cache_key(
+    symbol: str,
+    asset_class: str,
+    end: Optional[date],
+) -> EarliestDateCacheKey:
+    return (
+        symbol.strip().upper(),
+        asset_class,
         end.isoformat() if end else None,
     )
 
@@ -57,6 +76,29 @@ def _evict_stale_and_overflow() -> None:
             _history_locks.pop(key, None)
 
 
+def _evict_stale_and_overflow_earliest_dates() -> None:
+    now = time.time()
+
+    stale = [
+        key
+        for key, (cached_at, _) in _earliest_date_cache.items()
+        if now - cached_at > _EARLIEST_DATE_CACHE_HARD_TTL_SECONDS
+    ]
+    for key in stale:
+        _earliest_date_cache.pop(key, None)
+        _earliest_date_locks.pop(key, None)
+
+    if len(_earliest_date_cache) > _EARLIEST_DATE_CACHE_MAX_SIZE:
+        sorted_keys = sorted(
+            _earliest_date_cache,
+            key=lambda key: _earliest_date_cache[key][0],
+        )
+        evict_count = len(_earliest_date_cache) - _EARLIEST_DATE_CACHE_MAX_SIZE // 2
+        for key in sorted_keys[:evict_count]:
+            _earliest_date_cache.pop(key, None)
+            _earliest_date_locks.pop(key, None)
+
+
 async def fetch_daily_close_series(
     symbol: str,
     *,
@@ -67,6 +109,20 @@ async def fetch_daily_close_series(
     return await fetch_alpaca_daily_close_series(
         symbol,
         start=start,
+        end=end,
+        asset_class=asset_class,
+    )
+
+
+async def fetch_earliest_available_close_date(
+    symbol: str,
+    *,
+    end: Optional[date] = None,
+) -> date:
+    asset_class = get_symbol_asset_class(symbol)
+    return await fetch_alpaca_earliest_daily_bar_date(
+        symbol,
+        start=_FULL_HISTORY_LOOKBACK_START,
         end=end,
         asset_class=asset_class,
     )
@@ -103,6 +159,35 @@ async def get_daily_close_series_cached(
         _evict_stale_and_overflow()
 
         return list(payload)
+
+
+async def get_earliest_available_close_date_cached(
+    symbol: str,
+    *,
+    end: Optional[date] = None,
+    min_ttl_seconds: int = 60 * 60,
+) -> date:
+    now = time.time()
+    asset_class = get_symbol_asset_class(symbol)
+    key = _earliest_date_cache_key(symbol, asset_class, end)
+
+    if key in _earliest_date_cache:
+        cached_at, payload = _earliest_date_cache[key]
+        if now - cached_at < min_ttl_seconds:
+            return payload
+
+    lock = _earliest_date_locks.setdefault(key, asyncio.Lock())
+    async with lock:
+        now = time.time()
+        if key in _earliest_date_cache:
+            cached_at, payload = _earliest_date_cache[key]
+            if now - cached_at < min_ttl_seconds:
+                return payload
+
+        payload = await fetch_earliest_available_close_date(symbol, end=end)
+        _earliest_date_cache[key] = (time.time(), payload)
+        _evict_stale_and_overflow_earliest_dates()
+        return payload
 
 
 async def fetch_daily_bar_series(symbol: str) -> List[dict]:

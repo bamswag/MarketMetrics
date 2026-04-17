@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import AsyncMock, patch
 
 from app.integrations.alpaca.client import AlpacaMarketDataError
@@ -13,6 +13,7 @@ except ModuleNotFoundError:
 
 class InstrumentRouteTests(BaseAPITestCase):
     @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -21,6 +22,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
     ):
         token = self.register_and_login(email="instrument@example.com")
@@ -31,6 +33,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "tradable": True,
         }
         mock_resolve_company_name.return_value = "Apple Inc."
+        mock_get_earliest_available_close_date_cached.return_value = date(2025, 1, 10)
         mock_get_quote_cached.return_value = {
             "symbol": "AAPL",
             "price": 210.25,
@@ -39,13 +42,20 @@ class InstrumentRouteTests(BaseAPITestCase):
             "latestTradingDay": "2026-04-06",
             "source": "alpaca",
         }
-        mock_get_daily_close_series_cached.return_value = [
+        historical_series = [
             (date(2025, 1, 10), 189.4),
             (date(2025, 12, 10), 198.5),
             (date(2026, 2, 2), 201.0),
             (date(2026, 4, 2), 204.0),
             (date(2026, 4, 3), 206.5),
         ]
+        mock_get_daily_close_series_cached.side_effect = (
+            lambda *args, **kwargs: [
+                (point_date, close)
+                for point_date, close in historical_series
+                if kwargs.get("start") is None or point_date >= kwargs["start"]
+            ]
+        )
 
         response = self.client.get(
             "/instruments/AAPL?range=6M",
@@ -62,8 +72,14 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["earliestAvailableDate"], "2025-01-10")
         self.assertEqual(payload["latestQuote"]["price"], 210.25)
         self.assertEqual(len(payload["historicalSeries"]), 4)
+        mock_get_daily_close_series_cached.assert_awaited_once()
+        self.assertEqual(
+            mock_get_daily_close_series_cached.await_args.kwargs["start"],
+            date.today() - timedelta(days=182),
+        )
 
     @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -72,6 +88,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
     ):
         token = self.register_and_login(email="instrument-max@example.com")
@@ -83,6 +100,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "asset_class": "crypto",
         }
         mock_resolve_company_name.return_value = "Ethereum"
+        mock_get_earliest_available_close_date_cached.return_value = date(2025, 8, 20)
         mock_get_quote_cached.return_value = {
             "symbol": "ETH/USD",
             "price": 3210.5,
@@ -111,6 +129,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(len(payload["historicalSeries"]), 4)
 
     @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -119,6 +138,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
     ):
         mock_get_symbol_metadata.return_value = {
@@ -129,6 +149,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "assetCategory": "etfs",
         }
         mock_resolve_company_name.return_value = "Invesco QQQ Trust, Series 1"
+        mock_get_earliest_available_close_date_cached.return_value = date(2021, 1, 4)
         mock_get_quote_cached.return_value = {
             "symbol": "QQQ",
             "price": 507.72,
@@ -190,6 +211,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "That instrument is not currently available for chart loading.",
         )
 
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -198,6 +220,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
     ):
         token = self.register_and_login(email="missing-history@example.com")
         mock_get_symbol_metadata.return_value = {
@@ -206,6 +229,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "exchange": "NASDAQ",
             "tradable": True,
         }
+        mock_get_earliest_available_close_date_cached.return_value = date(2025, 1, 10)
         mock_get_quote_cached.return_value = {
             "symbol": "AAPL",
             "price": 210.25,
@@ -227,6 +251,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertIn("No historical bar data", response.json()["detail"])
 
     @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -235,6 +260,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
     ):
         mock_get_symbol_metadata.return_value = {
@@ -244,6 +270,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "tradable": True,
         }
         mock_resolve_company_name.return_value = "Apple Inc."
+        mock_get_earliest_available_close_date_cached.return_value = date(2025, 1, 10)
         mock_get_quote_cached.return_value = {
             "symbol": "AAPL",
             "price": 210.25,
@@ -268,6 +295,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["companyName"], "Apple Inc.")
 
     @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_symbol_metadata")
@@ -276,6 +304,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata,
         mock_get_quote_cached,
         mock_get_daily_close_series_cached,
+        mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
     ):
         mock_get_symbol_metadata.return_value = {
@@ -286,6 +315,7 @@ class InstrumentRouteTests(BaseAPITestCase):
             "asset_class": "crypto",
         }
         mock_resolve_company_name.return_value = "Bitcoin"
+        mock_get_earliest_available_close_date_cached.return_value = date(2025, 9, 1)
         mock_get_quote_cached.return_value = {
             "symbol": "BTC/USD",
             "price": 84250.0,

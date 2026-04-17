@@ -223,6 +223,8 @@ function AppContent() {
   const alertSocketsRef = useRef<Map<string, WebSocket>>(new Map())
   const alertReconnectTimersRef = useRef<Map<string, number>>(new Map())
   const triggeredAlertIdsRef = useRef<Map<string, number>>(new Map())
+  const alertWorkspaceRefreshPromiseRef = useRef<Promise<void> | null>(null)
+  const alertWorkspaceRefreshQueuedRef = useRef(false)
 
   const pruneTriggeredAlertIds = useEffectEvent(() => {
     const now = Date.now()
@@ -258,6 +260,8 @@ function AppContent() {
     alertSocketsRef.current.clear()
 
     triggeredAlertIdsRef.current.clear()
+    alertWorkspaceRefreshPromiseRef.current = null
+    alertWorkspaceRefreshQueuedRef.current = false
     localStorage.removeItem('marketmetrics.token')
     dashboardCache = null
     setToken('')
@@ -459,16 +463,34 @@ function AppContent() {
   }
 
   async function refreshAlertWorkspaceData(activeToken: string) {
-    const [updatedAlerts, updatedWatchlist] = await Promise.all([
-      fetchAlerts(activeToken),
-      fetchWatchlist(activeToken),
-    ])
+    if (alertWorkspaceRefreshPromiseRef.current) {
+      alertWorkspaceRefreshQueuedRef.current = true
+      return alertWorkspaceRefreshPromiseRef.current
+    }
 
-    updateDashboardDataCache(activeToken, (currentData) => ({
-      ...currentData,
-      alerts: updatedAlerts,
-      watchlist: updatedWatchlist,
-    }))
+    const refreshPromise = (async () => {
+      try {
+        const [updatedAlerts, updatedWatchlist] = await Promise.all([
+          fetchAlerts(activeToken),
+          fetchWatchlist(activeToken),
+        ])
+
+        updateDashboardDataCache(activeToken, (currentData) => ({
+          ...currentData,
+          alerts: updatedAlerts,
+          watchlist: updatedWatchlist,
+        }))
+      } finally {
+        alertWorkspaceRefreshPromiseRef.current = null
+        if (alertWorkspaceRefreshQueuedRef.current) {
+          alertWorkspaceRefreshQueuedRef.current = false
+          void refreshAlertWorkspaceData(activeToken)
+        }
+      }
+    })()
+
+    alertWorkspaceRefreshPromiseRef.current = refreshPromise
+    return refreshPromise
   }
 
   async function completeAuthentication(nextToken: string, successMessage: string) {
@@ -508,6 +530,8 @@ function AppContent() {
     alertSocketsRef.current.clear()
 
     triggeredAlertIdsRef.current.clear()
+    alertWorkspaceRefreshPromiseRef.current = null
+    alertWorkspaceRefreshQueuedRef.current = false
     localStorage.removeItem('marketmetrics.token')
     dashboardCache = null
     setToken('')
@@ -1058,6 +1082,8 @@ function AppContent() {
       alertSocketsRef.current.clear()
 
       triggeredAlertIdsRef.current.clear()
+      alertWorkspaceRefreshPromiseRef.current = null
+      alertWorkspaceRefreshQueuedRef.current = false
       localStorage.removeItem('marketmetrics.token')
       dashboardCache = null
       setToken('')
@@ -1099,6 +1125,8 @@ function AppContent() {
       alertSocketsRef.current.clear()
 
       triggeredAlertIdsRef.current.clear()
+      alertWorkspaceRefreshPromiseRef.current = null
+      alertWorkspaceRefreshQueuedRef.current = false
       localStorage.removeItem('marketmetrics.token')
       dashboardCache = null
       setToken('')

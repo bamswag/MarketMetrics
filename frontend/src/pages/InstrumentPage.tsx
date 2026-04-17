@@ -207,6 +207,7 @@ export function InstrumentPage({
       return
     }
 
+    const abortController = new AbortController()
     let cancelled = false
 
     async function loadInstrumentDetail() {
@@ -214,7 +215,12 @@ export function InstrumentPage({
       setInstrumentError('')
 
       try {
-        const response = await fetchInstrumentDetail(token, symbol, selectedRange)
+        const response = await fetchInstrumentDetail(
+          token,
+          symbol,
+          selectedRange,
+          abortController.signal,
+        )
         if (cancelled) {
           return
         }
@@ -225,6 +231,10 @@ export function InstrumentPage({
         setInstrumentDetail(response)
       } catch (error) {
         if (cancelled) {
+          return
+        }
+
+        if (error instanceof DOMException && error.name === 'AbortError') {
           return
         }
 
@@ -247,6 +257,7 @@ export function InstrumentPage({
 
     return () => {
       cancelled = true
+      abortController.abort()
     }
   }, [selectedRange, symbol, token])
 

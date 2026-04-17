@@ -135,13 +135,18 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
       return
     }
 
+    const abortController = new AbortController()
     let cancelled = false
     const timeoutId = window.setTimeout(async () => {
       setIsSearching(true)
       setSearchError('')
 
       try {
-        const response = await fetchSearchResults(token, trimmedQuery)
+        const response = await fetchSearchResults(
+          token,
+          trimmedQuery,
+          abortController.signal,
+        )
         if (cancelled) {
           return
         }
@@ -187,6 +192,7 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
 
     return () => {
       cancelled = true
+      abortController.abort()
       window.clearTimeout(timeoutId)
     }
   }, [filteredRecentSearches.length, hasTyped, preferences.preferredAssetClasses, isFocused, query, token])
