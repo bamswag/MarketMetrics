@@ -224,6 +224,41 @@ export type InstrumentDetailResponse = {
   }>
 }
 
+const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
+
+function isInstrumentRangeValue(value: unknown): value is InstrumentRange {
+  return (
+    value === '1M'
+    || value === '3M'
+    || value === '6M'
+    || value === '1Y'
+    || value === '5Y'
+    || value === 'MAX'
+  )
+}
+
+function normalizeInstrumentDetailResponse(
+  payload: InstrumentDetailResponse,
+): InstrumentDetailResponse {
+  const currentRange = isInstrumentRangeValue(payload.range) ? payload.range : '6M'
+  const normalizedRanges = Array.isArray(payload.availableRanges)
+    ? payload.availableRanges.filter(isInstrumentRangeValue)
+    : []
+
+  return {
+    ...payload,
+    range: currentRange,
+    availableRanges:
+      normalizedRanges.length > 0
+        ? Array.from(new Set(normalizedRanges))
+        : [...LEGACY_INSTRUMENT_RANGES],
+    earliestAvailableDate:
+      typeof payload.earliestAvailableDate === 'string'
+        ? payload.earliestAvailableDate
+        : null,
+  }
+}
+
 export type AlertCondition = 'above' | 'below' | 'percent_change' | 'range_exit'
 export type AlertSeverity = 'normal' | 'urgent'
 
@@ -741,7 +776,9 @@ export async function fetchInstrumentDetail(
       },
     )
 
-    const payload = await parseResponse<InstrumentDetailResponse>(response)
+    const payload = normalizeInstrumentDetailResponse(
+      await parseResponse<InstrumentDetailResponse>(response),
+    )
     instrumentDetailCache.delete(key)
     instrumentDetailCache.set(key, {
       expiresAt: Date.now() + INSTRUMENT_DETAIL_CACHE_TTL_MS,

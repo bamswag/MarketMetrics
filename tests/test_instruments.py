@@ -110,6 +110,48 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["earliestAvailableDate"], "2025-08-20")
         self.assertEqual(len(payload["historicalSeries"]), 4)
 
+    @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_daily_close_series_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_instrument_detail_accepts_direct_max_query_value(
+        self,
+        mock_get_symbol_metadata,
+        mock_get_quote_cached,
+        mock_get_daily_close_series_cached,
+        mock_resolve_company_name,
+    ):
+        mock_get_symbol_metadata.return_value = {
+            "symbol": "QQQ",
+            "name": "Invesco QQQ Trust, Series 1",
+            "exchange": "NASDAQ",
+            "tradable": True,
+            "assetCategory": "etfs",
+        }
+        mock_resolve_company_name.return_value = "Invesco QQQ Trust, Series 1"
+        mock_get_quote_cached.return_value = {
+            "symbol": "QQQ",
+            "price": 507.72,
+            "change": 2.18,
+            "changePercent": "0.43%",
+            "latestTradingDay": "2026-04-16",
+            "source": "alpaca",
+        }
+        mock_get_daily_close_series_cached.return_value = [
+            (date(2021, 1, 4), 313.1),
+            (date(2023, 1, 5), 268.4),
+            (date(2025, 1, 6), 413.2),
+            (date(2026, 4, 16), 507.72),
+        ]
+
+        response = self.client.get("/instruments/QQQ?range=MAX")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["range"], "MAX")
+        self.assertEqual(payload["availableRanges"], ["1M", "3M", "6M", "1Y", "5Y", "MAX"])
+        self.assertEqual(payload["earliestAvailableDate"], "2021-01-04")
+
     @patch("app.services.instruments.get_symbol_metadata")
     def test_instrument_detail_rejects_symbols_outside_supported_catalog(self, mock_get_symbol_metadata):
         token = self.register_and_login(email="unsupported@example.com")

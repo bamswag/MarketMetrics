@@ -178,7 +178,9 @@ def _merge_default_catalog_entries(catalog: Iterable[Dict[str, Any]]) -> List[Di
     merged: List[Dict[str, Any]] = []
     seen_symbols: set[str] = set()
 
-    for raw_item in [*catalog, *DEFAULT_SYMBOL_CATALOG]:
+    # Process defaults FIRST to ensure core symbols (BTC/USD, ETH/USD, XRP/USD, etc.)
+    # are present even if Alpaca's live catalog has conflicts or is incomplete.
+    for raw_item in [*DEFAULT_SYMBOL_CATALOG, *catalog]:
         item = _normalize_catalog_item(raw_item)
         symbol = item.get("symbol")
         if not symbol or symbol in seen_symbols:

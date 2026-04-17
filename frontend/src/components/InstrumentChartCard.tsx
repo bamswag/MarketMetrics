@@ -67,6 +67,7 @@ export function InstrumentChartCard({
   onSelectRange,
 }: InstrumentChartCardProps) {
   const [chartType, setChartType] = useState<ChartType>('price')
+  const hasAvailabilityMetadata = instrumentDetail.availableRanges.length > 0
   const availableRanges = useMemo(
     () => new Set(instrumentDetail.availableRanges),
     [instrumentDetail.availableRanges],
@@ -144,7 +145,7 @@ export function InstrumentChartCard({
             {RANGE_OPTIONS.map((rangeOption) => (
               <button
                 className={selectedRange === rangeOption ? 'instrument-range-btn instrument-range-btn--active' : 'instrument-range-btn'}
-                disabled={!availableRanges.has(rangeOption)}
+                disabled={hasAvailabilityMetadata ? !availableRanges.has(rangeOption) : false}
                 key={rangeOption}
                 onClick={() => onSelectRange(rangeOption)}
                 type="button"
