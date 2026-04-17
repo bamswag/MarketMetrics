@@ -14,6 +14,9 @@ _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
 _MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 1800.0
 _DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 60.0
 _CRYPTO_QUOTE_SUFFIXES = ("USD",)
+# Cap the dynamic crypto mover universe to prevent the ranked-period scan from
+# creating hundreds of concurrent coroutines and exhausting the 512 MB heap.
+_CRYPTO_MOVER_UNIVERSE_MAX_SYMBOLS = 25
 _ETF_NAME_HINTS = (
     " ETF",
     " ETN",
@@ -477,7 +480,9 @@ def _extract_dynamic_crypto_mover_symbols(catalog: Iterable[Dict[str, Any]]) -> 
         seen.add(symbol)
         symbols.append(symbol)
 
-    return sorted(symbols)
+    # Sort alphabetically for reproducibility, then cap to avoid memory spikes
+    # when this list is used by _rank_period_candidates on the 512 MB Render instance.
+    return sorted(symbols)[:_CRYPTO_MOVER_UNIVERSE_MAX_SYMBOLS]
 
 
 async def get_dynamic_mover_universe_symbols_by_category(

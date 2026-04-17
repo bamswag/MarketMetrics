@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import time
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -181,11 +182,16 @@ async def _rank_period_candidates(
             "volume": _to_int(snapshot.get("volume") if snapshot else None),
         }
 
-    ranked = [
-        item
-        for item in await asyncio.gather(*(evaluate(symbol) for symbol in symbols))
-        if item is not None
-    ]
+    # Process in batches to avoid creating hundreds of coroutines simultaneously,
+    # which causes Python's heap to ratchet up and never release back to the OS.
+    _RANK_BATCH_SIZE = 12
+    ranked: List[Dict[str, Any]] = []
+    for i in range(0, len(symbols), _RANK_BATCH_SIZE):
+        batch_results = await asyncio.gather(
+            *(evaluate(symbol) for symbol in symbols[i : i + _RANK_BATCH_SIZE])
+        )
+        ranked.extend(item for item in batch_results if item is not None)
+
     ranked.sort(
         key=lambda item: item["change_percent_value"],
         reverse=direction == FeaturedMoverDirection.gainer,
@@ -221,11 +227,17 @@ async def _load_sparkline_map(items: List[Dict[str, Any]]) -> Dict[str, List[Mov
             seen.add(symbol)
             symbols.append(symbol)
 
-    sparkline_results = await asyncio.gather(
-        *[_build_sparkline_series(symbol) for symbol in symbols],
-        return_exceptions=False,
-    )
-    return dict(zip(symbols, sparkline_results))
+    # Batch sparkline fetches to keep peak coroutine count bounded.
+    _SPARKLINE_BATCH_SIZE = 15
+    all_results: List[List[MoverSparklinePoint]] = []
+    for i in range(0, len(symbols), _SPARKLINE_BATCH_SIZE):
+        batch = symbols[i : i + _SPARKLINE_BATCH_SIZE]
+        batch_results = await asyncio.gather(
+            *[_build_sparkline_series(symbol) for symbol in batch],
+            return_exceptions=False,
+        )
+        all_results.extend(batch_results)
+    return dict(zip(symbols, all_results))
 
 
 def _build_metadata_map(items: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -474,6 +486,7 @@ async def get_market_movers(limit: int = 5) -> MoversResponse:
 
         payload = await _build_market_movers(limit)
         _movers_cache[limit] = (time.time(), payload)
+        gc.collect()
         return payload
 
 
@@ -506,4 +519,5 @@ async def get_featured_mover(
             asset=asset,
         )
         _featured_mover_cache[cache_key] = (time.time(), payload)
+        gc.collect()
         return payload

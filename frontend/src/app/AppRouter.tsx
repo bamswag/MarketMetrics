@@ -5,6 +5,8 @@ import { AlertToastStack } from '../components/AlertToastStack'
 import type { AlertToast } from '../components/AlertToastStack'
 import { AppHeader } from '../components/AppHeader'
 import { ScrollToTop } from '../components/ScrollToTop'
+import { SideNav } from '../components/SideNav'
+import '../styles/components/SideNav.css'
 import { AuthActions } from '../components/AuthActions'
 import { GlobalSearch } from '../components/GlobalSearch'
 import { DashboardPage } from '../pages/DashboardPage'
@@ -1174,6 +1176,7 @@ function AppContent() {
       {token ? (
         <AlertToastStack onDismiss={dismissAlertToast} toasts={alertToasts} />
       ) : null}
+      <SideNav token={token} />
 
       <Routes>
         <Route

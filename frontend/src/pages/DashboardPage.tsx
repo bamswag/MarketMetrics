@@ -79,12 +79,6 @@ export function DashboardPage({
 
       {dashboardError ? <p className="error-text">{dashboardError}</p> : null}
 
-      <TrackedSymbolsPreview
-        isLoading={isLoadingDashboard}
-        trackedSymbols={watchlist}
-        variant="panel"
-      />
-
       <section className="workspace-grid page-section">
         <DailyMoversSection
           error={dashboardError && !movers && !isLoadingDashboard ? dashboardError : ''}
@@ -92,6 +86,9 @@ export function DashboardPage({
           movers={movers}
           variant="dashboard"
         />
+      </section>
+
+      <section className="dashboard-bottom-row page-section">
         <AlertsPanel
           alerts={alerts}
           errorMessage={alertActionError}
@@ -107,6 +104,11 @@ export function DashboardPage({
           pendingAction={pendingAlertAction}
           pendingActionId={pendingAlertActionId}
           token={token}
+        />
+        <TrackedSymbolsPreview
+          isLoading={isLoadingDashboard}
+          trackedSymbols={watchlist}
+          variant="panel"
         />
       </section>
     </div>

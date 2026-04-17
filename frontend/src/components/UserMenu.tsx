@@ -57,9 +57,6 @@ export function UserMenu() {
 
       {isOpen ? (
         <div className="user-menu-dropdown" role="menu">
-          <NavLink className={({ isActive }) => menuItemClass(isActive)} to="/tracked-symbols">
-            Tracked symbols
-          </NavLink>
           <NavLink className={({ isActive }) => menuItemClass(isActive)} to="/account">
             Account
           </NavLink>

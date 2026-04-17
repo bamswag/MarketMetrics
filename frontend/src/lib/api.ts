@@ -383,7 +383,48 @@ async function parseResponse<T>(response: Response): Promise<T> {
     throw new ApiError(detail, response.status)
   }
 
-  return response.json() as Promise<T>
+  const clonedResponse = response.clone()
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+
+  if (!contentType.includes('application/json')) {
+    const bodyPreview = (await clonedResponse.text().catch(() => '')).trim()
+    if (
+      bodyPreview.startsWith('<!DOCTYPE html') ||
+      bodyPreview.startsWith('<html') ||
+      bodyPreview.includes('<body')
+    ) {
+      throw new Error(
+        'The API returned HTML instead of JSON. This usually means the request hit the frontend app instead of the deployed backend route.',
+      )
+    }
+
+    throw new Error(
+      `The API returned ${contentType || 'a non-JSON response'} when JSON was expected.`,
+    )
+  }
+
+  try {
+    return (await response.json()) as T
+  } catch (error) {
+    const bodyPreview = (await clonedResponse.text().catch(() => '')).trim()
+    if (
+      bodyPreview.startsWith('<!DOCTYPE html') ||
+      bodyPreview.startsWith('<html') ||
+      bodyPreview.includes('<body')
+    ) {
+      throw new Error(
+        'The API returned HTML instead of JSON. This usually means the request hit the frontend app instead of the deployed backend route.',
+      )
+    }
+
+    if (error instanceof Error) {
+      throw new Error(
+        `The API returned invalid JSON: ${error.message}`,
+      )
+    }
+
+    throw new Error('The API returned invalid JSON.')
+  }
 }
 
 function authHeaders(token: string): HeadersInit {

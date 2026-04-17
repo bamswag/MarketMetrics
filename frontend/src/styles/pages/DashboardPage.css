@@ -161,3 +161,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+.dashboard-bottom-row {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-bottom-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .dashboard-bottom-row {
+    flex-direction: column;
+  }
+}
