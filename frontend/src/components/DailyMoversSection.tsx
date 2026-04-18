@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
-import type { MoversResponse } from '../lib/api'
+import type { Mover, MoversByCategory, MoversResponse } from '../lib/api'
 import { assetCategoryLabel, isAssetCategoryEnabled } from '../lib/marketPreferences'
 import { DailyMoverCard, DEFAULT_MOVER_CATEGORIES } from './DailyMoverCard'
 
@@ -12,6 +12,62 @@ type DailyMoversSectionProps = {
   variant: 'dashboard' | 'landing'
 }
 
+function parseMoverPercentValue(value: string | null | undefined) {
+  if (!value) {
+    return 0
+  }
+
+  const normalizedValue = Number.parseFloat(value.replace('%', '').trim())
+  return Number.isFinite(normalizedValue) ? normalizedValue : 0
+}
+
+function moverPercentValue(mover: Mover) {
+  return parseMoverPercentValue(mover.change_percent)
+}
+
+function moverChangeAmountValue(mover: Mover) {
+  return typeof mover.change_amount === 'number' && Number.isFinite(mover.change_amount)
+    ? mover.change_amount
+    : 0
+}
+
+function sortMoversForDailyCard(
+  items: Mover[],
+  tone: 'positive' | 'negative',
+  usePriceChangeRanking: boolean,
+) {
+  const sortedItems = [...items]
+
+  sortedItems.sort((left, right) => {
+    const leftValue = usePriceChangeRanking
+      ? moverChangeAmountValue(left)
+      : moverPercentValue(left)
+    const rightValue = usePriceChangeRanking
+      ? moverChangeAmountValue(right)
+      : moverPercentValue(right)
+
+    return tone === 'positive' ? rightValue - leftValue : leftValue - rightValue
+  })
+
+  return sortedItems
+}
+
+function sortMoversByCategory(
+  itemsByCategory: MoversByCategory | undefined,
+  tone: 'positive' | 'negative',
+  usePriceChangeRanking: boolean,
+) {
+  if (!itemsByCategory) {
+    return undefined
+  }
+
+  return {
+    stocks: sortMoversForDailyCard(itemsByCategory.stocks, tone, usePriceChangeRanking),
+    crypto: sortMoversForDailyCard(itemsByCategory.crypto, tone, usePriceChangeRanking),
+    etfs: sortMoversForDailyCard(itemsByCategory.etfs, tone, usePriceChangeRanking),
+  } satisfies MoversByCategory
+}
+
 export function DailyMoversSection({
   error = '',
   isLoading,
@@ -19,10 +75,27 @@ export function DailyMoversSection({
   variant,
 }: DailyMoversSectionProps) {
   const { preferences } = useMarketPreferences()
-  const gainers = movers?.gainers.slice(0, 3) ?? []
-  const losers = movers?.losers.slice(0, 3) ?? []
-  const gainersByCategory = movers?.gainersByCategory
-  const losersByCategory = movers?.losersByCategory
+  const usePriceChangeRanking = preferences.priceDisplayMode === 'change'
+  const gainers = sortMoversForDailyCard(
+    movers?.gainers ?? [],
+    'positive',
+    usePriceChangeRanking,
+  ).slice(0, 3)
+  const losers = sortMoversForDailyCard(
+    movers?.losers ?? [],
+    'negative',
+    usePriceChangeRanking,
+  ).slice(0, 3)
+  const gainersByCategory = sortMoversByCategory(
+    movers?.gainersByCategory,
+    'positive',
+    usePriceChangeRanking,
+  )
+  const losersByCategory = sortMoversByCategory(
+    movers?.losersByCategory,
+    'negative',
+    usePriceChangeRanking,
+  )
   const visibleCategories = DEFAULT_MOVER_CATEGORIES.filter(({ key }) =>
     isAssetCategoryEnabled(key, preferences.preferredAssetClasses),
   )
@@ -51,8 +124,9 @@ export function DailyMoversSection({
       </div>
 
       <p className="panel-note">
-        Ranked from the latest daily move percentage so you can compare the top and bottom three
-        stocks, crypto names, and ETFs side by side.
+        {usePriceChangeRanking
+          ? 'Ranked from the latest daily price change so you can compare the biggest raw moves across stocks, crypto names, and ETFs side by side.'
+          : 'Ranked from the latest daily move percentage so you can compare the top and bottom three stocks, crypto names, and ETFs side by side.'}
       </p>
 
       {error ? <p className="error-text">{error}</p> : null}

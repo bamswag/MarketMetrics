@@ -253,7 +253,7 @@ function normalizeInstrumentDetailResponse(
     range: currentRange,
     availableRanges:
       normalizedRanges.length > 0
-        ? Array.from(new Set(normalizedRanges))
+        ? Array.from(new Set(['1D' as InstrumentRange, ...normalizedRanges]))
         : [...LEGACY_INSTRUMENT_RANGES],
     earliestAvailableDate:
       typeof payload.earliestAvailableDate === 'string'
