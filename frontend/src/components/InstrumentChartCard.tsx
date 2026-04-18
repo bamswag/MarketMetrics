@@ -126,7 +126,10 @@ export function InstrumentChartCard({
   const rangeChange = lastClose - firstClose
   const rangeChangePct = firstClose > 0 ? ((rangeChange / firstClose) * 100).toFixed(2) : '0.00'
   const isRangePositive = rangeChange >= 0
-  const isIntraday = selectedRange === '1D'
+  // Use the range that was actually loaded — not what the user last clicked.
+  // They can differ when a fetch fails (e.g. 1D fails and old 6M data stays loaded).
+  const loadedRange = instrumentDetail.range
+  const isIntraday = loadedRange === '1D'
 
   const livePrice = instrumentDetail.latestQuote.price
   const liveChange = instrumentDetail.latestQuote.change
@@ -142,7 +145,7 @@ export function InstrumentChartCard({
             <span className={`instrument-range-badge ${isRangePositive ? 'instrument-range-badge--up' : 'instrument-range-badge--down'}`}>
               {isRangePositive ? '+' : ''}{rangeChangePct}%
             </span>
-            <span className="instrument-range-label">over {RANGE_LABELS[selectedRange]}</span>
+            <span className="instrument-range-label">over {RANGE_LABELS[loadedRange]}</span>
           </div>
         </div>
 
