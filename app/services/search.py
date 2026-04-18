@@ -14,7 +14,7 @@ from app.integrations.alpaca.assets import fetch_assets_catalog
 _CATALOG_MTIME_CHECK_INTERVAL_SECONDS = 30.0
 _MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 1800.0
 _DEGRADED_MOVER_UNIVERSE_REFRESH_TTL_SECONDS = 60.0
-_CRYPTO_QUOTE_SUFFIXES = ("USD",)
+_CRYPTO_QUOTE_SUFFIXES = ("USDT", "USDC", "USD", "BTC", "ETH")
 # Cap the dynamic crypto mover universe to prevent the ranked-period scan from
 # creating hundreds of concurrent coroutines and exhausting the 512 MB heap.
 _CRYPTO_MOVER_UNIVERSE_MAX_SYMBOLS = 25
@@ -36,6 +36,94 @@ _ETF_NAME_HINTS = (
 )
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_CRYPTO_PAIRS: tuple[str, ...] = (
+    "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT",
+    "TRX/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT", "LTC/USDT", "SHIB/USDT", "LINK/USDT",
+    "ATOM/USDT", "UNI/USDT", "NEAR/USDT", "APT/USDT", "ARB/USDT", "OP/USDT", "FIL/USDT",
+    "ICP/USDT", "HBAR/USDT", "ETC/USDT", "XLM/USDT", "EOS/USDT", "AAVE/USDT", "MKR/USDT",
+    "SUSHI/USDT", "CRV/USDT", "COMP/USDT", "LDO/USDT", "DYDX/USDT", "SNX/USDT", "BAL/USDT",
+    "RUNE/USDT", "PEPE/USDT", "FLOKI/USDT", "BONK/USDT", "SEI/USDT", "SUI/USDT", "TIA/USDT",
+    "PYTH/USDT", "JUP/USDT", "BLUR/USDT", "WIF/USDT", "BTC/USD", "ETH/USD", "SOL/USD",
+    "BNB/USD", "XRP/USD", "ADA/USD", "DOGE/USD", "AVAX/USD", "DOT/USD", "MATIC/USD",
+    "LINK/USD", "LTC/USD", "BTC/USDC", "ETH/USDC", "SOL/USDC", "BNB/USDC", "XRP/USDC",
+    "ADA/USDC", "USDC/USDT", "DAI/USDT", "BUSD/USDT", "BTC/ETH", "SOL/BTC", "BNB/BTC",
+    "XRP/BTC", "ADA/BTC", "DOGE/BTC", "AVAX/BTC", "DOT/BTC", "MATIC/BTC", "LINK/BTC",
+    "LTC/BTC", "TRX/BTC", "ATOM/BTC", "UNI/BTC",
+)
+_ALLOWED_CRYPTO_PAIR_SET = frozenset(ALLOWED_CRYPTO_PAIRS)
+
+CRYPTO_TOKEN_NAMES: Dict[str, str] = {
+    "AAVE": "Aave",
+    "ADA": "Cardano",
+    "APT": "Aptos",
+    "ARB": "Arbitrum",
+    "ATOM": "Cosmos",
+    "AVAX": "Avalanche",
+    "BAL": "Balancer",
+    "BLUR": "Blur",
+    "BNB": "BNB",
+    "BONK": "Bonk",
+    "BTC": "Bitcoin",
+    "BUSD": "Binance USD",
+    "COMP": "Compound",
+    "CRV": "Curve DAO Token",
+    "DAI": "Dai",
+    "DOGE": "Dogecoin",
+    "DOT": "Polkadot",
+    "DYDX": "dYdX",
+    "EOS": "EOS",
+    "ETC": "Ethereum Classic",
+    "ETH": "Ether",
+    "FIL": "Filecoin",
+    "FLOKI": "Floki",
+    "HBAR": "Hedera",
+    "ICP": "Internet Computer",
+    "JUP": "Jupiter",
+    "LDO": "Lido DAO",
+    "LINK": "Chainlink",
+    "LTC": "Litecoin",
+    "MATIC": "Polygon",
+    "MKR": "Maker",
+    "NEAR": "NEAR Protocol",
+    "OP": "Optimism",
+    "PEPE": "Pepe",
+    "PYTH": "Pyth Network",
+    "RUNE": "THORChain",
+    "SEI": "Sei",
+    "SHIB": "Shiba Inu",
+    "SNX": "Synthetix",
+    "SOL": "Solana",
+    "SUI": "Sui",
+    "SUSHI": "SushiSwap",
+    "TIA": "Celestia",
+    "TRX": "TRON",
+    "UNI": "Uniswap",
+    "USDC": "USD Coin",
+    "USDT": "Tether USDt",
+    "WIF": "dogwifhat",
+    "XLM": "Stellar",
+    "XRP": "XRP",
+}
+
+
+def _crypto_pair_display_name(symbol: str) -> str:
+    base, quote = symbol.split("/", 1)
+    base_name = CRYPTO_TOKEN_NAMES.get(base, base)
+    quote_name = CRYPTO_TOKEN_NAMES.get(quote, quote)
+    return f"{base_name} / {quote_name}"
+
+
+DEFAULT_CRYPTO_SYMBOL_CATALOG: List[Dict[str, Any]] = [
+    {
+        "symbol": symbol,
+        "name": _crypto_pair_display_name(symbol),
+        "exchange": "CRYPTO",
+        "tradable": True,
+        "asset_class": "crypto",
+    }
+    for symbol in ALLOWED_CRYPTO_PAIRS
+]
 
 
 DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
@@ -76,15 +164,7 @@ DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
     {"symbol": "TLT", "name": "iShares 20+ Year Treasury Bond ETF", "exchange": "NASDAQ", "tradable": True, "asset_class": "us_equity"},
     {"symbol": "GLD", "name": "SPDR Gold Shares", "exchange": "ARCA", "tradable": True, "asset_class": "us_equity"},
     # Crypto
-    {"symbol": "BTC/USD", "name": "Bitcoin", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "ETH/USD", "name": "Ethereum", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "SOL/USD", "name": "Solana", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "DOGE/USD", "name": "Dogecoin", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "ADA/USD", "name": "Cardano", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "XRP/USD", "name": "XRP", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "AVAX/USD", "name": "Avalanche", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "LINK/USD", "name": "Chainlink", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
-    {"symbol": "DOT/USD", "name": "Polkadot", "exchange": "CRYPTO", "tradable": True, "asset_class": "crypto"},
+    *DEFAULT_CRYPTO_SYMBOL_CATALOG,
 ]
 
 DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
@@ -95,8 +175,9 @@ DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
         "DIS", "KO", "PEP", "XOM", "CVX",
     ],
     "crypto": [
-        "BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD", "ADA/USD",
-        "XRP/USD", "AVAX/USD", "LINK/USD", "DOT/USD",
+        "BTC/USD", "ETH/USD", "SOL/USD", "BNB/USD", "XRP/USD",
+        "ADA/USD", "DOGE/USD", "AVAX/USD", "DOT/USD", "MATIC/USD",
+        "LINK/USD", "LTC/USD",
     ],
     "etfs": [
         "SPY", "QQQ", "DIA", "IWM", "VOO",
@@ -175,6 +256,10 @@ def _normalize_catalog_item(item: Dict[str, Any]) -> Dict[str, Any]:
     return normalized_item
 
 
+def _is_allowed_crypto_symbol(symbol: Any) -> bool:
+    return normalize_catalog_symbol(symbol, "crypto") in _ALLOWED_CRYPTO_PAIR_SET
+
+
 def _merge_default_catalog_entries(catalog: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     merged: List[Dict[str, Any]] = []
     seen_symbols: set[str] = set()
@@ -185,6 +270,8 @@ def _merge_default_catalog_entries(catalog: Iterable[Dict[str, Any]]) -> List[Di
         item = _normalize_catalog_item(raw_item)
         symbol = item.get("symbol")
         if not symbol or symbol in seen_symbols:
+            continue
+        if item.get("asset_class") == "crypto" and not _is_allowed_crypto_symbol(symbol):
             continue
         seen_symbols.add(symbol)
         merged.append(item)
@@ -553,7 +640,12 @@ def _extract_dynamic_crypto_mover_symbols(catalog: Iterable[Dict[str, Any]]) -> 
             continue
 
         symbol = normalize_catalog_symbol(item.get("symbol"), "crypto")
-        if not symbol or not symbol.endswith("/USD") or symbol in seen:
+        if (
+            not symbol
+            or not symbol.endswith("/USD")
+            or not _is_allowed_crypto_symbol(symbol)
+            or symbol in seen
+        ):
             continue
 
         seen.add(symbol)

@@ -129,8 +129,8 @@ class SearchServiceTests(unittest.TestCase):
                 "class": "crypto",
             },
             {
-                "symbol": "UNI/USD",
-                "name": "Uniswap",
+                "symbol": "MATIC/USD",
+                "name": "Polygon",
                 "exchange": "CRYPTO",
                 "status": "active",
                 "tradable": True,
@@ -157,9 +157,9 @@ class SearchServiceTests(unittest.TestCase):
                 }
 
         self.assertIn("LTC/USD", payload["crypto"])
-        self.assertIn("UNI/USD", payload["crypto"])
+        self.assertIn("MATIC/USD", payload["crypto"])
         self.assertIn("LTC/USD", catalog_symbols)
-        self.assertIn("UNI/USD", catalog_symbols)
+        self.assertIn("MATIC/USD", catalog_symbols)
 
     @patch("app.services.search.fetch_assets_catalog", new_callable=AsyncMock)
     def test_degraded_crypto_universe_cache_retries_quickly_after_fallback(
@@ -211,5 +211,8 @@ class SearchServiceTests(unittest.TestCase):
                 set(DEFAULT_MOVER_UNIVERSE_BY_CATEGORY["crypto"])
             )
         )
-        self.assertNotIn("LTC/USD", fallback_payload["crypto"])
         self.assertIn("LTC/USD", recovered_payload["crypto"])
+        self.assertEqual(
+            search_service._dynamic_crypto_mover_universe_ttl_seconds,
+            search_service._MOVER_UNIVERSE_REFRESH_TTL_SECONDS,
+        )
