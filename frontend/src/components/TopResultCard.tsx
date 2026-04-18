@@ -12,6 +12,7 @@ import {
 
 import type { CompanySearchResult, InstrumentDetailResponse } from '../lib/api'
 import { fetchInstrumentDetail } from '../lib/api'
+import { sampleChartSeries } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
 import { assetCategoryLabel } from '../lib/marketPreferences'
 import { MoverLogo } from './MoverLogo'
@@ -27,6 +28,7 @@ type TopResultCardProps = {
 type Tone = 'positive' | 'negative' | 'neutral'
 
 const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
+const MAX_TOP_RESULT_CHART_POINTS = 28
 
 function parsePct(changePercent: string | null | undefined): number | null {
   if (!changePercent) return null
@@ -34,12 +36,16 @@ function parsePct(changePercent: string | null | undefined): number | null {
   return isNaN(n) ? null : n
 }
 
+function getToneFromNumber(value: number | null | undefined): Tone {
+  if (value == null || Number.isNaN(value)) return 'neutral'
+  if (value > 0) return 'positive'
+  if (value < 0) return 'negative'
+  return 'neutral'
+}
+
 function getTone(changePercent: string | null | undefined): Tone {
   const n = parsePct(changePercent)
-  if (n === null) return 'neutral'
-  if (n > 0) return 'positive'
-  if (n < 0) return 'negative'
-  return 'neutral'
+  return getToneFromNumber(n)
 }
 
 function formatPrice(price: number | null | undefined): string {
@@ -53,11 +59,12 @@ function formatPrice(price: number | null | undefined): string {
   }).format(price)
 }
 
-function formatChangePct(changePercent: string | null | undefined): string {
-  if (!changePercent) return '—'
-  const n = parsePct(changePercent)
-  if (n === null) return '—'
-  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
+function formatChangeValue(changePercent: number | null | undefined): string {
+  if (changePercent == null || Number.isNaN(changePercent)) {
+    return '—'
+  }
+
+  return `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,15 +118,42 @@ export function TopResultCard({
   }, [result.symbol, token])
 
   const quote = detail?.latestQuote ?? null
-  const tone = getTone(quote?.changePercent)
-
-  // Use all 1M bars — filtered to finite values only
-  const chartData = useMemo(
+  const fullMonthHistory = useMemo(
     () =>
       (detail?.historicalSeries ?? []).filter((p) => Number.isFinite(p.close)),
     [detail],
   )
+  const chartData = useMemo(
+    () => sampleChartSeries(fullMonthHistory, MAX_TOP_RESULT_CHART_POINTS),
+    [fullMonthHistory],
+  )
   const hasChart = chartData.length >= 2
+  const monthlyChangePercent = useMemo(() => {
+    if (fullMonthHistory.length < 2) {
+      return null
+    }
+
+    const startingClose = fullMonthHistory[0]?.close ?? null
+    const endingClose = fullMonthHistory[fullMonthHistory.length - 1]?.close ?? null
+
+    if (
+      startingClose == null
+      || endingClose == null
+      || !Number.isFinite(startingClose)
+      || !Number.isFinite(endingClose)
+      || startingClose <= 0
+    ) {
+      return null
+    }
+
+    return ((endingClose - startingClose) / startingClose) * 100
+  }, [fullMonthHistory])
+  const tone = monthlyChangePercent != null
+    ? getToneFromNumber(monthlyChangePercent)
+    : getTone(quote?.changePercent)
+  const monthlyChangeLabel = monthlyChangePercent != null
+    ? formatChangeValue(monthlyChangePercent)
+    : null
 
   const strokeColor =
     tone === 'positive' ? '#0f766e' : tone === 'negative' ? '#b14f2b' : '#687487'
@@ -154,7 +188,6 @@ export function TopResultCard({
         className="top-result-link"
         to={`/instrument/${encodeURIComponent(result.symbol)}`}
       >
-        {/* Left: identity */}
         <div className="top-result-left">
           <div className="top-result-logo-wrap">
             <MoverLogo name={result.name} symbol={result.symbol} />
@@ -168,30 +201,39 @@ export function TopResultCard({
           </div>
         </div>
 
-        {/* Right: price + live chart */}
         <div className="top-result-right">
           <div className="top-result-stats">
             {detailLoading ? (
               <>
                 <span className="search-result-skeleton top-result-skeleton-price" />
-                <span className="search-result-skeleton top-result-skeleton-pill" />
+                <div className="top-result-skeleton-change-group">
+                  <span className="search-result-skeleton top-result-skeleton-pill" />
+                  <span className="search-result-skeleton top-result-skeleton-timeframe" />
+                </div>
               </>
             ) : (
               <>
-                <span className="top-result-price">{formatPrice(quote?.price)}</span>
-                {quote?.changePercent && (
-                  <span
-                    className={
-                      tone === 'positive'
-                        ? 'positive-pill top-result-pill'
-                        : tone === 'negative'
-                          ? 'negative-pill top-result-pill'
-                          : 'neutral-pill top-result-pill'
-                    }
-                  >
-                    {formatChangePct(quote.changePercent)}
-                  </span>
-                )}
+                <div className="top-result-price-stack">
+                  <span className="top-result-price-label">Latest price</span>
+                  <span className="top-result-price">{formatPrice(quote?.price)}</span>
+                </div>
+
+                {monthlyChangeLabel ? (
+                  <div className="top-result-change-copy">
+                    <span
+                      className={
+                        tone === 'positive'
+                          ? 'positive-pill top-result-pill'
+                          : tone === 'negative'
+                            ? 'negative-pill top-result-pill'
+                            : 'neutral-pill top-result-pill'
+                      }
+                    >
+                      {monthlyChangeLabel}
+                    </span>
+                    <span className="top-result-timeframe">Over the past month</span>
+                  </div>
+                ) : null}
               </>
             )}
           </div>
@@ -199,58 +241,62 @@ export function TopResultCard({
           {detailLoading && (
             <span
               className="search-result-skeleton"
-              style={{ height: 160, display: 'block', borderRadius: 10 }}
+              style={{ height: 132, display: 'block', borderRadius: 18 }}
             />
           )}
 
           {!detailLoading && hasChart && (
-            <div className="top-result-chart">
-              <ResponsiveContainer height={160} width="100%">
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 6, right: 8, bottom: 0, left: 0 }}
-                >
-                  <defs>
-                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={fillColor} stopOpacity={0.18} />
-                      <stop offset="100%" stopColor={fillColor} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    stroke="rgba(25, 40, 62, 0.06)"
-                    strokeDasharray="4 4"
-                    vertical={false}
-                  />
-                  <XAxis
-                    axisLine={false}
-                    dataKey="date"
-                    minTickGap={48}
-                    tick={AXIS_TICK}
-                    tickFormatter={formatShortDate}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    domain={yDomain}
-                    orientation="right"
-                    tick={AXIS_TICK}
-                    tickFormatter={(v: number) => formatCurrency(v)}
-                    tickLine={false}
-                    width={72}
-                  />
-                  <Tooltip content={TopResultTooltip} />
-                  <Area
-                    dataKey="close"
-                    dot={false}
-                    fill={`url(#${gradientId})`}
-                    fillOpacity={1}
-                    isAnimationActive={false}
-                    stroke={strokeColor}
-                    strokeWidth={2}
-                    type="monotone"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="top-result-chart-shell">
+              <div className="top-result-chart">
+                <ResponsiveContainer height={132} width="100%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 4, bottom: 0, left: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={fillColor} stopOpacity={0.18} />
+                        <stop offset="100%" stopColor={fillColor} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      stroke="rgba(25, 40, 62, 0.06)"
+                      strokeDasharray="4 4"
+                      vertical={false}
+                    />
+                    <XAxis
+                      axisLine={false}
+                      dataKey="date"
+                      minTickGap={42}
+                      tick={AXIS_TICK}
+                      tickFormatter={formatShortDate}
+                      tickLine={false}
+                      tickMargin={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      domain={yDomain}
+                      orientation="right"
+                      tickCount={4}
+                      tick={AXIS_TICK}
+                      tickFormatter={(v: number) => formatCurrency(v)}
+                      tickLine={false}
+                      width={64}
+                    />
+                    <Tooltip content={TopResultTooltip} />
+                    <Area
+                      dataKey="close"
+                      dot={false}
+                      fill={`url(#${gradientId})`}
+                      fillOpacity={1}
+                      isAnimationActive={false}
+                      stroke={strokeColor}
+                      strokeWidth={2}
+                      type="monotone"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
         </div>

@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
-import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
+import { formatCurrency, formatLongDate, formatShortDate, formatShortTime } from '../lib/formatters'
 
 type ChartType = 'price' | 'ma-overlay'
 
@@ -21,8 +21,9 @@ type InstrumentChartCardProps = {
   onSelectRange: (range: InstrumentRange) => void
 }
 
-const RANGE_OPTIONS: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'MAX']
+const RANGE_OPTIONS: InstrumentRange[] = ['1D', '1W', '1M', '3M', '6M', '1Y', '5Y', 'MAX']
 const RANGE_LABELS: Record<InstrumentRange, string> = {
+  '1D': '1D',
   '1W': '1W',
   '1M': '1M',
   '3M': '3M',
@@ -44,9 +45,16 @@ function ChartTooltipContent(props: any) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ma50Entry = payload.find((p: any) => p.dataKey === 'ma50')
   const value = Number(priceEntry?.value ?? payload[0]?.value ?? 0)
+  const isIntraday = typeof label === 'string' && label.includes('T')
   return (
     <div className="instrument-tooltip">
-      <span className="instrument-tooltip-date">{typeof label === 'string' ? formatLongDate(label) : ''}</span>
+      <span className="instrument-tooltip-date">
+        {typeof label === 'string'
+          ? isIntraday
+            ? `${formatLongDate(label)} · ${formatShortTime(label)}`
+            : formatLongDate(label)
+          : ''}
+      </span>
       <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
       {ma30Entry?.value != null && (
         <span className="instrument-tooltip-ma instrument-tooltip-ma--30">EMA30 {formatCurrency(Number(ma30Entry.value))}</span>
@@ -118,6 +126,12 @@ export function InstrumentChartCard({
   const rangeChange = lastClose - firstClose
   const rangeChangePct = firstClose > 0 ? ((rangeChange / firstClose) * 100).toFixed(2) : '0.00'
   const isRangePositive = rangeChange >= 0
+  const isIntraday = selectedRange === '1D'
+
+  const livePrice = instrumentDetail.latestQuote.price
+  const liveChange = instrumentDetail.latestQuote.change
+  const liveChangePct = instrumentDetail.latestQuote.changePercent
+  const isLivePositive = (liveChange ?? 0) >= 0
 
   return (
     <div className="instrument-chart-wrapper">
@@ -158,6 +172,20 @@ export function InstrumentChartCard({
         </div>
       </div>
 
+      {/* ── Live price row ── */}
+      <div className="instrument-live-price-row">
+        <span className="instrument-live-price-value">{formatCurrency(livePrice)}</span>
+        {(liveChange != null || liveChangePct) && (
+          <span className={isLivePositive ? 'positive-pill instrument-live-pill' : 'negative-pill instrument-live-pill'}>
+            {liveChange != null ? `${isLivePositive ? '+' : ''}${liveChange.toFixed(2)}` : ''}
+            {liveChangePct ? ` (${liveChangePct})` : ''}
+          </span>
+        )}
+        {isIntraday && (
+          <span className="instrument-live-label">Today · 15-min bars</span>
+        )}
+      </div>
+
       {chartType === 'ma-overlay' && (
         <div className="instrument-chart-legend">
           <span className="instrument-chart-legend-pill instrument-chart-legend-pill--price">
@@ -195,7 +223,7 @@ export function InstrumentChartCard({
                 dataKey="date"
                 minTickGap={40}
                 tick={AXIS_TICK}
-                tickFormatter={formatShortDate}
+                tickFormatter={isIntraday ? formatShortTime : formatShortDate}
                 tickLine={false}
               />
               <YAxis

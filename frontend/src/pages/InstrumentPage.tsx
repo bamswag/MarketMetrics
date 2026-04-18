@@ -5,7 +5,6 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import { InstrumentChartCard } from '../components/InstrumentChartCard'
 import { MoverLogo } from '../components/MoverLogo'
-import { PricePredictionPanel } from '../components/PricePredictionPanel'
 import { ApiError, fetchAlertsForSymbol, fetchInstrumentDetail } from '../lib/api'
 import type {
   AlertCondition,
@@ -679,11 +678,24 @@ export function InstrumentPage({
       ) : null}
 
       {instrumentDetail && !isLoadingInstrument ? (
-        <PricePredictionPanel
-          currentPrice={instrumentDetail.latestQuote.price}
-          symbol={symbol}
-          token={token}
-        />
+        <div className="instrument-forecast-cta">
+          <div className="instrument-forecast-cta-info">
+            <h3 className="instrument-forecast-cta-heading">AI Price Forecast</h3>
+            <p className="instrument-forecast-cta-sub">
+              See where {symbol} could be heading — powered by a trained ML model.
+            </p>
+          </div>
+          {token ? (
+            <Link
+              className="primary-action"
+              to={`/forecast/${encodeURIComponent(symbol)}`}
+            >
+              Run forecast →
+            </Link>
+          ) : (
+            <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
+          )}
+        </div>
       ) : null}
     </section>
   )

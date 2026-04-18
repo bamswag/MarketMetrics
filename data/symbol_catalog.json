@@ -311,9 +311,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "NVN Liquidation, Inc. Common Stock",
+    "name": "YOTTA ACQUISITION CORP Warrant",
     "status": "active",
-    "symbol": "NOVNQ",
+    "symbol": "YOTAW",
     "tradable": false
   },
   {
@@ -343,9 +343,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SPRING VY ACQUISITION CORP II Rights   02/25/2026",
+    "name": "TWIN HOSPITALITY GROUP INC CL A",
     "status": "active",
-    "symbol": "SVIRF",
+    "symbol": "TWNPQ",
     "tradable": false
   },
   {
@@ -375,9 +375,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Technology & Telecommunication Acquisition Corporation Warrant",
+    "name": "Brainstorm Cell Therapeutics Inc. Common Stock",
     "status": "active",
-    "symbol": "TETWF",
+    "symbol": "BCLI",
     "tradable": false
   },
   {
@@ -391,9 +391,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "KALEIDO BIOSCIENCES INC Common Stock",
+    "name": "SPRING VY ACQUISITION CORP II Rights   02/25/2026",
     "status": "active",
-    "symbol": "KLDO",
+    "symbol": "SVIRF",
     "tradable": false
   },
   {
@@ -423,17 +423,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AVAYA HLDGS CORP COM",
+    "name": "Technology & Telecommunication Acquisition Corporation Warrant",
     "status": "active",
-    "symbol": "AVYAQ",
+    "symbol": "TETWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Brainstorm Cell Therapeutics Inc. Common Stock",
+    "name": "AVAYA HLDGS CORP COM",
     "status": "active",
-    "symbol": "BCLI",
+    "symbol": "AVYAQ",
     "tradable": false
   },
   {
@@ -463,9 +463,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TWIN HOSPITALITY GROUP INC CL A",
+    "name": "KALEIDO BIOSCIENCES INC Common Stock",
     "status": "active",
-    "symbol": "TWNPQ",
+    "symbol": "KLDO",
     "tradable": false
   },
   {
@@ -487,9 +487,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "WALLBOX N V WT EXP 2026-10-01",
+    "name": "ZyVersa Therapeutics, Inc. Com Par $0.001",
     "status": "active",
-    "symbol": "WBXWF",
+    "symbol": "ZVSA",
     "tradable": false
   },
   {
@@ -503,17 +503,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ELECTRIC LAST MILE SOLUTIONS INC CL A",
+    "name": "KINETA INC Common Stock",
     "status": "active",
-    "symbol": "ELMSQ",
+    "symbol": "KANT",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "COSCIENS BIOPHARMA INC COM",
+    "name": "CANNA-GLOBAL ACQUISITION CORP UNIT 1 COM CL A & 1 WT EXP RED Unit",
     "status": "active",
-    "symbol": "CSCIF",
+    "symbol": "CNGLU",
     "tradable": false
   },
   {
@@ -527,9 +527,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Virpax Pharmaceuticals, Inc. Common Stock",
+    "name": "COSCIENS BIOPHARMA INC COM",
     "status": "active",
-    "symbol": "VRPX",
+    "symbol": "CSCIF",
     "tradable": false
   },
   {
@@ -559,17 +559,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOBILE GLOBAL ESPORTS INC Common Stock",
+    "name": "LMP AUTOMOTIVE HLDGS INC Common Stock",
     "status": "active",
-    "symbol": "MGAM",
+    "symbol": "LMPX",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Just Eat Takeaway.com N.V. American Depositary Receipts - Sponsored",
+    "name": "TWELVE SEAS INVT CO II Warrant   03/28/2028",
     "status": "active",
-    "symbol": "JTKWY",
+    "symbol": "TWLVW",
     "tradable": false
   },
   {
@@ -599,9 +599,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TWELVE SEAS INVT CO II Warrant   03/28/2028",
+    "name": "VIZSLA ROYALTIES CORP COM NEW (Canada)",
     "status": "active",
-    "symbol": "TWLVW",
+    "symbol": "VROYF",
     "tradable": false
   },
   {
@@ -623,6 +623,22 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "Just Eat Takeaway.com N.V. American Depositary Receipts - Sponsored",
+    "status": "active",
+    "symbol": "JTKWY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MCLOUD TECHNOLOGIES CORP Common Shares",
+    "status": "active",
+    "symbol": "MCLDF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "INTEGRATED RAIL & RES ACQUISITION CORP Warrant",
     "status": "active",
     "symbol": "IRRXW",
@@ -630,26 +646,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "METAL SKY STAR ACQUISITION CORP Warrant   2029-03-31",
-    "status": "active",
-    "symbol": "MSSWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "INTEGRATED RAIL & RES ACQUISITION CORP Unit",
+    "name": "TREVENA INC Common Stock",
     "status": "active",
-    "symbol": "IRRXU",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "INTEGRATED RAIL & RES ACQUISITION CORP Common Stock",
-    "status": "active",
-    "symbol": "IRRX",
+    "symbol": "TRVN",
     "tradable": false
   },
   {
@@ -671,25 +671,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "INTEGRATED RAIL & RES ACQUISITION CORP Unit",
+    "status": "active",
+    "symbol": "IRRXU",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "INTEGRATED RAIL & RES ACQUISITION CORP Common Stock",
+    "status": "active",
+    "symbol": "IRRX",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "ABRAXAS PETE CORP COM NEW",
     "status": "active",
     "symbol": "AXAS",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SILVER BULL RES INC Common Stock",
-    "status": "active",
-    "symbol": "SVBL",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "TREVENA INC Common Stock",
-    "status": "active",
-    "symbol": "TRVN",
     "tradable": false
   },
   {
@@ -703,25 +703,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "SILVER BULL RES INC Common Stock",
+    "status": "active",
+    "symbol": "SVBL",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MYNARIC AG American Depositary Shares - Sponsored",
+    "status": "active",
+    "symbol": "MYNAY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "COPPERNICO METALS INC Common Shares (Canada)",
     "status": "active",
     "symbol": "CPPMF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Remark Holdings Inc Common Stock",
-    "status": "active",
-    "symbol": "MARK",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "NOTABLE LABS LTD Ordinary Shares",
-    "status": "active",
-    "symbol": "NTBLQ",
     "tradable": false
   },
   {
@@ -735,17 +735,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MICROMOBILITY.COM INC CL A PAR $0.00001",
+    "name": "NOTABLE LABS LTD Ordinary Shares",
     "status": "active",
-    "symbol": "MCOM",
+    "symbol": "NTBLQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Zenvia Inc. Class A Common Stock",
+    "name": "Allego N.V. Ordinary Shares",
     "status": "active",
-    "symbol": "ZENVF",
+    "symbol": "ALLGF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VROOM INC Warrant 2030-01-14",
+    "status": "active",
+    "symbol": "VRMWW",
     "tradable": false
   },
   {
@@ -754,14 +762,6 @@
     "name": "ComSovereign Holding Corp. Common Stock",
     "status": "active",
     "symbol": "COMS",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CHARGE ENTERPRISES INC COM",
-    "status": "active",
-    "symbol": "CRGEQ",
     "tradable": false
   },
   {
@@ -783,33 +783,33 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LMP AUTOMOTIVE HLDGS INC Common Stock",
+    "name": "ALPHA STAR ACQUISITION CORP Ordinary Shares",
     "status": "active",
-    "symbol": "LMPX",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Regencell Bioscience Holdings Limited Ordinary Shares",
-    "status": "active",
-    "symbol": "RGC",
+    "symbol": "ALSAF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BARK INC Warrant   05/01/2026",
+    "name": "CHARGE ENTERPRISES INC COM",
     "status": "active",
-    "symbol": "BARKW",
+    "symbol": "CRGEQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VIZSLA ROYALTIES CORP COM NEW (Canada)",
+    "name": "ELYS BMG GROUP, INC. Common Stock",
     "status": "active",
-    "symbol": "VROYF",
+    "symbol": "ELYS",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "KASPIEN HLDGS INC Common Stock",
+    "status": "active",
+    "symbol": "KSPN",
     "tradable": false
   },
   {
@@ -839,9 +839,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ARMSTRONG FLOORING INC Common Stock",
+    "name": "BARK INC Warrant   05/01/2026",
     "status": "active",
-    "symbol": "AFIIQ",
+    "symbol": "BARKW",
     "tradable": false
   },
   {
@@ -863,17 +863,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BIT BRO LTD Ordinary Shares",
+    "name": "ARMSTRONG FLOORING INC Common Stock",
     "status": "active",
-    "symbol": "BETSF",
+    "symbol": "AFIIQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "KASPIEN HLDGS INC Common Stock",
+    "name": "Lavoro Limited Class A Ordinary Shares",
     "status": "active",
-    "symbol": "KSPN",
+    "symbol": "LVROF",
     "tradable": false
   },
   {
@@ -895,25 +895,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "YOTTA ACQUISITION CORP Warrant",
+    "name": "CAMBER ENERGY INC Common Stock",
     "status": "active",
-    "symbol": "YOTAW",
+    "symbol": "CEIN",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ARRIVAL Common Shares",
+    "name": "VELO3D INC WT EXP 09/29/2026",
     "status": "active",
-    "symbol": "ARVLF",
+    "symbol": "VLDXW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MINGZHU LOGISTICS HLDGS LTD SHS NEW US$0.128 (Cayman Islands)",
+    "name": "MOLEKULE GROUP INC Common Shares",
     "status": "active",
-    "symbol": "YGMZF",
+    "symbol": "MKULQ",
     "tradable": false
   },
   {
@@ -927,9 +927,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VROOM INC Warrant 2030-01-14",
+    "name": "ARRIVAL Common Shares",
     "status": "active",
-    "symbol": "VRMWW",
+    "symbol": "ARVLF",
     "tradable": false
   },
   {
@@ -951,6 +951,14 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "MAQUIA CAP ACQUISITION CORP WT",
+    "status": "active",
+    "symbol": "MAQCW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "SORRENTO THERAPEUTICS INC Common Stock",
     "status": "active",
     "symbol": "SRNE",
@@ -959,25 +967,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CANNA-GLOBAL ACQUISITION CORP UNIT 1 COM CL A & 1 WT EXP RED Unit",
+    "name": "LUCIRA HEALTH INC COM",
     "status": "active",
-    "symbol": "CNGLU",
+    "symbol": "LHDXQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "KINETA INC Common Stock",
+    "name": "Wang & Lee Group, Inc. Ordinary Shares",
     "status": "active",
-    "symbol": "KANT",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "ALLIED HEALTHCARE PRODS INC COM NEW",
-    "status": "active",
-    "symbol": "AHPIQ",
+    "symbol": "WLGSF",
     "tradable": false
   },
   {
@@ -991,9 +991,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CIMG Inc. Common Stock",
+    "name": "METACRINE INC Common Stock",
     "status": "active",
-    "symbol": "CIMG",
+    "symbol": "MTCR",
     "tradable": false
   },
   {
@@ -1007,17 +1007,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "THYSSENKRUPP AG SPONSORED ADR (Germany)",
+    "name": "CIMG Inc. Common Stock",
     "status": "active",
-    "symbol": "TKAMY",
+    "symbol": "CIMG",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Carbon Revolution Public Limited Ordinary Shares",
+    "name": "ALLIED HEALTHCARE PRODS INC COM NEW",
     "status": "active",
-    "symbol": "CREVF",
+    "symbol": "AHPIQ",
     "tradable": false
   },
   {
@@ -1031,9 +1031,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CRESCERA CAP ACQUISITION CORP UNIT 1 CL A & 1/2 WT EXP (Cayman Islands)",
+    "name": "THYSSENKRUPP AG SPONSORED ADR (Germany)",
     "status": "active",
-    "symbol": "CREUF",
+    "symbol": "TKAMY",
     "tradable": false
   },
   {
@@ -1071,9 +1071,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Medicenna Therapeutics Corp.",
+    "name": "Carbon Revolution Public Limited Ordinary Shares",
     "status": "active",
-    "symbol": "MDNAF",
+    "symbol": "CREVF",
     "tradable": false
   },
   {
@@ -1127,9 +1127,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VELO3D INC WT EXP 09/29/2026",
+    "name": "CRESCERA CAP ACQUISITION CORP UNIT 1 CL A & 1/2 WT EXP (Cayman Islands)",
     "status": "active",
-    "symbol": "VLDXW",
+    "symbol": "CREUF",
     "tradable": false
   },
   {
@@ -1151,9 +1151,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Lavoro Limited Class A Ordinary Shares",
+    "name": "Arogo Capital Acquisition Corp. Class A Common Stock",
     "status": "active",
-    "symbol": "LVROF",
+    "symbol": "AOGO",
     "tradable": false
   },
   {
@@ -1167,9 +1167,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "USD PARTNERS LP COM UNIT REPSTG LTD PARTNER INTS",
+    "name": "VICINITY MTR CORP Common Shares",
     "status": "active",
-    "symbol": "USDP",
+    "symbol": "VEVMQ",
     "tradable": false
   },
   {
@@ -1183,17 +1183,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MCLOUD TECHNOLOGIES CORP Common Shares",
+    "name": "VOCODIA HLDGS CORP WT SER A",
     "status": "active",
-    "symbol": "MCLDF",
+    "symbol": "VHAIW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALPHA STAR ACQUISITION CORP Ordinary Shares",
+    "name": "USD PARTNERS LP COM UNIT REPSTG LTD PARTNER INTS",
     "status": "active",
-    "symbol": "ALSAF",
+    "symbol": "USDP",
     "tradable": false
   },
   {
@@ -1223,9 +1223,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SURGALIGN HLDGS INC Common Stock",
+    "name": "Unity Biotechnology, Inc. Common Stock",
     "status": "active",
-    "symbol": "SRGAQ",
+    "symbol": "UNBX",
     "tradable": false
   },
   {
@@ -1255,9 +1255,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AZUL S A SPONSORED ADR REPSTG 1 SHS UNIT NEW PAR (Brazil)",
+    "name": "SURGALIGN HLDGS INC Common Stock",
     "status": "active",
-    "symbol": "AZLUY",
+    "symbol": "SRGAQ",
     "tradable": false
   },
   {
@@ -1271,25 +1271,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ZyVersa Therapeutics, Inc. Com Par $0.001",
+    "name": "FRESH TRACKS THERAPEUTICS INC Common Stock",
     "status": "active",
-    "symbol": "ZVSA",
+    "symbol": "FRTX",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MYNARIC AG American Depositary Shares - Sponsored",
+    "name": "AZUL S A SPONSORED ADR REPSTG 1 SHS UNIT NEW PAR (Brazil)",
     "status": "active",
-    "symbol": "MYNAY",
+    "symbol": "AZLUY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VICINITY MTR CORP Common Shares",
+    "name": "BURGERFI INTL INC WT EXP 12/16/2025",
     "status": "active",
-    "symbol": "VEVMQ",
+    "symbol": "BFIWQ",
     "tradable": false
   },
   {
@@ -1327,17 +1327,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MAQUIA CAP ACQUISITION CORP WT",
+    "name": "Brainchip Holdings Limited American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "MAQCW",
+    "symbol": "BCHPY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Brainchip Holdings Limited American Depositary Receipts - Sponsored",
+    "name": "VIQ Solutions Inc Common Shares",
     "status": "active",
-    "symbol": "BCHPY",
+    "symbol": "VQSSF",
     "tradable": false
   },
   {
@@ -1367,9 +1367,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Allego N.V. Ordinary Shares",
+    "name": "HUANENG PWR INTL INC American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "ALLGF",
+    "symbol": "HNPIY",
     "tradable": false
   },
   {
@@ -1383,17 +1383,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Israel Acquisitions Corp Unit 1 CL A Shs & 1 WT Exp (Cayman)",
+    "name": "1847 HOLDINGS LLC COM PAR NO PAR OCTOBER 2024",
     "status": "active",
-    "symbol": "ISLUF",
+    "symbol": "LBRA",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ELYS BMG GROUP, INC. Common Stock",
+    "name": "Mobiquity Technologies, Inc. Common Stock",
     "status": "active",
-    "symbol": "ELYS",
+    "symbol": "MOBQ",
     "tradable": false
   },
   {
@@ -1407,9 +1407,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Wang & Lee Group, Inc. Ordinary Shares",
+    "name": "Israel Acquisitions Corp Unit 1 CL A Shs & 1 WT Exp (Cayman)",
     "status": "active",
-    "symbol": "WLGSF",
+    "symbol": "ISLUF",
     "tradable": false
   },
   {
@@ -1439,9 +1439,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "1847 HOLDINGS LLC COM PAR NO PAR OCTOBER 2024",
+    "name": "Localiza Rent A Car Sa Sponsored ADR (Brazil)",
     "status": "active",
-    "symbol": "LBRA",
+    "symbol": "LZRFY",
     "tradable": false
   },
   {
@@ -1479,25 +1479,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "MOVELLA HLDGS INC WT EXP 02/10/2028",
+    "status": "active",
+    "symbol": "MVLAW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VIEW INC Warrant   03/08/2026",
+    "status": "active",
+    "symbol": "VIWWQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "EROS MEDIA WORLD PLC Class A Ordinary Shares (Isle of Man)",
     "status": "active",
     "symbol": "EMWPF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "China Finance Online Co Ltd American Depositary Shares - Sponsored",
-    "status": "active",
-    "symbol": "JRJCY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CAMBER ENERGY INC Common Stock",
-    "status": "active",
-    "symbol": "CEIN",
     "tradable": false
   },
   {
@@ -1511,9 +1511,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "INVESTCORP AI ACQUISITION CORP Unit",
+    "name": "China Finance Online Co Ltd American Depositary Shares - Sponsored",
     "status": "active",
-    "symbol": "IVAUF",
+    "symbol": "JRJCY",
     "tradable": false
   },
   {
@@ -1535,6 +1535,22 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "Alithya Group Inc. Class A Subordinate Voting Shares (Canada)",
+    "status": "active",
+    "symbol": "ALYAF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "INVESTCORP AI ACQUISITION CORP Unit",
+    "status": "active",
+    "symbol": "IVAUF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "CONCORD ACQUISITION CORP II WT EXP RED",
     "status": "active",
     "symbol": "CNDAW",
@@ -1543,25 +1559,33 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOLEKULE GROUP INC Common Shares",
+    "name": "PANBELA THERAPEUTICS INC NEW Common Stock",
     "status": "active",
-    "symbol": "MKULQ",
+    "symbol": "PBLA",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VIQ Solutions Inc Common Shares",
+    "name": "Medicenna Therapeutics Corp.",
     "status": "active",
-    "symbol": "VQSSF",
+    "symbol": "MDNAF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LUCIRA HEALTH INC COM",
+    "name": "PRIOR1TY INTELLIGENCE GROUP PLC Ordinary Shares (United Kingdom)",
     "status": "active",
-    "symbol": "LHDXQ",
+    "symbol": "PRIAF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MEDLEY MGMT INC Common Stock",
+    "status": "active",
+    "symbol": "MDLM",
     "tradable": false
   },
   {
@@ -1570,22 +1594,6 @@
     "name": "SUNWORKS INC COM NEW",
     "status": "active",
     "symbol": "SUNWQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "TurnOnGreen, Inc. Common Stock",
-    "status": "active",
-    "symbol": "TOGI",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "HUANENG PWR INTL INC American Depositary Receipts - Sponsored",
-    "status": "active",
-    "symbol": "HNPIY",
     "tradable": false
   },
   {
@@ -1607,17 +1615,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SQZ BIOTECHNOLOGIES CO Common Stock",
+    "name": "LUXURBAN HOTELS INC CUMULATIVE REDEEMABLE PFD SER A",
     "status": "active",
-    "symbol": "SQZB",
+    "symbol": "LUXPQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TORTOISEECOFIN ACQUISITION CORP III WT EXP 07/22/2028",
+    "name": "SQZ BIOTECHNOLOGIES CO Common Stock",
     "status": "active",
-    "symbol": "TRTWF",
+    "symbol": "SQZB",
     "tradable": false
   },
   {
@@ -1647,9 +1655,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "METACRINE INC Common Stock",
+    "name": "TurnOnGreen, Inc. Common Stock",
     "status": "active",
-    "symbol": "MTCR",
+    "symbol": "TOGI",
     "tradable": false
   },
   {
@@ -1663,33 +1671,33 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "TORTOISEECOFIN ACQUISITION CORP III WT EXP 07/22/2028",
+    "status": "active",
+    "symbol": "TRTWF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "LogicMark, Inc. Common Stock",
+    "status": "active",
+    "symbol": "LGMK",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "LUXURBAN HOTELS INC COM NEW",
+    "status": "active",
+    "symbol": "LUXHQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "TIAN RUIXIANG Holdings Ltd Class A Ordinary Shares",
     "status": "active",
     "symbol": "TIRXF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "VIEW INC Warrant   03/08/2026",
-    "status": "active",
-    "symbol": "VIWWQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "China Feihe Limited Unsponsored ADR (Cayman Islands)",
-    "status": "active",
-    "symbol": "CFEIY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Clarus Therapeutics Holdings, Inc.",
-    "status": "active",
-    "symbol": "CRXTQ",
     "tradable": false
   },
   {
@@ -1711,9 +1719,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Arogo Capital Acquisition Corp. Class A Common Stock",
+    "name": "WINC INC COM",
     "status": "active",
-    "symbol": "AOGO",
+    "symbol": "WBEVQ",
     "tradable": false
   },
   {
@@ -1722,6 +1730,38 @@
     "name": "FINCH THERAPEUTICS GROUP INC Common Stock",
     "status": "active",
     "symbol": "FNCHQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "China Feihe Limited Unsponsored ADR (Cayman Islands)",
+    "status": "active",
+    "symbol": "CFEIY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Clarus Therapeutics Holdings, Inc.",
+    "status": "active",
+    "symbol": "CRXTQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "BIOPHYTIS SA American Depositary Shares - Sponsored",
+    "status": "active",
+    "symbol": "BPTSY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MARPAI INC CL A COM NEW",
+    "status": "active",
+    "symbol": "MRAI",
     "tradable": false
   },
   {
@@ -1743,17 +1783,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BIOPHYTIS SA American Depositary Shares - Sponsored",
+    "name": "Innerscope Hearing Technologies, Inc. Common Stock",
     "status": "active",
-    "symbol": "BPTSY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "PANBELA THERAPEUTICS INC NEW Common Stock",
-    "status": "active",
-    "symbol": "PBLA",
+    "symbol": "INND",
     "tradable": false
   },
   {
@@ -1767,30 +1799,6 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Innerscope Hearing Technologies, Inc. Common Stock",
-    "status": "active",
-    "symbol": "INND",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Localiza Rent A Car Sa Sponsored ADR (Brazil)",
-    "status": "active",
-    "symbol": "LZRFY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "LogicMark, Inc. Common Stock",
-    "status": "active",
-    "symbol": "LGMK",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
     "name": "FISCALNOTE HLDGS INC Warrant (07/29/2027)",
     "status": "active",
     "symbol": "NOTEW",
@@ -1799,9 +1807,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VOCODIA HLDGS CORP WT SER A",
+    "name": "Innventure, Inc. Warrant   10/02/2029",
     "status": "active",
-    "symbol": "VHAIW",
+    "symbol": "INVLW",
     "tradable": false
   },
   {
@@ -1823,9 +1831,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Unity Biotechnology, Inc. Common Stock",
+    "name": "Vivakor, Inc. Common Stock",
     "status": "active",
-    "symbol": "UNBX",
+    "symbol": "VIVKD",
     "tradable": false
   },
   {
@@ -1839,9 +1847,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Steel Partners Holdings L.P. Common Units, no par value",
+    "name": "ABB LTD American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "SPLP",
+    "symbol": "ABBNY",
     "tradable": false
   },
   {
@@ -1863,25 +1871,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ENSERVCO CORP Common Stock",
+    "name": "Endo International plc Ordinary Shares",
     "status": "active",
-    "symbol": "ENSV",
+    "symbol": "ENDPQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Innventure, Inc. Warrant   10/02/2029",
+    "name": "AppTech Payments Corp. Common Stock",
     "status": "active",
-    "symbol": "INVLW",
+    "symbol": "APCX",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LUXURBAN HOTELS INC CUMULATIVE REDEEMABLE PFD SER A",
+    "name": "Steel Partners Holdings L.P. Common Units, no par value",
     "status": "active",
-    "symbol": "LUXPQ",
+    "symbol": "SPLP",
     "tradable": false
   },
   {
@@ -1903,9 +1911,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Zapata Quantum Inc Common Stock",
+    "name": "ENSERVCO CORP Common Stock",
     "status": "active",
-    "symbol": "ZPTA",
+    "symbol": "ENSV",
     "tradable": false
   },
   {
@@ -1919,17 +1927,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LUXURBAN HOTELS INC COM NEW",
+    "name": "LIBERTY LIVE HLDGS INC SER B LIBERTY LIVE GROUP COM",
     "status": "active",
-    "symbol": "LUXHQ",
+    "symbol": "LLYVB",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vivakor, Inc. Common Stock",
+    "name": "Zapata Quantum Inc Common Stock",
     "status": "active",
-    "symbol": "VIVKD",
+    "symbol": "ZPTA",
     "tradable": false
   },
   {
@@ -1943,17 +1951,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "FRESH TRACKS THERAPEUTICS INC Common Stock",
+    "name": "LEEF BRANDS INC Ordinary Shares",
     "status": "active",
-    "symbol": "FRTX",
+    "symbol": "LEEEF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "WINC INC COM",
+    "name": "VITRU BRASIL EMPREENDIMENTOS PARTICIPACOES E COMERCIO S A ADS - Sponsored (Brazil)",
     "status": "active",
-    "symbol": "WBEVQ",
+    "symbol": "VTRBY",
     "tradable": false
   },
   {
@@ -1975,9 +1983,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TurnOnGreen, Inc. Warrant",
+    "name": "Enlightify Inc.",
     "status": "active",
-    "symbol": "TOGIW",
+    "symbol": "ENFY",
     "tradable": false
   },
   {
@@ -1991,17 +1999,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AGILE THERAPEUTICS INC Common Stock",
+    "name": "Eloxx Pharmaceuticals, Inc. Common Stock",
     "status": "active",
-    "symbol": "AGRX",
+    "symbol": "ELOX",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LEEF BRANDS INC Ordinary Shares",
+    "name": "AGILE THERAPEUTICS INC Common Stock",
     "status": "active",
-    "symbol": "LEEEF",
+    "symbol": "AGRX",
     "tradable": false
   },
   {
@@ -2023,17 +2031,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CYANOTECH CORP Common Stock",
+    "name": "TurnOnGreen, Inc. Warrant",
     "status": "active",
-    "symbol": "CYAN",
+    "symbol": "TOGIW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BURGERFI INTL INC WT EXP 12/16/2025",
+    "name": "Luna Innovations Incorporated Common Stock",
     "status": "active",
-    "symbol": "BFIWQ",
+    "symbol": "LUNA",
     "tradable": false
   },
   {
@@ -2079,17 +2087,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Telefonica, S.A. American Depositary Receipts - Sponsored (Spain)",
+    "name": "CYANOTECH CORP Common Stock",
     "status": "active",
-    "symbol": "TELFY",
+    "symbol": "CYAN",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LIBERTY LIVE HLDGS INC SER B LIBERTY LIVE GROUP COM",
+    "name": "VISLINK TECHNOLOGIES INC Common Stock",
     "status": "active",
-    "symbol": "LLYVB",
+    "symbol": "VISL",
     "tradable": false
   },
   {
@@ -2103,9 +2111,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TINGO GROUP INC COM",
+    "name": "BIOCEPT INC Common Stock",
     "status": "active",
-    "symbol": "TIOG",
+    "symbol": "BIOCQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Telefonica, S.A. American Depositary Receipts - Sponsored (Spain)",
+    "status": "active",
+    "symbol": "TELFY",
     "tradable": false
   },
   {
@@ -2114,14 +2130,6 @@
     "name": "CELYAD ONCOLOGY SA American Depositary Receipts - Sponsored",
     "status": "active",
     "symbol": "CYADY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Mobiquity Technologies, Inc. Common Stock",
-    "status": "active",
-    "symbol": "MOBQ",
     "tradable": false
   },
   {
@@ -2151,9 +2159,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Investcorp Europe Acquisition Corp I Warrant",
+    "name": "TINGO GROUP INC COM",
     "status": "active",
-    "symbol": "IVCWF",
+    "symbol": "TIOG",
     "tradable": false
   },
   {
@@ -2175,17 +2183,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOVELLA HLDGS INC WT EXP 02/10/2028",
+    "name": "MISSFRESH LTD American Depositary Shares - Sponsored",
     "status": "active",
-    "symbol": "MVLAW",
+    "symbol": "MFLTY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VITRU BRASIL EMPREENDIMENTOS PARTICIPACOES E COMERCIO S A ADS - Sponsored (Brazil)",
+    "name": "Investcorp Europe Acquisition Corp I Warrant",
     "status": "active",
-    "symbol": "VTRBY",
+    "symbol": "IVCWF",
     "tradable": false
   },
   {
@@ -2207,9 +2215,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "China Eastern Airlines Ltd Sponsored ADR Rep Class H (China)",
+    "name": "UNIQUE FABRICATING INC COM",
     "status": "active",
-    "symbol": "CEAYY",
+    "symbol": "UFABQ",
     "tradable": false
   },
   {
@@ -2223,9 +2231,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "UNIQUE FABRICATING INC COM",
+    "name": "ILEARNINGENGINES INC Warrant   04/16/2029",
     "status": "active",
-    "symbol": "UFABQ",
+    "symbol": "AILWQ",
     "tradable": false
   },
   {
@@ -2239,9 +2247,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Alithya Group Inc. Class A Subordinate Voting Shares (Canada)",
+    "name": "China Eastern Airlines Ltd Sponsored ADR Rep Class H (China)",
     "status": "active",
-    "symbol": "ALYAF",
+    "symbol": "CEAYY",
     "tradable": false
   },
   {
@@ -2263,9 +2271,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ILEARNINGENGINES INC Warrant   04/16/2029",
+    "name": "ARDAGH METAL PACKAGING S A WT EXP 08/04/2026 (Luxembourg)",
     "status": "active",
-    "symbol": "AILWQ",
+    "symbol": "AMPWF",
     "tradable": false
   },
   {
@@ -2279,6 +2287,30 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "LL Flooring Holdings Inc. Common Stock",
+    "status": "active",
+    "symbol": "LLFLQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "JIN MEDICAL INTERNATIONAL LTD. Class A Ordinary Shares",
+    "status": "active",
+    "symbol": "ZJYL",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Yellow Corporation Common Stock",
+    "status": "active",
+    "symbol": "YELLQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "Taitron Components Incorporated Class A Common Stock",
     "status": "active",
     "symbol": "TAIT",
@@ -2287,33 +2319,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VISLINK TECHNOLOGIES INC Common Stock",
+    "name": "EVERGREEN CORP Ordinary Shares",
     "status": "active",
-    "symbol": "VISL",
+    "symbol": "EGRVF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MEDLEY MGMT INC Common Stock",
+    "name": "DAVIS COMMODITIES LTD ORD SHS NEW US$0.00000860216 (Cayman)",
     "status": "active",
-    "symbol": "MDLM",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Grom Social Enterprises, Inc. Common Stock",
-    "status": "active",
-    "symbol": "GROM",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Luna Innovations Incorporated Common Stock",
-    "status": "active",
-    "symbol": "LUNA",
+    "symbol": "DTCKF",
     "tradable": false
   },
   {
@@ -2327,17 +2343,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AIMFINITY INVT CORP I Warrant   2029-12-31",
+    "name": "Grom Social Enterprises, Inc. Common Stock",
     "status": "active",
-    "symbol": "AIMWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "MARPAI INC CL A COM NEW",
-    "status": "active",
-    "symbol": "MRAI",
+    "symbol": "GROM",
     "tradable": false
   },
   {
@@ -2359,17 +2367,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SEMANTIX INC Warrant Exp 8/3/2027 (Cayman Islands)",
+    "name": "VERTEX ENERGY INC Common Stock",
     "status": "active",
-    "symbol": "STWWF",
+    "symbol": "VTNRQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LL Flooring Holdings Inc. Common Stock",
+    "name": "AIMFINITY INVT CORP I Warrant   2029-12-31",
     "status": "active",
-    "symbol": "LLFLQ",
+    "symbol": "AIMWF",
     "tradable": false
   },
   {
@@ -2439,9 +2447,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ABB LTD American Depositary Receipts - Sponsored",
+    "name": "SEMANTIX INC Warrant Exp 8/3/2027 (Cayman Islands)",
     "status": "active",
-    "symbol": "ABBNY",
+    "symbol": "STWWF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MSP Recovery, Inc. Warrant Exp 05/23/2027",
+    "status": "active",
+    "symbol": "MSPRZ",
     "tradable": false
   },
   {
@@ -2455,17 +2471,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AIMFINITY INVT CORP I Unit   2029-02-01",
+    "name": "LILIUM N V Warrant Exp 09/14/2026",
     "status": "active",
-    "symbol": "AIMUF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Endo International plc Ordinary Shares",
-    "status": "active",
-    "symbol": "ENDPQ",
+    "symbol": "LILWF",
     "tradable": false
   },
   {
@@ -2479,9 +2487,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AppTech Payments Corp. Common Stock",
+    "name": "INFINITY PHARMACEUTICALS INC Common Shares",
     "status": "active",
-    "symbol": "APCX",
+    "symbol": "INFIQ",
     "tradable": false
   },
   {
@@ -2503,9 +2511,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Enlightify Inc.",
+    "name": "AIMFINITY INVT CORP I Unit   2029-02-01",
     "status": "active",
-    "symbol": "ENFY",
+    "symbol": "AIMUF",
     "tradable": false
   },
   {
@@ -2519,6 +2527,14 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "Welsbach Technology Metals Acquisition Corp. one right to receive 1/10th of a share of common stock",
+    "status": "active",
+    "symbol": "WTMAR",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "Kelso Technologies Inc. Common Stock (Canada)",
     "status": "active",
     "symbol": "KIQSF",
@@ -2527,17 +2543,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Eloxx Pharmaceuticals, Inc. Common Stock",
+    "name": "Meihua International Medical Technologies Co., Ltd. Ord Shs New US$0.05 (Cayman)",
     "status": "active",
-    "symbol": "ELOX",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "BIOCEPT INC Common Stock",
-    "status": "active",
-    "symbol": "BIOCQ",
+    "symbol": "MHUAF",
     "tradable": false
   },
   {
@@ -2551,9 +2559,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "China XD Plastics Co Ltd Common Stock",
+    "name": "AMBIPAR EMERGENCY RESPONSE Warrant   03/06/2028",
     "status": "active",
-    "symbol": "CXDC",
+    "symbol": "AMBWQ",
     "tradable": false
   },
   {
@@ -2575,9 +2583,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VERTEX ENERGY INC Common Stock",
+    "name": "Meta Materials Inc Common Stock",
     "status": "active",
-    "symbol": "VTNRQ",
+    "symbol": "MMATQ",
     "tradable": false
   },
   {
@@ -2615,9 +2623,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Investcorp AI Acquisition Corp. Class A Ordinary Share",
+    "name": "China XD Plastics Co Ltd Common Stock",
     "status": "active",
-    "symbol": "IVCAF",
+    "symbol": "CXDC",
     "tradable": false
   },
   {
@@ -2647,9 +2655,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MISSFRESH LTD American Depositary Shares - Sponsored",
+    "name": "OLYMPUS CORP American Depositary Receipts - Unsponsored",
     "status": "active",
-    "symbol": "MFLTY",
+    "symbol": "OLYMY",
     "tradable": false
   },
   {
@@ -2663,9 +2671,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ARDAGH METAL PACKAGING S A WT EXP 08/04/2026 (Luxembourg)",
+    "name": "MULTIMETAVERSE HLDGS LTD Warrant   01/04/2028",
     "status": "active",
-    "symbol": "AMPWF",
+    "symbol": "MMVXF",
     "tradable": false
   },
   {
@@ -2678,10 +2686,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "JIN MEDICAL INTERNATIONAL LTD. Class A Ordinary Shares",
+    "exchange": "OTC",
+    "name": "Investcorp AI Acquisition Corp. Class A Ordinary Share",
     "status": "active",
-    "symbol": "ZJYL",
+    "symbol": "IVCAF",
     "tradable": false
   },
   {
@@ -2695,9 +2703,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Yellow Corporation Common Stock",
+    "name": "NAVIDEA BIOPHARMACEUTICALS INC Common Shares",
     "status": "active",
-    "symbol": "YELLQ",
+    "symbol": "NAVBQ",
     "tradable": false
   },
   {
@@ -2711,9 +2719,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DAVIS COMMODITIES LTD ORD SHS NEW US$0.00000860216 (Cayman)",
+    "name": "YOTTA ACQUISITION CORP Rights",
     "status": "active",
-    "symbol": "DTCKF",
+    "symbol": "YOTAR",
     "tradable": false
   },
   {
@@ -2743,25 +2751,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "EVERGREEN CORP Ordinary Shares",
+    "name": "Lytus Technologies Holdings PTV. Ltd. Ordinary Shares",
     "status": "active",
-    "symbol": "EGRVF",
+    "symbol": "LYTHF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "GLOBAL LTS ACQUISITION CORP Rights",
+    "name": "SPARK NETWORKS SE American Depositary Receipts - Sponsored (Germany)",
     "status": "active",
-    "symbol": "GLLRF",
+    "symbol": "LOVLQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "OLYMPUS CORP American Depositary Receipts - Unsponsored",
+    "name": "Yotta Acquisition Corporation Common Stock",
     "status": "active",
-    "symbol": "OLYMY",
+    "symbol": "YOTA",
     "tradable": false
   },
   {
@@ -2775,17 +2783,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TUESDAY MORNING CORP NEW Common Stock",
+    "name": "GLOBAL LTS ACQUISITION CORP Rights",
     "status": "active",
-    "symbol": "TUEMQ",
+    "symbol": "GLLRF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BABYLON HLDGS LTD CL A ORD SHS NEW (Jersey)",
+    "name": "TUESDAY MORNING CORP NEW Common Stock",
     "status": "active",
-    "symbol": "BBLNF",
+    "symbol": "TUEMQ",
     "tradable": false
   },
   {
@@ -2799,9 +2807,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MSP Recovery, Inc. Warrant Exp 05/23/2027",
+    "name": "NOCO NOCO INC Warrant   08/25/2028 (Cayman Islands)",
     "status": "active",
-    "symbol": "MSPRZ",
+    "symbol": "NCNWF",
     "tradable": false
   },
   {
@@ -2815,9 +2823,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LILIUM N V Warrant Exp 09/14/2026",
+    "name": "VIRGIN ORBIT HLDGS INC COM",
     "status": "active",
-    "symbol": "LILWF",
+    "symbol": "VORBQ",
     "tradable": false
   },
   {
@@ -2839,17 +2847,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Welsbach Technology Metals Acquisition Corp. one right to receive 1/10th of a share of common stock",
+    "name": "BABYLON HLDGS LTD CL A ORD SHS NEW (Jersey)",
     "status": "active",
-    "symbol": "WTMAR",
+    "symbol": "BBLNF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "INFINITY PHARMACEUTICALS INC Common Shares",
+    "name": "MOVELLA HLDGS INC COM",
     "status": "active",
-    "symbol": "INFIQ",
+    "symbol": "MVLA",
     "tradable": false
   },
   {
@@ -2871,33 +2879,33 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SPARK NETWORKS SE American Depositary Receipts - Sponsored (Germany)",
+    "name": "ADDVANTAGE TECHNOLOGIES GROUP INC Common Stock",
     "status": "active",
-    "symbol": "LOVLQ",
+    "symbol": "AEYGQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Meihua International Medical Technologies Co., Ltd. Ord Shs New US$0.05 (Cayman)",
+    "name": "LUOKUNG TECHNOLOGY CORP Ordinary Shares (Virgin Islands British)",
     "status": "active",
-    "symbol": "MHUAF",
+    "symbol": "LKCOF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Lytus Technologies Holdings PTV. Ltd. Ordinary Shares",
+    "name": "Lynas Rare Earths Limited American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "LYTHF",
+    "symbol": "LYSDY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VIRGIN ORBIT HLDGS INC COM",
+    "name": "NKGEN BIOTECH INC Common Stock",
     "status": "active",
-    "symbol": "VORBQ",
+    "symbol": "NKGN",
     "tradable": false
   },
   {
@@ -2911,9 +2919,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ZOMEDICA CORP Common Stock",
+    "name": "ALJ Regional Holdings, Inc.",
     "status": "active",
-    "symbol": "ZOMDF",
+    "symbol": "ALJJ",
     "tradable": false
   },
   {
@@ -2927,17 +2935,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AMBIPAR EMERGENCY RESPONSE Warrant   03/06/2028",
+    "name": "ZOOMCAR HLDGS INC Warrant   2028-12-31",
     "status": "active",
-    "symbol": "AMBWQ",
+    "symbol": "ZCARW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LUOKUNG TECHNOLOGY CORP Ordinary Shares (Virgin Islands British)",
+    "name": "CAPTIVISION INC Warrant   11/15/2028",
     "status": "active",
-    "symbol": "LKCOF",
+    "symbol": "CPTWF",
     "tradable": false
   },
   {
@@ -2983,25 +2991,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Meta Materials Inc Common Stock",
+    "name": "ZOMEDICA CORP Common Stock",
     "status": "active",
-    "symbol": "MMATQ",
+    "symbol": "ZOMDF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Procaps Group, S.A. Warrants",
+    "name": "F45 TRAINING HLDGS INC COM",
     "status": "active",
-    "symbol": "PRCWF",
+    "symbol": "FXLV",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "IMAC HLDGS INC COM NEW",
+    "name": "Lyra Therapeutics, Inc. Common Stock",
     "status": "active",
-    "symbol": "BACK",
+    "symbol": "LYRA",
     "tradable": false
   },
   {
@@ -3015,9 +3023,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MULTIMETAVERSE HLDGS LTD Warrant   01/04/2028",
+    "name": "Procaps Group, S.A. Warrants",
     "status": "active",
-    "symbol": "MMVXF",
+    "symbol": "PRCWF",
     "tradable": false
   },
   {
@@ -3031,9 +3039,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Tile Shop Holdings, Inc. Common Stock",
+    "name": "IMAC HLDGS INC COM NEW",
     "status": "active",
-    "symbol": "TTSH",
+    "symbol": "BACK",
     "tradable": false
   },
   {
@@ -3047,9 +3055,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALJ Regional Holdings, Inc.",
+    "name": "Tile Shop Holdings, Inc. Common Stock",
     "status": "active",
-    "symbol": "ALJJ",
+    "symbol": "TTSH",
     "tradable": false
   },
   {
@@ -3071,9 +3079,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "NAVIDEA BIOPHARMACEUTICALS INC Common Shares",
+    "name": "LANNETT INC COM NEW",
     "status": "active",
-    "symbol": "NAVBQ",
+    "symbol": "LCINQ",
     "tradable": false
   },
   {
@@ -3087,9 +3095,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "JG Summit Holdings Inc Unsponsored ADR (Phillippines)",
+    "name": "MULTIMETAVERSE HLDGS LTD Ordinary Shares",
     "status": "active",
-    "symbol": "JGSMY",
+    "symbol": "MMVVF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VACCINEX INC COM PAR $0.0001",
+    "status": "active",
+    "symbol": "VCNX",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "ZOOMCAR HLDGS INC Common Stock",
+    "status": "active",
+    "symbol": "ZCAR",
     "tradable": false
   },
   {
@@ -3103,22 +3127,6 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Lynas Rare Earths Limited American Depositary Receipts - Sponsored",
-    "status": "active",
-    "symbol": "LYSDY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "YOTTA ACQUISITION CORP Rights",
-    "status": "active",
-    "symbol": "YOTAR",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
     "name": "VIVEVE MED INC Common Stock",
     "status": "active",
     "symbol": "VIVE",
@@ -3127,9 +3135,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Yotta Acquisition Corporation Common Stock",
+    "name": "JG Summit Holdings Inc Unsponsored ADR (Phillippines)",
     "status": "active",
-    "symbol": "YOTA",
+    "symbol": "JGSMY",
     "tradable": false
   },
   {
@@ -3175,9 +3183,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "JIANPU TECHNOLOGY INC ADR NEW - Sponsored (Cayman)",
+    "name": "Liberty TripAdvisor Holdings, Inc. Series B Common Stock",
     "status": "active",
-    "symbol": "AIJTY",
+    "symbol": "LTRPB",
     "tradable": false
   },
   {
@@ -3191,9 +3199,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "GOLDENSTONE ACQUISITION LTD RT",
+    "name": "T2 BIOSYSTEMS INC COM PAR $0.001",
     "status": "active",
-    "symbol": "GDSTR",
+    "symbol": "TTOO",
     "tradable": false
   },
   {
@@ -3223,25 +3231,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "T2 BIOSYSTEMS INC COM PAR $0.001",
+    "name": "ATRECA INC CL A COM",
     "status": "active",
-    "symbol": "TTOO",
+    "symbol": "BCEL",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "NOCO NOCO INC Warrant   08/25/2028 (Cayman Islands)",
+    "name": "JIANPU TECHNOLOGY INC ADR NEW - Sponsored (Cayman)",
     "status": "active",
-    "symbol": "NCNWF",
+    "symbol": "AIJTY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VACCINEX INC COM PAR $0.0001",
+    "name": "GOLDENSTONE ACQUISITION LTD RT",
     "status": "active",
-    "symbol": "VCNX",
+    "symbol": "GDSTR",
     "tradable": false
   },
   {
@@ -3255,17 +3263,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ELECTRIQ PWR HLDGS INC COM",
+    "name": "UPHEALTH INC Common Stock",
     "status": "active",
-    "symbol": "ELIQQ",
+    "symbol": "UPHL",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOVELLA HLDGS INC COM",
+    "name": "Liberty TripAdvisor Holdings, Inc. Series A Common Stock",
     "status": "active",
-    "symbol": "MVLA",
+    "symbol": "LTRPA",
     "tradable": false
   },
   {
@@ -3303,17 +3311,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "UPHEALTH INC Common Stock",
+    "name": "ELECTRIQ PWR HLDGS INC COM",
     "status": "active",
-    "symbol": "UPHL",
+    "symbol": "ELIQQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TOUGHBUILT INDS INC Common Stock",
+    "name": "LOYALTY VENTURES INC COM (Delaware)",
     "status": "active",
-    "symbol": "TBLT",
+    "symbol": "LYLTQ",
     "tradable": false
   },
   {
@@ -3343,17 +3351,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CARTICA ACQUISITION CORP RED WTS  04/30/2028 (Cayman Islands)",
+    "name": "Gaucho Group Holdings, Inc. Com Par $0.01 2024",
     "status": "active",
-    "symbol": "CRTWF",
+    "symbol": "VINO",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TEMPO AUTOMATION HLDGS INC",
+    "name": "TOUGHBUILT INDS INC Common Stock",
     "status": "active",
-    "symbol": "TMPOQ",
+    "symbol": "TBLT",
     "tradable": false
   },
   {
@@ -3383,9 +3391,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Lyra Therapeutics, Inc. Common Stock",
+    "name": "EVERGREEN CORP Warrant  exp 02/08/2027",
     "status": "active",
-    "symbol": "LYRA",
+    "symbol": "EGUVF",
     "tradable": false
   },
   {
@@ -3399,25 +3407,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AMBIPAR EMERGENCY RESPONSE Ordinary Shares",
+    "name": "CARTICA ACQUISITION CORP RED WTS  04/30/2028 (Cayman Islands)",
     "status": "active",
-    "symbol": "AMBIQ",
+    "symbol": "CRTWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ADDVANTAGE TECHNOLOGIES GROUP INC Common Stock",
+    "name": "TEMPO AUTOMATION HLDGS INC",
     "status": "active",
-    "symbol": "AEYGQ",
+    "symbol": "TMPOQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "NKGEN BIOTECH INC Common Stock",
+    "name": "FIELD TRIP HEALTH & WELLNESS LTD Common Shares",
     "status": "active",
-    "symbol": "NKGN",
+    "symbol": "FTHWF",
     "tradable": false
   },
   {
@@ -3431,17 +3439,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Kaival Brands Innovations Group, Inc. Common Stock",
+    "name": "AMBIPAR EMERGENCY RESPONSE Ordinary Shares",
     "status": "active",
-    "symbol": "KAVL",
+    "symbol": "AMBIQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Liberty TripAdvisor Holdings, Inc. Series B Common Stock",
+    "name": "LEDDARTECH HLDGS INC Warrant   2028-12-21",
     "status": "active",
-    "symbol": "LTRPB",
+    "symbol": "LDTDF",
     "tradable": false
   },
   {
@@ -3479,9 +3487,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TROIKA MEDIA GROUP INC Common Stock",
+    "name": "Kaival Brands Innovations Group, Inc. Common Stock",
     "status": "active",
-    "symbol": "TRKAQ",
+    "symbol": "KAVL",
     "tradable": false
   },
   {
@@ -3511,17 +3519,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "INVACARE CORP Common Stock",
+    "name": "ALPHA STAR ACQUISITION CORP Warrant   12/13/2026",
     "status": "active",
-    "symbol": "IVCRQ",
+    "symbol": "ALSWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ZOOMCAR HLDGS INC Warrant   2028-12-31",
+    "name": "TROIKA MEDIA GROUP INC Common Stock",
     "status": "active",
-    "symbol": "ZCARW",
+    "symbol": "TRKAQ",
     "tradable": false
   },
   {
@@ -3551,17 +3559,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Gaucho Group Holdings, Inc. Com Par $0.01 2024",
+    "name": "Vincerx Pharma, Inc. Common Stock",
     "status": "active",
-    "symbol": "VINO",
+    "symbol": "VINC",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LEDDARTECH HLDGS INC Warrant   2028-12-21",
+    "name": "INVACARE CORP Common Stock",
     "status": "active",
-    "symbol": "LDTDF",
+    "symbol": "IVCRQ",
     "tradable": false
   },
   {
@@ -3575,25 +3583,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Liberty TripAdvisor Holdings, Inc. Series A Common Stock",
-    "status": "active",
-    "symbol": "LTRPA",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CAPTIVISION INC Warrant   11/15/2028",
-    "status": "active",
-    "symbol": "CPTWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
     "name": "LeddarTech Holdings Inc. Common Shares",
     "status": "active",
     "symbol": "LDTCF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Next.e.GO N.V. Ordinary Shares (Netherlands)",
+    "status": "active",
+    "symbol": "EGOXF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "ALLURION TECHNOLOGIES INC Warrant Exp  08/01/2030",
+    "status": "active",
+    "symbol": "ALURW",
     "tradable": false
   },
   {
@@ -3607,17 +3615,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LOYALTY VENTURES INC COM (Delaware)",
+    "name": "Delta Apparel, Inc.",
     "status": "active",
-    "symbol": "LYLTQ",
+    "symbol": "DLAPQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Iterum Therapeutics plc Ordinary Share",
+    "name": "WinVest Acquisition Corp. Wt Exp 08/09/2026",
     "status": "active",
-    "symbol": "ITRMF",
+    "symbol": "WINVW",
     "tradable": false
   },
   {
@@ -3639,33 +3647,33 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "1895 BANCORP WIS INC NEW Common Stock",
+    "status": "active",
+    "symbol": "BCOW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MALLINCKRODT PLC NEW Common Shares",
+    "status": "active",
+    "symbol": "MNKTQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Iterum Therapeutics plc Ordinary Share",
+    "status": "active",
+    "symbol": "ITRMF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "NorthView Acquisition Corporation Rights",
     "status": "active",
     "symbol": "NVACR",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Vincerx Pharma, Inc. Common Stock",
-    "status": "active",
-    "symbol": "VINC",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "ADAMAS ONE CORP Common Stock",
-    "status": "active",
-    "symbol": "JEWL",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "F45 TRAINING HLDGS INC COM",
-    "status": "active",
-    "symbol": "FXLV",
     "tradable": false
   },
   {
@@ -3679,9 +3687,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LANNETT INC COM NEW",
+    "name": "WinVest Acquisition Corp. Rights",
     "status": "active",
-    "symbol": "LCINQ",
+    "symbol": "WINVR",
     "tradable": false
   },
   {
@@ -3703,9 +3711,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "1895 BANCORP WIS INC NEW Common Stock",
+    "name": "ADAMAS ONE CORP Common Stock",
     "status": "active",
-    "symbol": "BCOW",
+    "symbol": "JEWL",
     "tradable": false
   },
   {
@@ -3727,9 +3735,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MULTIMETAVERSE HLDGS LTD Ordinary Shares",
+    "name": "VAST RENEWABLES LTD Warrant   2028-07-01",
     "status": "active",
-    "symbol": "MMVVF",
+    "symbol": "VSTWF",
     "tradable": false
   },
   {
@@ -3743,25 +3751,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ZOOMCAR HLDGS INC Common Stock",
+    "name": "VENATOR MATLS PLC Common Shares",
     "status": "active",
-    "symbol": "ZCAR",
+    "symbol": "VNTRF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ATRECA INC CL A COM",
+    "name": "WinVest Acquisition Corp. Common Stock",
     "status": "active",
-    "symbol": "BCEL",
+    "symbol": "WINV",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALPHA STAR ACQUISITION CORP Warrant   12/13/2026",
+    "name": "Vast Renewables Limited Ordinary Shares",
     "status": "active",
-    "symbol": "ALSWF",
+    "symbol": "VSTTF",
     "tradable": false
   },
   {
@@ -3790,10 +3798,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Akanda Corp. Common Shares",
+    "exchange": "OTC",
+    "name": "MSP Recovery, Inc. Com Par $0.0001 New",
     "status": "active",
-    "symbol": "AKAN",
+    "symbol": "MSPR",
     "tradable": false
   },
   {
@@ -3823,9 +3831,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "EVERGREEN CORP Warrant  exp 02/08/2027",
+    "name": "Windtree Therapeutics, Inc. Common Stock",
     "status": "active",
-    "symbol": "EGUVF",
+    "symbol": "WINT",
     "tradable": false
   },
   {
@@ -3838,10 +3846,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "FIELD TRIP HEALTH & WELLNESS LTD Common Shares",
+    "exchange": "NASDAQ",
+    "name": "Akanda Corp. Common Shares",
     "status": "active",
-    "symbol": "FTHWF",
+    "symbol": "AKAN",
     "tradable": false
   },
   {
@@ -3871,25 +3879,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VENATOR MATLS PLC Common Shares",
+    "name": "ADVENT TECHNOLOGIES HLDGS INC Warrant   02/03/2026",
     "status": "active",
-    "symbol": "VNTRF",
+    "symbol": "ADNWW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VAST RENEWABLES LTD Warrant   2028-07-01",
+    "name": "EFFECTOR THERAPEUTICS INC Warrant   12/31/2025",
     "status": "active",
-    "symbol": "VSTWF",
+    "symbol": "EFTRW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "WinVest Acquisition Corp. Wt Exp 08/09/2026",
+    "name": "Molecular Data Inc American Depositary Shares - Sponsored (Cayman Islands)",
     "status": "active",
-    "symbol": "WINVW",
+    "symbol": "MKDTY",
     "tradable": false
   },
   {
@@ -3935,41 +3943,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vast Renewables Limited Ordinary Shares",
+    "name": "Lipella Pharmaceuticals Inc. Common Stock",
     "status": "active",
-    "symbol": "VSTTF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SYLA TECHNOLOGIES CO LTD American Depositary Receipts - Sponsored",
-    "status": "active",
-    "symbol": "SYTTY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "ACHARI VENTURES HLDGS CORP I Common Stock",
-    "status": "active",
-    "symbol": "AVHI",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Next.e.GO N.V. Ordinary Shares (Netherlands)",
-    "status": "active",
-    "symbol": "EGOXF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Esports Entertainment Group Inc. Com Par $0.001",
-    "status": "active",
-    "symbol": "GMBL",
+    "symbol": "LIPO",
     "tradable": false
   },
   {
@@ -3983,17 +3959,49 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "WinVest Acquisition Corp. Rights",
+    "name": "ACHARI VENTURES HLDGS CORP I Common Stock",
     "status": "active",
-    "symbol": "WINVR",
+    "symbol": "AVHI",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "THERMOGENESIS HLDGS INC Common Stock.",
+    "name": "SCWorx Corp. Common Stock",
     "status": "active",
-    "symbol": "THMO",
+    "symbol": "WORX",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Esports Entertainment Group Inc. Com Par $0.001",
+    "status": "active",
+    "symbol": "GMBL",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "SPECTAIRE HLDGS INC Warrant   10/17/2028",
+    "status": "active",
+    "symbol": "SPECW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "SYLA TECHNOLOGIES CO LTD American Depositary Receipts - Sponsored",
+    "status": "active",
+    "symbol": "SYTTY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "DANIMER SCIENTIFIC INC WT EXP 07/15/2025",
+    "status": "active",
+    "symbol": "DNMWQ",
     "tradable": false
   },
   {
@@ -4015,25 +4023,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "WinVest Acquisition Corp. Common Stock",
+    "name": "Danimer Scientific, Inc.",
     "status": "active",
-    "symbol": "WINV",
+    "symbol": "DNMRQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "E-Home Household Service Holdings Limited Ordinary Shares",
+    "status": "active",
+    "symbol": "EJH",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "COHBAR INC Common Stock",
+    "name": "THERMOGENESIS HLDGS INC Common Stock.",
     "status": "active",
-    "symbol": "CWBR",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SYROS PHARMACEUTICALS INC COM NEW",
-    "status": "active",
-    "symbol": "SYRS",
+    "symbol": "THMO",
     "tradable": false
   },
   {
@@ -4071,9 +4079,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Lipella Pharmaceuticals Inc. Common Stock",
+    "name": "COHBAR INC Common Stock",
     "status": "active",
-    "symbol": "LIPO",
+    "symbol": "CWBR",
     "tradable": false
   },
   {
@@ -4095,9 +4103,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALLURION TECHNOLOGIES INC Warrant Exp  08/01/2030",
+    "name": "MONARCH CEMENT CO COM NEW",
     "status": "active",
-    "symbol": "ALURW",
+    "symbol": "MCEM",
     "tradable": false
   },
   {
@@ -4111,25 +4119,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Windtree Therapeutics, Inc. Common Stock",
+    "name": "SYROS PHARMACEUTICALS INC COM NEW",
     "status": "active",
-    "symbol": "WINT",
+    "symbol": "SYRS",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Delta Apparel, Inc.",
+    "name": "ALKALINE WTR CO INC COM PAR $0.001 NEW",
     "status": "active",
-    "symbol": "DLAPQ",
+    "symbol": "WTER",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "IMV INC COM NEW",
+    "name": "CREATD INC COM PAR $0.001",
     "status": "active",
-    "symbol": "IMVIF",
+    "symbol": "CRTD",
     "tradable": false
   },
   {
@@ -4151,25 +4159,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "IMV INC COM NEW",
+    "status": "active",
+    "symbol": "IMVIF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VBI VACCINES INC CDA Common Shares",
+    "status": "active",
+    "symbol": "VBIVQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "KAIROUS ACQUISITION CORP LTD Ordinary Shares",
     "status": "active",
     "symbol": "KACLF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Syra Health Corp. Class A Common Stock",
-    "status": "active",
-    "symbol": "SYRA",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "HIPPO HLDGS INC Warrant   08/02/2026",
-    "status": "active",
-    "symbol": "HIPOW",
     "tradable": false
   },
   {
@@ -4183,17 +4191,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MALLINCKRODT PLC NEW Common Shares",
+    "name": "Brooge Energy Limited Ordinary Shares",
     "status": "active",
-    "symbol": "MNKTQ",
+    "symbol": "BROGF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Brooge Energy Limited Ordinary Shares",
+    "name": "Syra Health Corp. Class A Common Stock",
     "status": "active",
-    "symbol": "BROGF",
+    "symbol": "SYRA",
     "tradable": false
   },
   {
@@ -4215,17 +4223,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MSP Recovery, Inc. Com Par $0.0001 New",
+    "name": "HIPPO HLDGS INC Warrant   08/02/2026",
     "status": "active",
-    "symbol": "MSPR",
+    "symbol": "HIPOW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CARBON REVOLUTION PUB LTD CO Warrant   09/09/9999",
+    "name": "VIA OPTRONICS HOLDING AG American Depositary Shares - Sponsored",
     "status": "active",
-    "symbol": "CRPWF",
+    "symbol": "VIAOY",
     "tradable": false
   },
   {
@@ -4234,6 +4242,30 @@
     "name": "HEALTHCARE AI ACQUISITION CORP CL A Ordinary Shares",
     "status": "active",
     "symbol": "HAIAF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "ASPEN GROUP INC Common Stock",
+    "status": "active",
+    "symbol": "ASPU",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Zapata Quantum Inc Warrant 02/14/2029",
+    "status": "active",
+    "symbol": "ZPTAW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "CARBON REVOLUTION PUB LTD CO Warrant   09/09/9999",
+    "status": "active",
+    "symbol": "CRPWF",
     "tradable": false
   },
   {
@@ -4255,17 +4287,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DANIMER SCIENTIFIC INC WT EXP 07/15/2025",
+    "name": "Alpine 4 Holdings, Inc. Cl A New Common Stock",
     "status": "active",
-    "symbol": "DNMWQ",
+    "symbol": "ALPP",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Danimer Scientific, Inc.",
+    "name": "ENGLOBAL CORP Common Stock",
     "status": "active",
-    "symbol": "DNMRQ",
+    "symbol": "ENGCQ",
     "tradable": false
   },
   {
@@ -4279,9 +4311,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VBI VACCINES INC CDA Common Shares",
+    "name": "CONTEXTLOGIC HLDGS INC COM",
     "status": "active",
-    "symbol": "VBIVQ",
+    "symbol": "LOGC",
     "tradable": false
   },
   {
@@ -4295,33 +4327,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ADVENT TECHNOLOGIES HLDGS INC Warrant   02/03/2026",
+    "name": "Vyant Bio, Inc. Common Stock",
     "status": "active",
-    "symbol": "ADNWW",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "VIA OPTRONICS HOLDING AG American Depositary Shares - Sponsored",
-    "status": "active",
-    "symbol": "VIAOY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SCWorx Corp. Common Stock",
-    "status": "active",
-    "symbol": "WORX",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "EFFECTOR THERAPEUTICS INC Warrant   12/31/2025",
-    "status": "active",
-    "symbol": "EFTRW",
+    "symbol": "VYNT",
     "tradable": false
   },
   {
@@ -4343,9 +4351,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VALUENCE MERGER CORP I Warrant",
+    "name": "GINKGO BIOWORKS HLDGS INC Warrant  exp 09/16/2026",
     "status": "active",
-    "symbol": "VMCWF",
+    "symbol": "DNABW",
     "tradable": false
   },
   {
@@ -4367,6 +4375,30 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "Unicharm Corp Sponsored ADR (Japan)",
+    "status": "active",
+    "symbol": "UNICY",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "MONDEE HLDGS INC CL A Common Stock",
+    "status": "active",
+    "symbol": "MOND",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VALUENCE MERGER CORP I Warrant",
+    "status": "active",
+    "symbol": "VMCWF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "CHICKEN SOUP FOR THE SOUL ENTMT INC 9.75% Series A Cumulative Redeemable Perpetual Preferred Stock",
     "status": "active",
     "symbol": "CSSPQ",
@@ -4378,30 +4410,6 @@
     "name": "CHICKEN SOUP FOR THE SOUL ENTMT INC 9.5% Note due 7/31/2025",
     "status": "active",
     "symbol": "CSSNQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Molecular Data Inc American Depositary Shares - Sponsored (Cayman Islands)",
-    "status": "active",
-    "symbol": "MKDTY",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CREATD INC COM PAR $0.001",
-    "status": "active",
-    "symbol": "CRTD",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CHICKEN SOUP FOR THE SOUL ENTMT INC Warrant   10/22/2026",
-    "status": "active",
-    "symbol": "CSSLQ",
     "tradable": false
   },
   {
@@ -4423,49 +4431,49 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Unicharm Corp Sponsored ADR (Japan)",
+    "name": "LONDON STK EXCHANGE GROUP PLC American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "UNICY",
+    "symbol": "LSEGY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SPECTAIRE HLDGS INC Warrant   10/17/2028",
+    "name": "AMERICAN LITHIUM CORP COM NEW (Canada)",
     "status": "active",
-    "symbol": "SPECW",
+    "symbol": "AMLIF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CONTEXTLOGIC HLDGS INC COM",
+    "name": "CHICKEN SOUP FOR THE SOUL ENTMT INC Warrant   10/22/2026",
     "status": "active",
-    "symbol": "LOGC",
+    "symbol": "CSSLQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SYNLOGIC INC Common Stock",
+    "name": "Moatable, Inc. American Depositary Share (each representing forty-five (45) Class A Ordinary",
     "status": "active",
-    "symbol": "SYBX",
+    "symbol": "MTBLY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MONARCH CEMENT CO COM NEW",
+    "name": "Netlist, Inc. Common Stock",
     "status": "active",
-    "symbol": "MCEM",
+    "symbol": "NLST",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALKALINE WTR CO INC COM PAR $0.001 NEW",
+    "name": "DMY SQUARED TECHNOLOGY GROUP INC UNIT 1 CL A COM & 1/2 WT EXP",
     "status": "active",
-    "symbol": "WTER",
+    "symbol": "DMYYU",
     "tradable": false
   },
   {
@@ -4479,9 +4487,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vyant Bio, Inc. Common Stock",
+    "name": "SYNLOGIC INC Common Stock",
     "status": "active",
-    "symbol": "VYNT",
+    "symbol": "SYBX",
     "tradable": false
   },
   {
@@ -4511,25 +4519,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "GINKGO BIOWORKS HLDGS INC Warrant  exp 09/16/2026",
+    "name": "OMNIQ Corp. Common Stock",
     "status": "active",
-    "symbol": "DNABW",
+    "symbol": "OMQS",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LONDON STK EXCHANGE GROUP PLC American Depositary Receipts - Sponsored",
+    "name": "ZAPP ELEC VEHS GROUP LTD Warrant",
     "status": "active",
-    "symbol": "LSEGY",
+    "symbol": "ZAPWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Alpine 4 Holdings, Inc. Cl A New Common Stock",
+    "name": "MERCEDES BENZ GROUP AG AKTIEN O N (Germany)",
     "status": "active",
-    "symbol": "ALPP",
+    "symbol": "MBGAF",
     "tradable": false
   },
   {
@@ -4551,17 +4559,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CORENERGY INFRASTRUCTURE TR INC Common Stock",
+    "name": "VIVEON HEALTH ACQUISITION CORP Rights Exp 09/30/2024",
     "status": "active",
-    "symbol": "CORRQ",
+    "symbol": "VHAQR",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "E-Home Household Service Holdings Limited Ordinary Shares",
+    "exchange": "OTC",
+    "name": "LUCY SCIENTIFIC DISCOVERY INC COM NEW (Canada)",
     "status": "active",
-    "symbol": "EJH",
+    "symbol": "LSDIF",
     "tradable": false
   },
   {
@@ -4583,17 +4591,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AMERICAN LITHIUM CORP COM NEW (Canada)",
+    "name": "CORENERGY INFRASTRUCTURE TR INC Common Stock",
     "status": "active",
-    "symbol": "AMLIF",
+    "symbol": "CORRQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VINCO VENTURES INC Common Stock",
+    "name": "Alternus Clean Energy, Inc. Common Stock",
     "status": "active",
-    "symbol": "BBIG",
+    "symbol": "ALCE",
     "tradable": false
   },
   {
@@ -4607,9 +4615,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ASPEN GROUP INC Common Stock",
+    "name": "Zapp Electric Vehicles Group Limited Ordinary Shares",
     "status": "active",
-    "symbol": "ASPU",
+    "symbol": "ZAPPF",
     "tradable": false
   },
   {
@@ -4639,33 +4647,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DMY SQUARED TECHNOLOGY GROUP INC UNIT 1 CL A COM & 1/2 WT EXP",
+    "name": "M3, INC.  American Depositary Receipts - Unsponsored  Japan(JP )",
     "status": "active",
-    "symbol": "DMYYU",
+    "symbol": "MTHRY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VIVEON HEALTH ACQUISITION CORP Rights Exp 09/30/2024",
+    "name": "VINCO VENTURES INC Common Stock",
     "status": "active",
-    "symbol": "VHAQR",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Zapata Quantum Inc Warrant 02/14/2029",
-    "status": "active",
-    "symbol": "ZPTAW",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CANOO INC Common Stock",
-    "status": "active",
-    "symbol": "GOEVQ",
+    "symbol": "BBIG",
     "tradable": false
   },
   {
@@ -4679,41 +4671,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Netlist, Inc. Common Stock",
+    "name": "CANOO INC Common Stock",
     "status": "active",
-    "symbol": "NLST",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "LUCY SCIENTIFIC DISCOVERY INC COM NEW (Canada)",
-    "status": "active",
-    "symbol": "LSDIF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SPI Energy Co., Ltd. Ordinary Shares",
-    "status": "active",
-    "symbol": "SPIEF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "OMNIQ Corp. Common Stock",
-    "status": "active",
-    "symbol": "OMQS",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CreateAI Holdings Inc Common Stock",
-    "status": "active",
-    "symbol": "TSPH",
+    "symbol": "GOEVQ",
     "tradable": false
   },
   {
@@ -4727,25 +4687,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ENGLOBAL CORP Common Stock",
+    "name": "DIGITAL MEDIA SOLUTIONS INC CL A NEW",
     "status": "active",
-    "symbol": "ENGCQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "IPI LEGACY LIQUIDATION CO Common Stock",
-    "status": "active",
-    "symbol": "IMPLQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Captivision Inc. Ordinary Shares",
-    "status": "active",
-    "symbol": "CPTAF",
+    "symbol": "DMSLQ",
     "tradable": false
   },
   {
@@ -4759,9 +4703,73 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MONDEE HLDGS INC CL A Common Stock",
+    "name": "DOMA HLDGS INC Warrant   07/28/2026",
     "status": "active",
-    "symbol": "MOND",
+    "symbol": "DOMAW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "SPI Energy Co., Ltd. Ordinary Shares",
+    "status": "active",
+    "symbol": "SPIEF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "BRIGHT GREEN CORP Common Stock",
+    "status": "active",
+    "symbol": "BGXXQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "CreateAI Holdings Inc Common Stock",
+    "status": "active",
+    "symbol": "TSPH",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "LONGEVITY HEALTH HLDGS INC WT EXP 07/12/2028",
+    "status": "active",
+    "symbol": "XAGEW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "EXELA TECHNOLOGIES INC PERP CUM PFD CONV SER B 6% Preferred Stock",
+    "status": "active",
+    "symbol": "XELAP",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "IPI LEGACY LIQUIDATION CO Common Stock",
+    "status": "active",
+    "symbol": "IMPLQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "EXELA TECHNOLOGIES INC Common Stock",
+    "status": "active",
+    "symbol": "XELA",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Umicore Group Unsponsored ADR (Belgium)",
+    "status": "active",
+    "symbol": "UMICY",
     "tradable": false
   },
   {
@@ -4775,9 +4783,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MERCEDES BENZ GROUP AG AKTIEN O N (Germany)",
+    "name": "Captivision Inc. Ordinary Shares",
     "status": "active",
-    "symbol": "MBGAF",
+    "symbol": "CPTAF",
     "tradable": false
   },
   {
@@ -4807,9 +4815,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Umicore Group Unsponsored ADR (Belgium)",
+    "name": "LONGEVITY HEALTH HLDGS INC COM NEW",
     "status": "active",
-    "symbol": "UMICY",
+    "symbol": "XAGE",
     "tradable": false
   },
   {
@@ -4831,17 +4839,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BANCO ITAU CHILE American Depositary Receipts - Sponsored",
+    "name": "Light & Wonder, Inc. Common Stock",
     "status": "active",
-    "symbol": "ITCLY",
+    "symbol": "LNWO",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CONX Corp Warrant Exp 10/30/2027",
+    "name": "Renovare Environmental Inc.",
     "status": "active",
-    "symbol": "CNXXW",
+    "symbol": "RENO",
     "tradable": false
   },
   {
@@ -4855,9 +4863,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DIGITAL MEDIA SOLUTIONS INC CL A NEW",
+    "name": "CONX Corp Warrant Exp 10/30/2027",
     "status": "active",
-    "symbol": "DMSLQ",
+    "symbol": "CNXXW",
     "tradable": false
   },
   {
@@ -4879,9 +4887,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Moatable, Inc. American Depositary Share (each representing forty-five (45) Class A Ordinary",
+    "name": "Vaxart, Inc Common Stock",
     "status": "active",
-    "symbol": "MTBLY",
+    "symbol": "VXRT",
     "tradable": false
   },
   {
@@ -4895,9 +4903,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOUNTAIN CREST ACQUISITION CORP V Rights",
+    "name": "BANCO ITAU CHILE American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "MCAGR",
+    "symbol": "ITCLY",
     "tradable": false
   },
   {
@@ -4911,17 +4919,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BETTER THERAPEUTICS INC Common Stock",
+    "name": "EBET INC Common Shares",
     "status": "active",
-    "symbol": "BTTX",
+    "symbol": "EBET",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "PRIOR1TY INTELLIGENCE GROUP PLC Ordinary Shares (United Kingdom)",
+    "name": "MOUNTAIN CREST ACQUISITION CORP V Rights",
     "status": "active",
-    "symbol": "PRIAF",
+    "symbol": "MCAGR",
     "tradable": false
   },
   {
@@ -4930,22 +4938,6 @@
     "name": "CORENERGY INFRASTRUCTURE TR INC DEPOSITARY SH REPSTG 1/100TH PFD SER A 7.375% Depositary Shares",
     "status": "active",
     "symbol": "CORLQ",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Starbox Group Holdings Ltd. Class A Ordinary Shares",
-    "status": "active",
-    "symbol": "STBXF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "ZAPP ELEC VEHS GROUP LTD Warrant",
-    "status": "active",
-    "symbol": "ZAPWF",
     "tradable": false
   },
   {
@@ -4967,9 +4959,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CLEAN ENERGY SPL SITUATIONS CORP Warrant   12/01/2027",
+    "name": "Starbox Group Holdings Ltd. Class A Ordinary Shares",
     "status": "active",
-    "symbol": "SWSSW",
+    "symbol": "STBXF",
     "tradable": false
   },
   {
@@ -4983,9 +4975,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Alternus Clean Energy, Inc. Common Stock",
+    "name": "Vaxxinity, Inc. Class A Common Stock",
     "status": "active",
-    "symbol": "ALCE",
+    "symbol": "VAXX",
     "tradable": false
   },
   {
@@ -4999,9 +4991,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Light & Wonder, Inc. Common Stock",
+    "name": "VirExit Technologies, Inc. Common Stock",
     "status": "active",
-    "symbol": "LNWO",
+    "symbol": "VXIT",
     "tradable": false
   },
   {
@@ -5010,6 +5002,46 @@
     "name": "Damon Inc. Common Shares",
     "status": "active",
     "symbol": "DMNIF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "CLEAN ENERGY SPL SITUATIONS CORP Warrant   12/01/2027",
+    "status": "active",
+    "symbol": "SWSSW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "LakeShore Biopharma Co., Ltd Ordinary Shares",
+    "status": "active",
+    "symbol": "LSBCF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "HERAMBA ELEC PLC Warrant   2029-07-26",
+    "status": "active",
+    "symbol": "PITWF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "LION ELEC CO WT EXP 05/06/2026 (Canada)",
+    "status": "active",
+    "symbol": "LEVWQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Heramba Electric plc Ordinary Shares",
+    "status": "active",
+    "symbol": "PITEF",
     "tradable": false
   },
   {
@@ -5026,46 +5058,6 @@
     "name": "KAIROUS ACQUISITION CORP LTD Warrant   09/15/2026",
     "status": "active",
     "symbol": "KACWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "HERAMBA ELEC PLC Warrant   2029-07-26",
-    "status": "active",
-    "symbol": "PITWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Zapp Electric Vehicles Group Limited Ordinary Shares",
-    "status": "active",
-    "symbol": "ZAPPF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Heramba Electric plc Ordinary Shares",
-    "status": "active",
-    "symbol": "PITEF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "Vaxxinity, Inc. Class A Common Stock",
-    "status": "active",
-    "symbol": "VAXX",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "CONX Corp Class A Common Stock",
-    "status": "active",
-    "symbol": "CNXX",
     "tradable": false
   },
   {
@@ -5103,17 +5095,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Swedish Match AB Frueher Svenska Taendsticks AB Unsponsored ADR (Sweden)",
+    "name": "CONX Corp Class A Common Stock",
     "status": "active",
-    "symbol": "SWMAY",
+    "symbol": "CNXX",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "M3, INC.  American Depositary Receipts - Unsponsored  Japan(JP )",
+    "name": "Westell Technologies Inc. Class A Common Stock",
     "status": "active",
-    "symbol": "MTHRY",
+    "symbol": "WSTL",
     "tradable": false
   },
   {
@@ -5127,17 +5119,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TC BIOPHARM HLDGS PLC WT PUR SPONSORED ADR (United Kingdom) 02/10/2028",
+    "name": "Adapti, Inc.  Common Stock",
     "status": "active",
-    "symbol": "TCBWF",
+    "symbol": "ADTI",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DOMA HLDGS INC Warrant   07/28/2026",
+    "name": "Swedish Match AB Frueher Svenska Taendsticks AB Unsponsored ADR (Sweden)",
     "status": "active",
-    "symbol": "DOMAW",
+    "symbol": "SWMAY",
     "tradable": false
   },
   {
@@ -5159,9 +5151,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SPECTAIRE HLDGS INC Common Stock",
+    "name": "ALMADEN MINERALS LTD COM (Canada)",
     "status": "active",
-    "symbol": "SPEC",
+    "symbol": "AAUAF",
     "tradable": false
   },
   {
@@ -5183,9 +5175,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LION ELEC CO WT EXP 05/06/2026 (Canada)",
+    "name": "SPECTAIRE HLDGS INC Common Stock",
     "status": "active",
-    "symbol": "LEVWQ",
+    "symbol": "SPEC",
     "tradable": false
   },
   {
@@ -5199,17 +5191,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vaxart, Inc Common Stock",
+    "name": "TC BIOPHARM HLDGS PLC WT PUR SPONSORED ADR (United Kingdom) 02/10/2028",
     "status": "active",
-    "symbol": "VXRT",
+    "symbol": "TCBWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "LONGEVITY HEALTH HLDGS INC WT EXP 07/12/2028",
+    "exchange": "NASDAQ",
+    "name": "CBL International Limited Class B Ordinary Shares",
     "status": "active",
-    "symbol": "XAGEW",
+    "symbol": "BANL",
     "tradable": false
   },
   {
@@ -5223,17 +5215,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TRIUMPH GROUP INC NEW WT EXP 12/19/2023",
+    "name": "LIANBIO American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "TGIDW",
+    "symbol": "LIANY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LakeShore Biopharma Co., Ltd Ordinary Shares",
+    "name": "Zhangmen Education Inc. American Depositary Receipts - Sponsored (Cayman Islands)",
     "status": "active",
-    "symbol": "LSBCF",
+    "symbol": "ZMENY",
     "tradable": false
   },
   {
@@ -5255,25 +5247,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TC BIOPHARM HLDGS PLC SPONSORED ADS NEW 2025 (United Kingdom)",
+    "name": "Blue Hat Interactive Entertainment Technology Ordinary Shares (Cayman Islands)",
     "status": "active",
-    "symbol": "TCBPY",
+    "symbol": "BHATF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VirExit Technologies, Inc. Common Stock",
+    "name": "TRIUMPH GROUP INC NEW WT EXP 12/19/2023",
     "status": "active",
-    "symbol": "VXIT",
+    "symbol": "TGIDW",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BRIGHT GREEN CORP Common Stock",
+    "name": "Hallmark Financial Services, Inc. Common Stock",
     "status": "active",
-    "symbol": "BGXXQ",
+    "symbol": "HALL",
     "tradable": false
   },
   {
@@ -5287,17 +5279,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ONTRAK INC CUM RED PFD SER A 9.50%",
+    "name": "TC BIOPHARM HLDGS PLC SPONSORED ADS NEW 2025 (United Kingdom)",
     "status": "active",
-    "symbol": "OTRQQ",
+    "symbol": "TCBPY",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "EXELA TECHNOLOGIES INC PERP CUM PFD CONV SER B 6% Preferred Stock",
+    "name": "Whitecap Resources, Inc. Common shares (Canada)",
     "status": "active",
-    "symbol": "XELAP",
+    "symbol": "WCPRF",
     "tradable": false
   },
   {
@@ -5319,25 +5311,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALMADEN MINERALS LTD COM (Canada)",
+    "name": "LI-CYCLE HLDGS CORP Common Shares",
     "status": "active",
-    "symbol": "AAUAF",
+    "symbol": "LICYQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Superior Industries International, Inc. Common Stock",
+    "name": "ONTRAK INC CUM RED PFD SER A 9.50%",
     "status": "active",
-    "symbol": "SSUP",
+    "symbol": "OTRQQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Novo Integrated Sciences, Inc. Common Stock",
+    "name": "HORIZON SPACE ACQUISITION I CORP USD UNITS CONSISTING ONE ORD SH & ONE RED WT & ONE RT (Cayman Islands)",
     "status": "active",
-    "symbol": "NVOS",
+    "symbol": "HSPUF",
     "tradable": false
   },
   {
@@ -5367,9 +5359,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LONGEVITY HEALTH HLDGS INC COM NEW",
+    "name": "Superior Industries International, Inc. Common Stock",
     "status": "active",
-    "symbol": "XAGE",
+    "symbol": "SSUP",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Vintage Wine Estates, Inc. Warrants",
+    "status": "active",
+    "symbol": "VWEWQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Novo Integrated Sciences, Inc. Common Stock",
+    "status": "active",
+    "symbol": "NVOS",
     "tradable": false
   },
   {
@@ -5383,25 +5391,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SIGNA SPORTS UTD BV SHS (Netherlands)",
-    "status": "active",
-    "symbol": "SSUNF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
     "name": "CONAVI MED CORP Common Shares (Canada)",
     "status": "active",
     "symbol": "CNVIF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "EXELA TECHNOLOGIES INC Common Stock",
-    "status": "active",
-    "symbol": "XELA",
     "tradable": false
   },
   {
@@ -5439,17 +5431,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Westell Technologies Inc. Class A Common Stock",
+    "name": "SIGNA SPORTS UTD BV SHS (Netherlands)",
     "status": "active",
-    "symbol": "WSTL",
+    "symbol": "SSUNF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TPI Composites, Inc. Common Stock",
+    "name": "Vintage Wine Estates, Inc. Common Stock",
     "status": "active",
-    "symbol": "TPICQ",
+    "symbol": "VWESQ",
     "tradable": false
   },
   {
@@ -5463,9 +5455,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SYSTEM1 INC Warrant   2027-01-27",
+    "name": "KUKE MUSIC HLDG LTD   SPONSORED ADS REPSTG CL A ORD SHS NEW (Cayman Islands)",
     "status": "active",
-    "symbol": "SSTPW",
+    "symbol": "KUKEY",
     "tradable": false
   },
   {
@@ -5511,6 +5503,30 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
+    "name": "BIG LOTS INC Common Stock",
+    "status": "active",
+    "symbol": "BIGGQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "SYSTEM1 INC Warrant   2027-01-27",
+    "status": "active",
+    "symbol": "SSTPW",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "TPI Composites, Inc. Common Stock",
+    "status": "active",
+    "symbol": "TPICQ",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
     "name": "CAZOO GROUP LTD WT 08/26/2026",
     "status": "active",
     "symbol": "CZOWF",
@@ -5522,30 +5538,6 @@
     "name": "CACTUS ACQUISITION CORP. 1 LTD Warrant   08/17/2028",
     "status": "active",
     "symbol": "CTSWF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "SRAX INC Common Stock",
-    "status": "active",
-    "symbol": "SRAX",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "TRINITY PL HLDGS INC COM",
-    "status": "active",
-    "symbol": "TPHS",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "LI-CYCLE HLDGS CORP Common Shares",
-    "status": "active",
-    "symbol": "LICYQ",
     "tradable": false
   },
   {
@@ -5575,9 +5567,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "KUKE MUSIC HLDG LTD   SPONSORED ADS REPSTG CL A ORD SHS NEW (Cayman Islands)",
+    "name": "SRAX INC Common Stock",
     "status": "active",
-    "symbol": "KUKEY",
+    "symbol": "SRAX",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "TRINITY PL HLDGS INC COM",
+    "status": "active",
+    "symbol": "TPHS",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "Huadi International Group Co., Ltd. Ordinary Shares",
+    "status": "active",
+    "symbol": "HUDI",
     "tradable": false
   },
   {
@@ -5591,22 +5599,6 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ATENTO S A SHS NEW (Luxembourg)",
-    "status": "active",
-    "symbol": "ATTOF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "TARGET GLOBAL ACQUISITION I CORP Class A Ordinary Shares (Cayman Islands)",
-    "status": "active",
-    "symbol": "TGAAF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
     "name": "PARTY CITY HOLDCO INC Common Stock",
     "status": "active",
     "symbol": "PRTYQ",
@@ -5615,17 +5607,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Renovare Environmental Inc.",
+    "name": "ATENTO S A SHS NEW (Luxembourg)",
     "status": "active",
-    "symbol": "RENO",
+    "symbol": "ATTOF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "EBET INC Common Shares",
+    "name": "ALPHA STAR ACQUISITION CORP Rights   12/13/2026",
     "status": "active",
-    "symbol": "EBET",
+    "symbol": "ALSTF",
     "tradable": false
   },
   {
@@ -5647,9 +5639,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Israel Acquisitions Corp Class A Ord Shs (Cayman)",
+    "name": "TARGET GLOBAL ACQUISITION I CORP Class A Ordinary Shares (Cayman Islands)",
     "status": "active",
-    "symbol": "ISRLF",
+    "symbol": "TGAAF",
     "tradable": false
   },
   {
@@ -5662,10 +5654,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "CBL International Limited Class B Ordinary Shares",
+    "exchange": "OTC",
+    "name": "BIMI INTL MED INC Common Stock",
     "status": "active",
-    "symbol": "BANL",
+    "symbol": "BIMI",
     "tradable": false
   },
   {
@@ -5679,9 +5671,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "FIRSTHAND TECHNOLOGY VALUE FD INC COM",
+    "name": "Wuxi Biologics (Cayman) Inc American Depositary Receipts - Unsponsored",
     "status": "active",
-    "symbol": "SVVC",
+    "symbol": "WXXWY",
     "tradable": false
   },
   {
@@ -5703,9 +5695,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Whitecap Resources, Inc. Common shares (Canada)",
+    "name": "Israel Acquisitions Corp Class A Ord Shs (Cayman)",
     "status": "active",
-    "symbol": "WCPRF",
+    "symbol": "ISRLF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "Wilhelmina International, Inc. Common Stock",
+    "status": "active",
+    "symbol": "WHLM",
     "tradable": false
   },
   {
@@ -5719,9 +5719,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vintage Wine Estates, Inc. Warrants",
+    "name": "FIRSTHAND TECHNOLOGY VALUE FD INC COM",
     "status": "active",
-    "symbol": "VWEWQ",
+    "symbol": "SVVC",
     "tradable": false
   },
   {
@@ -5799,17 +5799,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SRIVARU HLDG LTD Ordinary Shares",
+    "name": "MOTUS GI HLDGS INC COM PAR $0.0001",
     "status": "active",
-    "symbol": "SVUHF",
+    "symbol": "MOTS",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Vintage Wine Estates, Inc. Common Stock",
+    "name": "COMPASS DIGITAL ACQUISITION CORP Ordinary Shares",
     "status": "active",
-    "symbol": "VWESQ",
+    "symbol": "CDAQF",
     "tradable": false
   },
   {
@@ -5823,9 +5823,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Adapti, Inc.  Common Stock",
+    "name": "SRIVARU HLDG LTD Ordinary Shares",
     "status": "active",
-    "symbol": "ADTI",
+    "symbol": "SVUHF",
+    "tradable": false
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "OTC",
+    "name": "VERADIGM INC COM",
+    "status": "active",
+    "symbol": "MDRX",
     "tradable": false
   },
   {
@@ -5834,14 +5842,6 @@
     "name": "Tier One Silver Inc Common Shares (Canada)",
     "status": "active",
     "symbol": "TSLVF",
-    "tradable": false
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "LIANBIO American Depositary Receipts - Sponsored",
-    "status": "active",
-    "symbol": "LIANY",
     "tradable": false
   },
   {
@@ -5863,17 +5863,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AERWINS TECHNOLOGIES INC Common Stock",
+    "name": "Allurion Technologies, Inc.",
     "status": "active",
-    "symbol": "AWIN",
+    "symbol": "ALUR",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "COMPASS DIGITAL ACQUISITION CORP Ordinary Shares",
+    "name": "AERWINS TECHNOLOGIES INC Common Stock",
     "status": "active",
-    "symbol": "CDAQF",
+    "symbol": "AWIN",
     "tradable": false
   },
   {
@@ -5895,9 +5895,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "HORIZON SPACE ACQUISITION I CORP USD UNITS CONSISTING ONE ORD SH & ONE RED WT & ONE RT (Cayman Islands)",
+    "name": "MTN GROUP LTD SPONSORED ADR (South Africa)",
     "status": "active",
-    "symbol": "HSPUF",
+    "symbol": "MTNOY",
     "tradable": false
   },
   {
@@ -5911,9 +5911,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Zhangmen Education Inc. American Depositary Receipts - Sponsored (Cayman Islands)",
+    "name": "AIRSPAN NETWORKS HLDGS INC COM",
     "status": "active",
-    "symbol": "ZMENY",
+    "symbol": "MIMOQ",
     "tradable": false
   },
   {
@@ -5927,9 +5927,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Blue Hat Interactive Entertainment Technology Ordinary Shares (Cayman Islands)",
+    "name": "THE VERY GOOD FOOD CO INC Common Shares",
     "status": "active",
-    "symbol": "BHATF",
+    "symbol": "VGFCQ",
     "tradable": false
   },
   {
@@ -5943,9 +5943,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ALPHA STAR ACQUISITION CORP Rights   12/13/2026",
+    "name": "CLOVER LEAF CAP CORP Class A Common Stock",
     "status": "active",
-    "symbol": "ALSTF",
+    "symbol": "CLOE",
     "tradable": false
   },
   {
@@ -5991,9 +5991,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Hallmark Financial Services, Inc. Common Stock",
+    "name": "LIGHTNING EMOTORS INC COM NEW",
     "status": "active",
-    "symbol": "HALL",
+    "symbol": "ZEVY",
     "tradable": false
   },
   {
@@ -6007,9 +6007,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Israel Acquisitions Corp WT Exp (Cayman)",
+    "name": "AltEnergy Acquisition Corp. Unit",
     "status": "active",
-    "symbol": "ISLWF",
+    "symbol": "AEAEU",
     "tradable": false
   },
   {
@@ -6031,9 +6031,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Aspira Women's Health Inc. Common Stock",
+    "name": "Enthusiast Gaming Holdings Inc.",
     "status": "active",
-    "symbol": "AWHL",
+    "symbol": "EGLXF",
     "tradable": false
   },
   {
@@ -6047,9 +6047,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Wilhelmina International, Inc. Common Stock",
+    "name": "Aspira Women's Health Inc. Common Stock",
     "status": "active",
-    "symbol": "WHLM",
+    "symbol": "AWHL",
     "tradable": false
   },
   {
@@ -6071,17 +6071,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "IFRESH INC Common Stock",
+    "name": "Israel Acquisitions Corp WT Exp (Cayman)",
     "status": "active",
-    "symbol": "IFMK",
+    "symbol": "ISLWF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ASSURE HLDGS CORP COM PAR $0.001 NEW JULY 2024",
+    "name": "IFRESH INC Common Stock",
     "status": "active",
-    "symbol": "IONM",
+    "symbol": "IFMK",
     "tradable": false
   },
   {
@@ -6095,9 +6095,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "THE VERY GOOD FOOD CO INC Common Shares",
+    "name": "ASSURE HLDGS CORP COM PAR $0.001 NEW JULY 2024",
     "status": "active",
-    "symbol": "VGFCQ",
+    "symbol": "IONM",
     "tradable": false
   },
   {
@@ -6110,10 +6110,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Huadi International Group Co., Ltd. Ordinary Shares",
+    "exchange": "OTC",
+    "name": "Safran S.A. Unsponsored ADR (France)",
     "status": "active",
-    "symbol": "HUDI",
+    "symbol": "SAFRY",
     "tradable": false
   },
   {
@@ -6135,9 +6135,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Strata Skin Sciences, Inc. Common Stock",
+    "name": "DAVIDsTEA Inc. Common Stock",
     "status": "active",
-    "symbol": "SSKN",
+    "symbol": "DTEAF",
     "tradable": false
   },
   {
@@ -6159,17 +6159,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BIG LOTS INC Common Stock",
+    "name": "Strata Skin Sciences, Inc. Common Stock",
     "status": "active",
-    "symbol": "BIGGQ",
+    "symbol": "SSKN",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DAIMLER TRUCK HLDG AG American Depositary Receipts - Sponsored",
+    "name": "URGENTLY INC Common Stock",
     "status": "active",
-    "symbol": "DTRUY",
+    "symbol": "ULYX",
     "tradable": false
   },
   {
@@ -6191,9 +6191,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Wuxi Biologics (Cayman) Inc American Depositary Receipts - Unsponsored",
+    "name": "Autoscope Technologies Corporation Common Stock",
     "status": "active",
-    "symbol": "WXXWY",
+    "symbol": "AATC",
     "tradable": false
   },
   {
@@ -6215,9 +6215,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "ScanTech AI Systems Inc. Common stock",
+    "name": "DAIMLER TRUCK HLDG AG American Depositary Receipts - Sponsored",
     "status": "active",
-    "symbol": "STAI",
+    "symbol": "DTRUY",
     "tradable": false
   },
   {
@@ -6239,17 +6239,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "URGENTLY INC Common Stock",
+    "name": "ScanTech AI Systems Inc. Common stock",
     "status": "active",
-    "symbol": "ULYX",
+    "symbol": "STAI",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "BIMI INTL MED INC Common Stock",
+    "name": "Constellation Acquisition Corp I",
     "status": "active",
-    "symbol": "BIMI",
+    "symbol": "CSTAF",
     "tradable": false
   },
   {
@@ -6271,9 +6271,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MOTUS GI HLDGS INC COM PAR $0.0001",
+    "name": "VIZSLA ROYALTIES CORP WT NEW EXP 12/20/2024 (Canada)",
     "status": "active",
-    "symbol": "MOTS",
+    "symbol": "VRYWF",
     "tradable": false
   },
   {
@@ -6287,9 +6287,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TELESIS BIO INC Common Stock",
+    "name": "NVN Liquidation, Inc. Common Stock",
     "status": "active",
-    "symbol": "TBIO",
+    "symbol": "NOVNQ",
     "tradable": false
   },
   {
@@ -6303,25 +6303,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VERADIGM INC COM",
+    "name": "ELECTRIC LAST MILE SOLUTIONS INC CL A",
     "status": "active",
-    "symbol": "MDRX",
+    "symbol": "ELMSQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Allurion Technologies, Inc.",
+    "name": "TELESIS BIO INC Common Stock",
     "status": "active",
-    "symbol": "ALUR",
+    "symbol": "TBIO",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "AZURE PWR GLOBAL LTD EQUITY SHARES (Mauritius)",
+    "exchange": "NASDAQ",
+    "name": "METAL SKY STAR ACQUISITION CORP Warrant   2029-03-31",
     "status": "active",
-    "symbol": "AZREF",
+    "symbol": "MSSWF",
     "tradable": false
   },
   {
@@ -6343,9 +6343,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "MTN GROUP LTD SPONSORED ADR (South Africa)",
+    "name": "KonaTel, Inc. Common Stock",
     "status": "active",
-    "symbol": "MTNOY",
+    "symbol": "KTEL",
     "tradable": false
   },
   {
@@ -6367,9 +6367,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "TALIS BIOMEDICAL CORP Common Stock",
+    "name": "AZURE PWR GLOBAL LTD EQUITY SHARES (Mauritius)",
     "status": "active",
-    "symbol": "TLIS",
+    "symbol": "AZREF",
     "tradable": false
   },
   {
@@ -6383,9 +6383,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "IO Biotech, Inc. Common Stock",
+    "name": "Zenvia Inc. Class A Common Stock",
     "status": "active",
-    "symbol": "IOBTQ",
+    "symbol": "ZENVF",
     "tradable": false
   },
   {
@@ -6415,9 +6415,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "AIRSPAN NETWORKS HLDGS INC COM",
+    "name": "IO Biotech, Inc. Common Stock",
     "status": "active",
-    "symbol": "MIMOQ",
+    "symbol": "IOBTQ",
     "tradable": false
   },
   {
@@ -6431,9 +6431,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SharonAI Holdings Inc. Warrant 12/16/2030",
+    "name": "TALIS BIOMEDICAL CORP Common Stock",
     "status": "active",
-    "symbol": "SHAZW",
+    "symbol": "TLIS",
     "tradable": false
   },
   {
@@ -6447,9 +6447,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "KonaTel, Inc. Common Stock",
+    "name": "SharonAI Holdings Inc. Warrant 12/16/2030",
     "status": "active",
-    "symbol": "KTEL",
+    "symbol": "SHAZW",
     "tradable": false
   },
   {
@@ -6463,9 +6463,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Autoscope Technologies Corporation Common Stock",
+    "name": "BETTER THERAPEUTICS INC Common Stock",
     "status": "active",
-    "symbol": "AATC",
+    "symbol": "BTTX",
     "tradable": false
   },
   {
@@ -6495,9 +6495,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "VIZSLA ROYALTIES CORP WT NEW EXP 12/20/2024 (Canada)",
+    "name": "DIH Holding US, Inc. Warrants",
     "status": "active",
-    "symbol": "VRYWF",
+    "symbol": "DHAIW",
     "tradable": false
   },
   {
@@ -6527,9 +6527,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "CLOVER LEAF CAP CORP Class A Common Stock",
+    "name": "DIH Holdings US, Inc. Class A Common Stock",
     "status": "active",
-    "symbol": "CLOE",
+    "symbol": "DHAI",
     "tradable": false
   },
   {
@@ -6551,9 +6551,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LIGHTNING EMOTORS INC COM NEW",
+    "name": "Leju Holdings Limited American Depositary Shares - Sponsored (Cayman)",
     "status": "active",
-    "symbol": "ZEVY",
+    "symbol": "LEJUY",
     "tradable": false
   },
   {
@@ -6575,17 +6575,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Constellation Acquisition Corp I",
+    "name": "MICROMOBILITY.COM INC CL A PAR $0.00001",
     "status": "active",
-    "symbol": "CSTAF",
+    "symbol": "MCOM",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "SONDER HLDGS INC Warrant   01/18/2027",
+    "name": "MINGZHU LOGISTICS HLDGS LTD SHS NEW US$0.128 (Cayman Islands)",
     "status": "active",
-    "symbol": "SONWQ",
+    "symbol": "YGMZF",
     "tradable": false
   },
   {
@@ -6615,9 +6615,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DIH Holding US, Inc. Warrants",
+    "name": "SONDER HLDGS INC Warrant   01/18/2027",
     "status": "active",
-    "symbol": "DHAIW",
+    "symbol": "SONWQ",
     "tradable": false
   },
   {
@@ -6631,9 +6631,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Leju Holdings Limited American Depositary Shares - Sponsored (Cayman)",
+    "name": "WALLBOX N V WT EXP 2026-10-01",
     "status": "active",
-    "symbol": "LEJUY",
+    "symbol": "WBXWF",
     "tradable": false
   },
   {
@@ -6647,17 +6647,17 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DIH Holdings US, Inc. Class A Common Stock",
+    "name": "LION ELEC CO Warrant   12/16/2027",
     "status": "active",
-    "symbol": "DHAI",
+    "symbol": "LEGWQ",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
-    "exchange": "OTC",
-    "name": "AltEnergy Acquisition Corp. Unit",
+    "exchange": "NASDAQ",
+    "name": "Regencell Bioscience Holdings Limited Ordinary Shares",
     "status": "active",
-    "symbol": "AEAEU",
+    "symbol": "RGC",
     "tradable": false
   },
   {
@@ -6671,9 +6671,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "YANGUFANG INTL GROUP CO. LTD. Ordinary Shares",
+    "name": "MOBILE GLOBAL ESPORTS INC Common Stock",
     "status": "active",
-    "symbol": "YGFGF",
+    "symbol": "MGAM",
     "tradable": false
   },
   {
@@ -6687,25 +6687,25 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Enthusiast Gaming Holdings Inc.",
+    "name": "Remark Holdings Inc Common Stock",
     "status": "active",
-    "symbol": "EGLXF",
+    "symbol": "MARK",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "LION ELEC CO Warrant   12/16/2027",
+    "name": "YANGUFANG INTL GROUP CO. LTD. Ordinary Shares",
     "status": "active",
-    "symbol": "LEGWQ",
+    "symbol": "YGFGF",
     "tradable": false
   },
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "DAVIDsTEA Inc. Common Stock",
+    "name": "Virpax Pharmaceuticals, Inc. Common Stock",
     "status": "active",
-    "symbol": "DTEAF",
+    "symbol": "VRPX",
     "tradable": false
   },
   {
@@ -6719,9 +6719,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "OTC",
-    "name": "Safran S.A. Unsponsored ADR (France)",
+    "name": "BIT BRO LTD Ordinary Shares",
     "status": "active",
-    "symbol": "SAFRY",
+    "symbol": "BETSF",
     "tradable": false
   },
   {
@@ -16230,14 +16230,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "BATS",
-    "name": "Goldman Sachs Physical Gold ETF Shares",
-    "status": "active",
-    "symbol": "AAAU",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "NYSE",
     "name": "XFLH Capital Corporation Units, each consisting of one Ordinary Share and one Right",
     "status": "active",
@@ -17218,6 +17210,14 @@
     "name": "DBX ETF Trust Xtrackers Artificial Intelligence and Big Data ETF",
     "status": "active",
     "symbol": "XAIX",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NYSE",
+    "name": "Marsh",
+    "status": "active",
+    "symbol": "MRSH",
     "tradable": true
   },
   {
@@ -19894,14 +19894,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Alcoa Corporation",
-    "status": "active",
-    "symbol": "AA",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Whitehawk Therapeutics, Inc. Common Stock",
     "status": "active",
@@ -20074,14 +20066,6 @@
     "name": "Roundhill Space & Technology ETF",
     "status": "active",
     "symbol": "MARS",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Agilent Technologies Inc.",
-    "status": "active",
-    "symbol": "A",
     "tradable": true
   },
   {
@@ -22502,14 +22486,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Leonardo DRS, Inc. Common Stock",
-    "status": "active",
-    "symbol": "DRS",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "ARCA",
     "name": "State Street SPDR S&P Leveraged Loan ETF",
     "status": "active",
@@ -23178,14 +23154,6 @@
     "name": "Leishen Energy Holding Co., Ltd. Class A Ordinary Shares",
     "status": "active",
     "symbol": "LSE",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "GameStop Corp. Class A",
-    "status": "active",
-    "symbol": "GME",
     "tradable": true
   },
   {
@@ -24954,14 +24922,6 @@
     "name": "Lunai Bioworks Inc. Common Stock",
     "status": "active",
     "symbol": "LNAI",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "ARCA",
-    "name": "iShares MSCI Germany ETF",
-    "status": "active",
-    "symbol": "EWG",
     "tradable": true
   },
   {
@@ -29454,14 +29414,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Elevance Health, Inc.",
-    "status": "active",
-    "symbol": "ELV",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "U.S. GoldMining Inc. Common stock",
     "status": "active",
@@ -30754,6 +30706,14 @@
     "name": "Dropbox, Inc. Class A Common Stock",
     "status": "active",
     "symbol": "DBX",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "BATS",
+    "name": "Goldman Sachs Physical Gold ETF Shares",
+    "status": "active",
+    "symbol": "AAAU",
     "tradable": true
   },
   {
@@ -36526,6 +36486,14 @@
   },
   {
     "asset_class": "us_equity",
+    "exchange": "NYSE",
+    "name": "Alcoa Corporation",
+    "status": "active",
+    "symbol": "AA",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Community West Bancshares Common Stock",
     "status": "active",
@@ -38967,14 +38935,6 @@
   {
     "asset_class": "us_equity",
     "exchange": "ARCA",
-    "name": "YieldMax Gold Miners Option Income Strategy ETF",
-    "status": "active",
-    "symbol": "GDXY",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "ARCA",
     "name": "COtwo Advisors Physical European Carbon Allowance Trust",
     "status": "active",
     "symbol": "CTWO",
@@ -40506,14 +40466,6 @@
     "name": "iShares U.S. Thematic Rotation Active ETF",
     "status": "active",
     "symbol": "THRO",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "ARCA",
-    "name": "MicroSectors FANG+ Index 2X Leveraged ETNs due January 8, 2038",
-    "status": "active",
-    "symbol": "FNGO",
     "tradable": true
   },
   {
@@ -42086,14 +42038,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "ARCA",
-    "name": "YieldMax CVNA Option Income Strategy ETF",
-    "status": "active",
-    "symbol": "CVNY",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Janux Therapeutics, Inc. Common Stock",
     "status": "active",
@@ -42966,10 +42910,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Themes ETF Trust Leverage Shares 2X Long CRCL Daily ETF",
+    "exchange": "NYSE",
+    "name": "Agilent Technologies Inc.",
     "status": "active",
-    "symbol": "CRCG",
+    "symbol": "A",
     "tradable": true
   },
   {
@@ -43255,6 +43199,14 @@
   {
     "asset_class": "us_equity",
     "exchange": "NASDAQ",
+    "name": "Leonardo DRS, Inc. Common Stock",
+    "status": "active",
+    "symbol": "DRS",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
     "name": "Cronos Group Inc. Common Share",
     "status": "active",
     "symbol": "CRON",
@@ -43430,26 +43382,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "ARCA",
-    "name": "Capital Group Core Equity ETF",
-    "status": "active",
-    "symbol": "CGUS",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "OTC",
     "name": "Tencent Holdings Limited Unsponsored ADR Representing B Shares (Cayman Islands)",
     "status": "active",
     "symbol": "TCEHY",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "XPO, Inc.",
-    "status": "active",
-    "symbol": "XPO",
     "tradable": true
   },
   {
@@ -43514,14 +43450,6 @@
     "name": "Direxion Daily AI and Big Data Bear 2X ETF",
     "status": "active",
     "symbol": "AIBD",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Rollins, Inc.",
-    "status": "active",
-    "symbol": "ROL",
     "tradable": true
   },
   {
@@ -43650,6 +43578,14 @@
     "name": "T. Rowe Price Ultra Short-Term Bond ETF",
     "status": "active",
     "symbol": "TBUX",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NYSE",
+    "name": "GameStop Corp. Class A",
+    "status": "active",
+    "symbol": "GME",
     "tradable": true
   },
   {
@@ -44062,6 +43998,14 @@
   },
   {
     "asset_class": "us_equity",
+    "exchange": "ARCA",
+    "name": "iShares MSCI Germany ETF",
+    "status": "active",
+    "symbol": "EWG",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Northern Funds Northern Trust Tax-Exempt Bond ETF",
     "status": "active",
@@ -44106,6 +44050,14 @@
     "name": "Northern Funds Northern Trust Intermediate Tax-Exempt Bond ETF",
     "status": "active",
     "symbol": "TAXI",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NYSE",
+    "name": "Elevance Health, Inc.",
+    "status": "active",
+    "symbol": "ELV",
     "tradable": true
   },
   {
@@ -45346,6 +45298,14 @@
     "name": "Lazard Active ETF Trust Lazard US Systematic Small Cap Equity ETF",
     "status": "active",
     "symbol": "SYZ",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "ARCA",
+    "name": "YieldMax Gold Miners Option Income Strategy ETF",
+    "status": "active",
+    "symbol": "GDXY",
     "tradable": true
   },
   {
@@ -46734,6 +46694,14 @@
   },
   {
     "asset_class": "us_equity",
+    "exchange": "ARCA",
+    "name": "MicroSectors FANG+ Index 2X Leveraged ETNs due January 8, 2038",
+    "status": "active",
+    "symbol": "FNGO",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "iRadimed Corporation Common Stock",
     "status": "active",
@@ -46774,10 +46742,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Garmin Ltd",
+    "exchange": "ARCA",
+    "name": "YieldMax CVNA Option Income Strategy ETF",
     "status": "active",
-    "symbol": "GRMN",
+    "symbol": "CVNY",
     "tradable": true
   },
   {
@@ -46922,14 +46890,6 @@
     "name": "Aurora Mobile Limited American Depositary Shares",
     "status": "active",
     "symbol": "JG",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "PTC Inc. Common Stock",
-    "status": "active",
-    "symbol": "PTC",
     "tradable": true
   },
   {
@@ -47122,6 +47082,14 @@
     "name": "Iris Acquisition Corp II Units, each consisting of one Class A Ordinary Share and one-half of one redeemable Warrant",
     "status": "active",
     "symbol": "IRAB.U",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "Themes ETF Trust Leverage Shares 2X Long CRCL Daily ETF",
+    "status": "active",
+    "symbol": "CRCG",
     "tradable": true
   },
   {
@@ -47590,6 +47558,14 @@
   },
   {
     "asset_class": "us_equity",
+    "exchange": "ARCA",
+    "name": "Capital Group Core Equity ETF",
+    "status": "active",
+    "symbol": "CGUS",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
     "exchange": "NASDAQ",
     "name": "Star Equity Holdings, Inc. Common Stock",
     "status": "active",
@@ -47919,9 +47895,9 @@
   {
     "asset_class": "us_equity",
     "exchange": "NYSE",
-    "name": "MFA Financial, Inc",
+    "name": "XPO, Inc.",
     "status": "active",
-    "symbol": "MFA",
+    "symbol": "XPO",
     "tradable": true
   },
   {
@@ -48255,6 +48231,14 @@
   {
     "asset_class": "us_equity",
     "exchange": "NYSE",
+    "name": "Rollins, Inc.",
+    "status": "active",
+    "symbol": "ROL",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NYSE",
     "name": "Sunlands Technology Group, American Depositary Shares, American Depositary Shares, every two (2) ADSs representing one (1) Class A Ordinary Share",
     "status": "active",
     "symbol": "STG",
@@ -48463,6 +48447,14 @@
   {
     "asset_class": "us_equity",
     "exchange": "NASDAQ",
+    "name": "PTC Inc. Common Stock",
+    "status": "active",
+    "symbol": "PTC",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
     "name": "BeyondSpring Inc. Ordinary Shares",
     "status": "active",
     "symbol": "BYSI",
@@ -48582,10 +48574,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "BATS",
-    "name": "2x Cardano ETF",
+    "exchange": "NYSE",
+    "name": "MFA Financial, Inc",
     "status": "active",
-    "symbol": "CRDX",
+    "symbol": "MFA",
     "tradable": true
   },
   {
@@ -49238,10 +49230,10 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NASDAQ",
-    "name": "Dynamix Corporation III Warrants",
+    "exchange": "BATS",
+    "name": "2x Cardano ETF",
     "status": "active",
-    "symbol": "DNMXW",
+    "symbol": "CRDX",
     "tradable": true
   },
   {
@@ -49790,6 +49782,14 @@
   },
   {
     "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "Dynamix Corporation III Warrants",
+    "status": "active",
+    "symbol": "DNMXW",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
     "exchange": "NYSE",
     "name": "Infinity Natural Resources, Inc.",
     "status": "active",
@@ -50082,6 +50082,14 @@
     "name": "NEOS S&P 500 Hedged Equity Income ETF",
     "status": "active",
     "symbol": "SPYH",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NASDAQ",
+    "name": "Argo Blockchain plc American Depositary Shares",
+    "status": "active",
+    "symbol": "ARBK",
     "tradable": true
   },
   {
@@ -52015,14 +52023,6 @@
   {
     "asset_class": "us_equity",
     "exchange": "NASDAQ",
-    "name": "Argo Blockchain plc American Depositary Shares",
-    "status": "active",
-    "symbol": "ARBK",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
-    "exchange": "NASDAQ",
     "name": "Tidal Trust II Defiance Daily Target 2X Long SOUN ETF",
     "status": "active",
     "symbol": "SOUX",
@@ -53942,14 +53942,6 @@
   },
   {
     "asset_class": "us_equity",
-    "exchange": "NYSE",
-    "name": "Marsh",
-    "status": "active",
-    "symbol": "MRSH",
-    "tradable": true
-  },
-  {
-    "asset_class": "us_equity",
     "exchange": "OTC",
     "name": "Arcelik A S Unsponsored ADR (Turkey)",
     "status": "active",
@@ -54994,6 +54986,14 @@
     "name": "Nuwellis, Inc. Common Stock",
     "status": "active",
     "symbol": "NUWE",
+    "tradable": true
+  },
+  {
+    "asset_class": "us_equity",
+    "exchange": "NYSE",
+    "name": "Garmin Ltd",
+    "status": "active",
+    "symbol": "GRMN",
     "tradable": true
   },
   {
@@ -108463,25 +108463,17 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Sky / US Dollar",
+    "name": "Dogecoin / USD Coin",
     "status": "active",
-    "symbol": "SKY/USD",
+    "symbol": "DOGE/USDC",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "SushiSwap / USD Tether",
+    "name": "Tezos / USD Coin",
     "status": "active",
-    "symbol": "SUSHI/USDT",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Pax Gold / US Dollar",
-    "status": "active",
-    "symbol": "PAXG/USD",
+    "symbol": "XTZ/USDC",
     "tradable": true
   },
   {
@@ -108495,25 +108487,33 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "SushiSwap / USD Coin",
+    "name": "USD Tether / US Dollar",
     "status": "active",
-    "symbol": "SUSHI/USDC",
+    "symbol": "USDT/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Polkadot / USD Coin",
+    "name": "Shib USD Tether",
     "status": "active",
-    "symbol": "DOT/USDC",
+    "symbol": "SHIB/USDT",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Ethereum / Bitcoin ",
+    "name": "Aave / USD Tether",
     "status": "active",
-    "symbol": "ETH/BTC",
+    "symbol": "AAVE/USDT",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Bitcoin Cash / USD Coin",
+    "status": "active",
+    "symbol": "BCH/USDC",
     "tradable": true
   },
   {
@@ -108535,41 +108535,17 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Aave / USD Coin",
+    "name": "Sky / US Dollar",
     "status": "active",
-    "symbol": "AAVE/USDC",
+    "symbol": "SKY/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "The Graph / US Dollar",
+    "name": "Pax Gold / US Dollar",
     "status": "active",
-    "symbol": "GRT/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Uniswap / US Dollar",
-    "status": "active",
-    "symbol": "UNI/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Hype / US Dollar",
-    "status": "active",
-    "symbol": "HYPE/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Litecoin / Bitcoin ",
-    "status": "active",
-    "symbol": "LTC/BTC",
+    "symbol": "PAXG/USD",
     "tradable": true
   },
   {
@@ -108591,17 +108567,57 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Shib USD Tether",
+    "name": "Solana / USD Tether",
     "status": "active",
-    "symbol": "SHIB/USDT",
+    "symbol": "SOL/USDT",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "USD Tether / US Dollar",
+    "name": "Polkadot / USD Coin",
     "status": "active",
-    "symbol": "USDT/USD",
+    "symbol": "DOT/USDC",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Uniswap / US Dollar",
+    "status": "active",
+    "symbol": "UNI/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "SushiSwap / USD Tether",
+    "status": "active",
+    "symbol": "SUSHI/USDT",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Hype / US Dollar",
+    "status": "active",
+    "symbol": "HYPE/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Litecoin / Bitcoin ",
+    "status": "active",
+    "symbol": "LTC/BTC",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "SushiSwap / USD Coin",
+    "status": "active",
+    "symbol": "SUSHI/USDC",
     "tradable": true
   },
   {
@@ -108615,49 +108631,33 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
+    "name": "Ethereum / Bitcoin ",
+    "status": "active",
+    "symbol": "ETH/BTC",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "Aave / USD Coin",
+    "status": "active",
+    "symbol": "AAVE/USDC",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
+    "name": "The Graph / US Dollar",
+    "status": "active",
+    "symbol": "GRT/USD",
+    "tradable": true
+  },
+  {
+    "asset_class": "crypto",
+    "exchange": "CRYPTO",
     "name": "SushiSwap / US Dollar",
     "status": "active",
     "symbol": "SUSHI/USD",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Bitcoin Cash / USD Coin",
-    "status": "active",
-    "symbol": "BCH/USDC",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Dogecoin / USD Coin",
-    "status": "active",
-    "symbol": "DOGE/USDC",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Tezos / USD Coin",
-    "status": "active",
-    "symbol": "XTZ/USDC",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Solana / USD Tether",
-    "status": "active",
-    "symbol": "SOL/USDT",
-    "tradable": true
-  },
-  {
-    "asset_class": "crypto",
-    "exchange": "CRYPTO",
-    "name": "Aave / USD Tether",
-    "status": "active",
-    "symbol": "AAVE/USDT",
     "tradable": true
   },
   {

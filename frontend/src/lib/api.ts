@@ -202,7 +202,7 @@ export type WatchlistItemOut = {
   createdAt: string
 }
 
-export type InstrumentRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX'
+export type InstrumentRange = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX'
 
 export type InstrumentDetailResponse = {
   symbol: string
@@ -225,11 +225,12 @@ export type InstrumentDetailResponse = {
   }>
 }
 
-const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y']
+const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1D', '1W', '1M', '3M', '6M', '1Y', '5Y']
 
 function isInstrumentRangeValue(value: unknown): value is InstrumentRange {
   return (
-    value === '1W'
+    value === '1D'
+    || value === '1W'
     || value === '1M'
     || value === '3M'
     || value === '6M'

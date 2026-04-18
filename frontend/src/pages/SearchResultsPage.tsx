@@ -247,8 +247,12 @@ export function SearchResultsPage({
                 <div className="top-result-right">
                   <div className="top-result-stats">
                     <span className="search-result-skeleton top-result-skeleton-price" />
+                    <div className="top-result-skeleton-change-group">
+                      <span className="search-result-skeleton top-result-skeleton-pill" />
+                      <span className="search-result-skeleton top-result-skeleton-timeframe" />
+                    </div>
                   </div>
-                  <span className="search-result-skeleton" style={{ height: 96, display: 'block', borderRadius: 10 }} />
+                  <span className="search-result-skeleton" style={{ height: 132, display: 'block', borderRadius: 18 }} />
                 </div>
               </div>
             </div>
