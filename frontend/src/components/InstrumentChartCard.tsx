@@ -21,8 +21,9 @@ type InstrumentChartCardProps = {
   onSelectRange: (range: InstrumentRange) => void
 }
 
-const RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y', 'MAX']
+const RANGE_OPTIONS: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'MAX']
 const RANGE_LABELS: Record<InstrumentRange, string> = {
+  '1W': '1W',
   '1M': '1M',
   '3M': '3M',
   '6M': '6M',

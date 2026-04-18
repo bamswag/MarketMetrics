@@ -1,0 +1,282 @@
+/* ── Prediction Panel ── */
+.prediction-panel {
+  border-radius: 22px;
+  padding: 24px 28px;
+  margin-top: 18px;
+}
+
+/* ── Header ── */
+.prediction-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.prediction-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.prediction-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Horizon buttons ── */
+.prediction-horizon-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.prediction-horizon-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--panel-border);
+  background: none;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.prediction-horizon-btn:hover {
+  color: var(--text-main);
+  border-color: var(--text-main);
+}
+
+.prediction-horizon-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Run button ── */
+.prediction-run-btn {
+  flex-shrink: 0;
+}
+
+/* ── Disclaimer ── */
+.prediction-disclaimer {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: 8px 0 18px;
+  line-height: 1.5;
+}
+
+/* ── Skeleton ── */
+.prediction-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.prediction-skeleton-line {
+  background: var(--panel-border);
+  border-radius: 8px;
+  animation: prediction-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes prediction-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Not-fetched state ── */
+.prediction-idle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+  border: 1.5px dashed var(--panel-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+/* ── Summary row ── */
+.prediction-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 20px 0 4px;
+  flex-wrap: wrap;
+}
+
+.prediction-price {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.prediction-horizon-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ── Chart ── */
+.prediction-chart-wrap {
+  margin: 16px -4px 0;
+  height: 220px;
+}
+
+/* ── Metrics row ── */
+.prediction-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.prediction-metric-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--soft-bg);
+  border: 1px solid var(--panel-border);
+}
+
+.prediction-metric-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prediction-metric-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+/* ── Feature importances ── */
+.prediction-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.prediction-features-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+
+.prediction-feature-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prediction-feature-name {
+  font-size: 0.8rem;
+  color: var(--text-main);
+  min-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prediction-feature-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--panel-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.prediction-feature-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 400ms ease;
+}
+
+.prediction-feature-value {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Error / model-unavailable ── */
+.prediction-unavailable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 4px;
+}
+
+.prediction-error {
+  padding: 12px 0 4px;
+  font-size: 0.88rem;
+  color: var(--accent);
+}
+
+/* ── Tooltip ── */
+.prediction-tooltip {
+  background: #fff;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  box-shadow: 0 4px 16px rgba(13, 27, 45, 0.08);
+}
+
+.prediction-tooltip-date {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.prediction-tooltip-price {
+  display: block;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.prediction-tooltip-forecast {
+  display: block;
+  font-weight: 700;
+  color: #c96a45;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .prediction-metrics-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .prediction-price {
+    font-size: 1.6rem;
+  }
+
+  .prediction-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

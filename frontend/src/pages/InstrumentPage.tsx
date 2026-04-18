@@ -5,6 +5,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import { InstrumentChartCard } from '../components/InstrumentChartCard'
 import { MoverLogo } from '../components/MoverLogo'
+import { PricePredictionPanel } from '../components/PricePredictionPanel'
 import { ApiError, fetchAlertsForSymbol, fetchInstrumentDetail } from '../lib/api'
 import type {
   AlertCondition,
@@ -674,6 +675,14 @@ export function InstrumentPage({
           instrumentDetail={instrumentDetail}
           onSelectRange={setSelectedRange}
           selectedRange={selectedRange}
+        />
+      ) : null}
+
+      {instrumentDetail && !isLoadingInstrument ? (
+        <PricePredictionPanel
+          currentPrice={instrumentDetail.latestQuote.price}
+          symbol={symbol}
+          token={token}
         />
       ) : null}
     </section>

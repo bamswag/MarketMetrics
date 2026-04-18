@@ -2,6 +2,7 @@ const FALLBACK_API_URL =
   import.meta.env.DEV
     ? 'http://127.0.0.1:8000'
     : (typeof window !== 'undefined' ? window.location.origin : '')
+const ALLOW_REMOTE_API_IN_DEV = import.meta.env.VITE_ALLOW_REMOTE_API_IN_DEV === 'true'
 const FEATURED_MOVER_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_MAX_SIZE = 40
@@ -201,7 +202,7 @@ export type WatchlistItemOut = {
   createdAt: string
 }
 
-export type InstrumentRange = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX'
+export type InstrumentRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX'
 
 export type InstrumentDetailResponse = {
   symbol: string
@@ -224,11 +225,12 @@ export type InstrumentDetailResponse = {
   }>
 }
 
-const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y']
+const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y']
 
 function isInstrumentRangeValue(value: unknown): value is InstrumentRange {
   return (
-    value === '1M'
+    value === '1W'
+    || value === '1M'
     || value === '3M'
     || value === '6M'
     || value === '1Y'
@@ -387,10 +389,35 @@ function instrumentDetailCacheKey(symbol: string, range: InstrumentRange): strin
   return `${symbol.trim().toUpperCase()}:${range}`
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '::1' || hostname.startsWith('127.')
+}
+
+function shouldForceLocalApiInDev(configuredUrl: string): boolean {
+  if (!import.meta.env.DEV || ALLOW_REMOTE_API_IN_DEV || typeof window === 'undefined') {
+    return false
+  }
+
+  if (!isLoopbackHostname(window.location.hostname)) {
+    return false
+  }
+
+  try {
+    const resolvedUrl = new URL(configuredUrl, window.location.origin)
+    return !isLoopbackHostname(resolvedUrl.hostname)
+  } catch {
+    return false
+  }
+}
+
 export function getApiUrl(): string {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 
   if (!configuredUrl) {
+    return FALLBACK_API_URL
+  }
+
+  if (shouldForceLocalApiInDev(configuredUrl)) {
     return FALLBACK_API_URL
   }
 
@@ -488,7 +515,7 @@ async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     }
     if (error instanceof TypeError) {
       throw new NetworkError(
-        `Cannot reach the API at ${getApiUrl()}. Make sure the FastAPI server is running.`,
+        `The browser could not read a response from ${getApiUrl()}. The API may be down, or the backend may have failed before returning a readable CORS response.`,
       )
     }
 
@@ -956,4 +983,55 @@ export async function updateUserPreferences(
     body: JSON.stringify(payload),
   })
   return parseResponse<UserOut>(response)
+}
+
+// ── Forecast / Price Prediction ──────────────────────────────────────────────
+
+export type ForecastPoint = {
+  date: string
+  predictedClose: number
+  predictedReturnPct: number
+  predictedCloseLow?: number | null
+  predictedCloseHigh?: number | null
+}
+
+export type ForecastMetrics = {
+  maePrice: number
+  rmsePrice: number
+  maeReturn: number
+  directionalAccuracy: number
+}
+
+export type ForecastResponse = {
+  symbol: string
+  lastActualClose: number
+  predictedNextDayClose: number
+  predictedReturnPctOverHorizon: number
+  forecastHorizonDays: number
+  historicalSeries: Array<{ date: string; close: number }>
+  forecastSeries: ForecastPoint[]
+  metrics: ForecastMetrics
+  featureImportances: Array<{ feature: string; importance: number }>
+  modelVersion: string
+}
+
+export async function fetchForecast(
+  token: string | undefined,
+  symbol: string,
+  horizonDays: number,
+  signal?: AbortSignal,
+): Promise<ForecastResponse> {
+  if (!token) {
+    throw new Error('Sign in to use the price forecast feature.')
+  }
+  const response = await safeFetch(`${getApiUrl()}/predict/forecast`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ symbol, horizonDays, historyWindowDays: 365 }),
+    signal,
+  })
+  return parseResponse<ForecastResponse>(response)
 }

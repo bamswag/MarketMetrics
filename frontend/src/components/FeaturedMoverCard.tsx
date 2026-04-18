@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
+import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import { MoverLogo } from './MoverLogo'
 import {
   fetchFeaturedMover,
@@ -11,7 +12,7 @@ import {
   type FeaturedMoverResponse,
   type FeaturedMoverSelection,
 } from '../lib/api'
-import { formatCurrency } from '../lib/formatters'
+import { formatCurrencyWithPreferences } from '../lib/marketDisplay'
 import '../styles/components/FeaturedMoverCard.css'
 
 const DEFAULT_SELECTION: FeaturedMoverSelection = {
@@ -66,22 +67,6 @@ function formatChangePercent(raw: string | null | undefined): string {
   return '0.00%'
 }
 
-function formatAxisPrice(value: number): string {
-  const absValue = Math.abs(value)
-  const maximumFractionDigits = absValue >= 100 ? 0 : absValue >= 1 ? 2 : 4
-  return `$${value.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits,
-  })}`
-}
-
-function formatTooltipValue(
-  value: number | string | readonly (number | string)[] | undefined,
-): [string, string] {
-  const rawValue = Array.isArray(value) ? value[0] : value
-  const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue)
-  return [Number.isFinite(numericValue) ? formatCurrency(numericValue) : '--', 'Price']
-}
 
 function formatTooltipLabel(label: unknown, period: FeaturedMoverPeriod): string {
   const labelText = String(label ?? '')
@@ -164,10 +149,23 @@ function FeaturedMoverSkeleton() {
 }
 
 export function FeaturedMoverCard() {
+  const { preferences } = useMarketPreferences()
   const [selection, setSelection] = useState<FeaturedMoverSelection>(DEFAULT_SELECTION)
   const [featured, setFeatured] = useState<FeaturedMoverResponse | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+
+  function formatAxisPrice(value: number): string {
+    return formatCurrencyWithPreferences(value, preferences)
+  }
+
+  function formatTooltipValue(
+    value: number | string | readonly (number | string)[] | undefined,
+  ): [string, string] {
+    const rawValue = Array.isArray(value) ? value[0] : value
+    const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue)
+    return [Number.isFinite(numericValue) ? formatCurrencyWithPreferences(numericValue, preferences) : '--', 'Price']
+  }
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -352,7 +350,7 @@ export function FeaturedMoverCard() {
             <div className="hero-gainer-price-block">
               <span className="hero-gainer-price-label">Current price</span>
               <strong className="hero-gainer-price">
-                {mover.price != null ? formatCurrency(mover.price) : '--'}
+                {mover.price != null ? formatCurrencyWithPreferences(mover.price, preferences) : '--'}
               </strong>
             </div>
 

@@ -13,6 +13,10 @@ export function getMaxChartPoints(selectedRange: InstrumentRange): number {
     return 220
   }
 
+  if (selectedRange === '1W') {
+    return 10
+  }
+
   return 180
 }
 

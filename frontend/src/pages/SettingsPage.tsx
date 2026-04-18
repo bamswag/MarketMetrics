@@ -19,7 +19,7 @@ type SettingsPageProps = {
 }
 
 const ASSET_CATEGORY_OPTIONS: MarketAssetCategory[] = ['stocks', 'etfs', 'crypto']
-const DEFAULT_CHART_RANGE_OPTIONS: InstrumentRange[] = ['1M', '3M', '6M', '1Y', '5Y', 'MAX']
+const DEFAULT_CHART_RANGE_OPTIONS: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'MAX']
 const TRACKED_SORT_OPTIONS = ['newest', 'biggest_gain', 'biggest_loss', 'alphabetical'] as const
 const PRICE_DISPLAY_OPTIONS = ['percent', 'change', 'both'] as const
 const MARKET_TIME_OPTIONS = ['local', 'exchange', 'utc'] as const

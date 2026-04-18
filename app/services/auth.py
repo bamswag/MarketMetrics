@@ -9,7 +9,7 @@ from urllib.parse import quote, urlencode, urlparse
 from uuid import uuid4
 
 import httpx
-from sqlalchemy import inspect, or_, text
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 import app.orm_models  # noqa: F401
@@ -21,7 +21,7 @@ from app.core.auth import (
     verify_password,
 )
 from app.core.config import settings
-from app.core.database import Base
+from app.core.database import ensure_local_sqlite_schema
 from app.orm_models.user import UserDB
 from app.services.email import (
     send_email_change_verification_email,
@@ -34,18 +34,6 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 logger = logging.getLogger(__name__)
 
-_USER_SCHEMA_PATCHES = (
-    ("primaryAuthProvider", "ALTER TABLE users ADD COLUMN primaryAuthProvider VARCHAR DEFAULT 'password'"),
-    ("emailVerifiedAt", "ALTER TABLE users ADD COLUMN emailVerifiedAt DATETIME"),
-    ("pendingEmail", "ALTER TABLE users ADD COLUMN pendingEmail VARCHAR"),
-    ("sessionVersion", "ALTER TABLE users ADD COLUMN sessionVersion INTEGER DEFAULT 1"),
-    ("passwordResetTokenHash", "ALTER TABLE users ADD COLUMN passwordResetTokenHash VARCHAR"),
-    ("passwordResetTokenExpiresAt", "ALTER TABLE users ADD COLUMN passwordResetTokenExpiresAt DATETIME"),
-    ("pendingEmailTokenHash", "ALTER TABLE users ADD COLUMN pendingEmailTokenHash VARCHAR"),
-    ("pendingEmailTokenExpiresAt", "ALTER TABLE users ADD COLUMN pendingEmailTokenExpiresAt DATETIME"),
-)
-_ENSURED_USER_SCHEMA_KEYS: set[str] = set()
-
 
 class GoogleAuthError(ValueError):
     pass
@@ -55,45 +43,8 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def _bind_cache_key(bind) -> str:
-    engine = getattr(bind, "engine", bind)
-    return str(getattr(engine, "url", engine))
-
-
 def ensure_user_schema(bind) -> None:
-    cache_key = _bind_cache_key(bind)
-    if cache_key in _ENSURED_USER_SCHEMA_KEYS:
-        return
-
-    engine = getattr(bind, "engine", bind)
-    if getattr(engine.dialect, "name", "") != "sqlite":
-        _ENSURED_USER_SCHEMA_KEYS.add(cache_key)
-        return
-
-    Base.metadata.create_all(bind=engine)
-
-    inspector = inspect(engine)
-    if not inspector.has_table("users"):
-        return
-
-    existing_columns = {column["name"] for column in inspector.get_columns("users")}
-    with engine.begin() as connection:
-        for column_name, statement in _USER_SCHEMA_PATCHES:
-            if column_name not in existing_columns:
-                connection.execute(text(statement))
-
-        connection.execute(
-            text(
-                """
-                UPDATE users
-                SET primaryAuthProvider = COALESCE(NULLIF(primaryAuthProvider, ''), 'password'),
-                    sessionVersion = COALESCE(sessionVersion, 1),
-                    emailVerifiedAt = COALESCE(emailVerifiedAt, createdAt)
-                """
-            )
-        )
-
-    _ENSURED_USER_SCHEMA_KEYS.add(cache_key)
+    ensure_local_sqlite_schema(bind)
 
 
 def get_user_by_email(db: Session, email: str) -> Optional[UserDB]:

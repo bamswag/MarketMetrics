@@ -42,7 +42,8 @@ npm run build
 
 - During development, the frontend defaults to `http://127.0.0.1:8000`.
 - In production, the frontend falls back to the current site origin so a full-stack Render deployment can talk to its co-hosted API without an extra env override.
-- You can still override the backend URL with `VITE_API_BASE_URL`.
+- `frontend/.env.development` keeps local dev pinned to `http://127.0.0.1:8000`.
+- If you intentionally want localhost to talk to a remote backend, set `VITE_API_BASE_URL` and also set `VITE_ALLOW_REMOTE_API_IN_DEV=true`.
 
 ## Main folders
 

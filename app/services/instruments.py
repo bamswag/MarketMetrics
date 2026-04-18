@@ -25,6 +25,7 @@ from app.services.quotes import get_quote_cached
 
 
 RANGE_WINDOWS_DAYS = {
+    InstrumentRange.one_week: 7,
     InstrumentRange.one_month: 30,
     InstrumentRange.three_months: 90,
     InstrumentRange.six_months: 182,
@@ -33,6 +34,7 @@ RANGE_WINDOWS_DAYS = {
 }
 INSTRUMENT_DATA_TIMEOUT_SECONDS = 8.0
 STANDARD_RANGE_ORDER = [
+    InstrumentRange.one_week,
     InstrumentRange.one_month,
     InstrumentRange.three_months,
     InstrumentRange.six_months,
