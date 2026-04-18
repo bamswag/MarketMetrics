@@ -115,7 +115,6 @@ export function InstrumentPage({
   const symbol = params.symbol?.toUpperCase() ?? ''
   const onUnauthorizedRef = useRef(onUnauthorized)
   onUnauthorizedRef.current = onUnauthorized
-  const lastLoadedRangeRef = useRef<InstrumentRange | null>(null)
 
   const [selectedRange, setSelectedRange] = useState<InstrumentRange>(
     () => preferences.defaultChartRange,
@@ -229,7 +228,6 @@ export function InstrumentPage({
         if (response.range !== selectedRange) {
           setSelectedRange(response.range)
         }
-        lastLoadedRangeRef.current = response.range
         setInstrumentDetail(response)
       } catch (error) {
         if (cancelled) {
@@ -243,12 +241,6 @@ export function InstrumentPage({
         if (error instanceof ApiError && error.status === 401) {
           onUnauthorizedRef.current?.('Your session expired. Log in again to view instrument charts.')
           return
-        }
-
-        // Revert the range selector to the last successfully loaded range so
-        // the chart doesn't show a stale dataset with a misleading range label.
-        if (lastLoadedRangeRef.current && lastLoadedRangeRef.current !== selectedRange) {
-          setSelectedRange(lastLoadedRangeRef.current)
         }
 
         setInstrumentError(

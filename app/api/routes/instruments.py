@@ -19,6 +19,10 @@ async def instrument_detail(
         raise HTTPException(status_code=400, detail=str(exc))
     except AlpacaMarketDataError as exc:
         detail = str(exc)
-        if "No historical bar data" in detail or "No quote data" in detail:
+        if (
+            "No historical bar data" in detail
+            or "No quote data" in detail
+            or "No intraday bar data" in detail
+        ):
             raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=502, detail=detail)
