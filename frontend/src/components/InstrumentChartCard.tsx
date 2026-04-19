@@ -31,7 +31,7 @@ const RANGE_LABELS: Record<InstrumentRange, string> = {
   '5Y': '5Y',
   MAX: 'MAX',
 }
-const AXIS_TICK = { fill: '#687487', fontSize: 12 } as const
+const AXIS_TICK = { fill: '#8b95a3', fontSize: 11 } as const
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltipContent(props: any) {
@@ -60,8 +60,67 @@ function ChartTooltipContent(props: any) {
   )
 }
 
-function formatYAxisTick(value: number) {
-  return formatCurrency(value)
+// Compact Y-axis labels: $1.2K, $4.5M, $463, $52.9 — no full-precision clutter
+function formatYAxisTick(value: number): string {
+  if (value >= 1_000_000) {
+    const m = value / 1_000_000
+    return `$${Number.isInteger(m) ? m : m.toFixed(1)}M`
+  }
+  if (value >= 1_000) {
+    const k = value / 1_000
+    return `$${Number.isInteger(k) ? k : k.toFixed(1)}K`
+  }
+  if (value >= 100) return `$${Math.round(value)}`
+  if (value >= 10) return `$${value.toFixed(1)}`
+  if (value >= 1) return `$${value.toFixed(2)}`
+  return `$${value.toFixed(4)}`
+}
+
+// Range-aware X-axis labels: year for MAX/5Y, "Apr '24" for 1Y/6M/3M, "Apr 17" for short ranges
+function formatXAxisTick(value: string, range: InstrumentRange): string {
+  const d = new Date(`${value}T00:00:00`)
+  if (range === 'MAX' || range === '5Y') {
+    return String(d.getFullYear())
+  }
+  if (range === '1Y' || range === '6M' || range === '3M') {
+    const month = d.toLocaleString('en-US', { month: 'short' })
+    const year = String(d.getFullYear()).slice(2)
+    return `${month} '${year}`
+  }
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Compute explicit tick positions so each range shows clean calendar-aligned intervals:
+//   MAX / 5Y  → one tick per year
+//   1Y / 6M / 3M → one tick per month
+//   1M        → one tick per week (7-day block)
+//   1W        → one tick per trading day
+function computeXTicks(series: Array<{ date: string }>, range: InstrumentRange): string[] {
+  if (series.length === 0) return []
+  const ticks: string[] = []
+  const seen = new Set<string>()
+
+  for (const { date } of series) {
+    const d = new Date(`${date}T00:00:00`)
+    let key: string
+
+    if (range === 'MAX' || range === '5Y') {
+      key = String(d.getFullYear())
+    } else if (range === '1Y' || range === '6M' || range === '3M') {
+      key = `${d.getFullYear()}-${d.getMonth()}`
+    } else if (range === '1M') {
+      key = `${d.getFullYear()}-${d.getMonth()}-${Math.floor((d.getDate() - 1) / 7)}`
+    } else {
+      key = date.slice(0, 10)
+    }
+
+    if (!seen.has(key)) {
+      seen.add(key)
+      ticks.push(date)
+    }
+  }
+
+  return ticks
 }
 
 export function InstrumentChartCard({
@@ -104,6 +163,11 @@ export function InstrumentChartCard({
       return { ...p, ma30: ema30, ma50: ema50 }
     })
   }, [chartSeries, chartType])
+
+  const xTicks = useMemo(
+    () => computeXTicks(chartSeries, selectedRange),
+    [chartSeries, selectedRange],
+  )
 
   const yDomain = useMemo((): [number, number] => {
     if (chartSeries.length === 0) return [0, 1]
@@ -168,10 +232,13 @@ export function InstrumentChartCard({
       <div className="instrument-live-price-row">
         <span className="instrument-live-price-value">{formatCurrency(livePrice)}</span>
         {(liveChange != null || liveChangePct) && (
-          <span className={isLivePositive ? 'positive-pill instrument-live-pill' : 'negative-pill instrument-live-pill'}>
-            {liveChange != null ? `${isLivePositive ? '+' : ''}${liveChange.toFixed(2)}` : ''}
-            {liveChangePct ? ` (${liveChangePct})` : ''}
-          </span>
+          <>
+            <span className={isLivePositive ? 'positive-pill instrument-live-pill' : 'negative-pill instrument-live-pill'}>
+              {liveChange != null ? `${isLivePositive ? '+' : ''}${liveChange.toFixed(2)}` : ''}
+              {liveChangePct ? ` (${liveChangePct})` : ''}
+            </span>
+            <span className="instrument-live-label">today's change</span>
+          </>
         )}
       </div>
 
@@ -206,22 +273,23 @@ export function InstrumentChartCard({
                   <stop offset="100%" stopColor={isRangePositive ? '#0f766e' : '#b14f2b'} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(25, 40, 62, 0.06)" strokeDasharray="4 4" vertical={false} />
+              <CartesianGrid stroke="rgba(25, 40, 62, 0.05)" strokeDasharray="3 5" vertical={false} />
               <XAxis
                 axisLine={false}
                 dataKey="date"
-                minTickGap={40}
                 tick={AXIS_TICK}
-                tickFormatter={formatShortDate}
+                tickFormatter={(v: string) => formatXAxisTick(v, selectedRange)}
                 tickLine={false}
+                ticks={xTicks}
               />
               <YAxis
                 axisLine={false}
                 domain={yDomain}
                 tick={AXIS_TICK}
+                tickCount={5}
                 tickFormatter={formatYAxisTick}
                 tickLine={false}
-                width={85}
+                width={72}
               />
               <Tooltip content={ChartTooltipContent} />
               <Area

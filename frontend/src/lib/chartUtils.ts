@@ -17,10 +17,6 @@ export function getMaxChartPoints(selectedRange: InstrumentRange): number {
     return 10
   }
 
-  if (selectedRange === '1D') {
-    return 200  // 15-min bars over a session — no sampling needed
-  }
-
   return 180
 }
 
