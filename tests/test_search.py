@@ -10,6 +10,8 @@ from app.services.search import (
     get_dynamic_mover_universe_symbols_by_category,
     get_symbol_asset_class,
     get_symbol_metadata,
+    resolve_company_name,
+    resolve_crypto_pair_name,
 )
 
 try:
@@ -49,6 +51,11 @@ class SearchServiceTests(unittest.TestCase):
         self.assertIsNotNone(metadata)
         self.assertEqual(metadata["symbol"], "BTC/USD")
         self.assertEqual(get_symbol_asset_class("BTCUSD"), "crypto")
+
+    def test_crypto_pair_name_fallback_handles_live_pairs_missing_from_catalog(self):
+        self.assertEqual(resolve_crypto_pair_name("PAXG/USD"), "PAX Gold / US Dollar")
+        self.assertEqual(resolve_crypto_pair_name("PEPEUSD"), "Pepe / US Dollar")
+        self.assertEqual(resolve_company_name("BCH/USD"), "Bitcoin Cash / US Dollar")
 
     @patch("app.services.search.fetch_assets_catalog", new_callable=AsyncMock)
     def test_dynamic_mover_universe_uses_active_tradable_usd_crypto_assets(

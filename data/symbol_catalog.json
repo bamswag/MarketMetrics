@@ -562,84 +562,84 @@
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Bitcoin / USD",
+    "name": "Bitcoin / US Dollar",
     "symbol": "BTC/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Ether / USD",
+    "name": "Ether / US Dollar",
     "symbol": "ETH/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Solana / USD",
+    "name": "Solana / US Dollar",
     "symbol": "SOL/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "BNB / USD",
+    "name": "BNB / US Dollar",
     "symbol": "BNB/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "XRP / USD",
+    "name": "XRP / US Dollar",
     "symbol": "XRP/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Cardano / USD",
+    "name": "Cardano / US Dollar",
     "symbol": "ADA/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Dogecoin / USD",
+    "name": "Dogecoin / US Dollar",
     "symbol": "DOGE/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Avalanche / USD",
+    "name": "Avalanche / US Dollar",
     "symbol": "AVAX/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Polkadot / USD",
+    "name": "Polkadot / US Dollar",
     "symbol": "DOT/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Polygon / USD",
+    "name": "Polygon / US Dollar",
     "symbol": "MATIC/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Chainlink / USD",
+    "name": "Chainlink / US Dollar",
     "symbol": "LINK/USD",
     "tradable": true
   },
   {
     "asset_class": "crypto",
     "exchange": "CRYPTO",
-    "name": "Litecoin / USD",
+    "name": "Litecoin / US Dollar",
     "symbol": "LTC/USD",
     "tradable": true
   },

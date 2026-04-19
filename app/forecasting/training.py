@@ -1065,7 +1065,7 @@ async def train_random_forest_forecaster(
     return metadata
 
 
-_LOADED_MODEL_CACHE_MAX_SIZE = 2
+_LOADED_MODEL_CACHE_MAX_SIZE = 1
 _loaded_model_cache: "OrderedDict[str, Tuple[int, Any, Any, Any, Any]]" = OrderedDict()
 
 

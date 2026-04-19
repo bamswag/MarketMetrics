@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import time
 from datetime import date
 from typing import Dict, List, Optional, Tuple
@@ -22,9 +23,9 @@ _earliest_date_locks: Dict[EarliestDateCacheKey, asyncio.Lock] = {}
 
 # Historical series can be much larger than quote snapshots, so keep this cache
 # intentionally smaller and short-lived to avoid steady process growth.
-_CACHE_MAX_SIZE = 128
-_CACHE_HARD_TTL_SECONDS = 600
-_EARLIEST_DATE_CACHE_MAX_SIZE = 256
+_CACHE_MAX_SIZE = 48
+_CACHE_HARD_TTL_SECONDS = 300
+_EARLIEST_DATE_CACHE_MAX_SIZE = 96
 _EARLIEST_DATE_CACHE_HARD_TTL_SECONDS = 6 * 60 * 60
 _FULL_HISTORY_LOOKBACK_START = date(1970, 1, 1)
 
@@ -58,6 +59,7 @@ def _earliest_date_cache_key(
 def _evict_stale_and_overflow() -> None:
     """Remove expired history entries, then trim to a bounded size."""
     now = time.time()
+    evicted = 0
 
     stale = [
         key
@@ -67,6 +69,7 @@ def _evict_stale_and_overflow() -> None:
     for key in stale:
         _history_cache.pop(key, None)
         _history_locks.pop(key, None)
+        evicted += 1
 
     if len(_history_cache) > _CACHE_MAX_SIZE:
         sorted_keys = sorted(_history_cache, key=lambda key: _history_cache[key][0])
@@ -74,10 +77,15 @@ def _evict_stale_and_overflow() -> None:
         for key in sorted_keys[:evict_count]:
             _history_cache.pop(key, None)
             _history_locks.pop(key, None)
+            evicted += 1
+
+    if evicted:
+        gc.collect()
 
 
 def _evict_stale_and_overflow_earliest_dates() -> None:
     now = time.time()
+    evicted = 0
 
     stale = [
         key
@@ -87,6 +95,7 @@ def _evict_stale_and_overflow_earliest_dates() -> None:
     for key in stale:
         _earliest_date_cache.pop(key, None)
         _earliest_date_locks.pop(key, None)
+        evicted += 1
 
     if len(_earliest_date_cache) > _EARLIEST_DATE_CACHE_MAX_SIZE:
         sorted_keys = sorted(
@@ -97,6 +106,10 @@ def _evict_stale_and_overflow_earliest_dates() -> None:
         for key in sorted_keys[:evict_count]:
             _earliest_date_cache.pop(key, None)
             _earliest_date_locks.pop(key, None)
+            evicted += 1
+
+    if evicted:
+        gc.collect()
 
 
 async def fetch_daily_close_series(

@@ -244,7 +244,11 @@ export function InstrumentPage({
         }
 
         setInstrumentError(
-          error instanceof Error ? error.message : 'Unable to load instrument details.',
+          error instanceof ApiError && error.status === 422
+            ? `The ${selectedRange} range isn't supported by the connected server yet. Try another range or restart the backend.`
+            : error instanceof Error
+              ? error.message
+              : 'Unable to load instrument details.',
         )
       } finally {
         if (!cancelled) {

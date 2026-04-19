@@ -61,6 +61,7 @@ CRYPTO_TOKEN_NAMES: Dict[str, str] = {
     "ATOM": "Cosmos",
     "AVAX": "Avalanche",
     "BAL": "Balancer",
+    "BCH": "Bitcoin Cash",
     "BLUR": "Blur",
     "BNB": "BNB",
     "BONK": "Bonk",
@@ -87,6 +88,7 @@ CRYPTO_TOKEN_NAMES: Dict[str, str] = {
     "MKR": "Maker",
     "NEAR": "NEAR Protocol",
     "OP": "Optimism",
+    "PAXG": "PAX Gold",
     "PEPE": "Pepe",
     "PYTH": "Pyth Network",
     "RUNE": "THORChain",
@@ -99,6 +101,7 @@ CRYPTO_TOKEN_NAMES: Dict[str, str] = {
     "TIA": "Celestia",
     "TRX": "TRON",
     "UNI": "Uniswap",
+    "USD": "US Dollar",
     "USDC": "USD Coin",
     "USDT": "Tether USDt",
     "WIF": "dogwifhat",
@@ -112,6 +115,18 @@ def _crypto_pair_display_name(symbol: str) -> str:
     base_name = CRYPTO_TOKEN_NAMES.get(base, base)
     quote_name = CRYPTO_TOKEN_NAMES.get(quote, quote)
     return f"{base_name} / {quote_name}"
+
+
+def resolve_crypto_pair_name(symbol: str) -> Optional[str]:
+    normalized_symbol = normalize_catalog_symbol(symbol, "crypto")
+    if "/" not in normalized_symbol:
+        return None
+
+    base, quote = normalized_symbol.split("/", 1)
+    if not base or not quote:
+        return None
+
+    return _crypto_pair_display_name(normalized_symbol)
 
 
 DEFAULT_CRYPTO_SYMBOL_CATALOG: List[Dict[str, Any]] = [
@@ -747,4 +762,11 @@ def resolve_company_name(symbol: str) -> str:
     metadata = get_symbol_metadata(symbol)
     if metadata and metadata.get("name"):
         return metadata["name"]
-    return normalize_catalog_symbol(symbol, get_symbol_asset_class(symbol))
+
+    asset_class = get_symbol_asset_class(symbol)
+    if asset_class == "crypto":
+        crypto_pair_name = resolve_crypto_pair_name(symbol)
+        if crypto_pair_name:
+            return crypto_pair_name
+
+    return normalize_catalog_symbol(symbol, asset_class)

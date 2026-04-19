@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import time
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -26,9 +27,11 @@ from app.services.search import (
     get_dynamic_mover_universe_symbols_by_category,
     get_symbol_asset_class,
     get_symbol_metadata,
+    resolve_crypto_pair_name,
 )
 
 MOVERS_CACHE_TTL_SECONDS = 45
+MOVERS_CACHE_MAX_SIZE = 4
 SPARKLINE_LOOKBACK_DAYS = 14
 SPARKLINE_POINTS = 5
 MOVER_CATEGORY_ORDER = ("stocks", "crypto", "etfs")
@@ -41,6 +44,7 @@ FEATURED_MOVER_CACHE_TTL_SECONDS = {
     FeaturedMoverPeriod.week: 300,
     FeaturedMoverPeriod.month: 300,
 }
+FEATURED_MOVER_CACHE_MAX_SIZE = 8
 
 _movers_cache: Dict[int, tuple[float, MoversResponse]] = {}
 _movers_cache_locks: Dict[int, asyncio.Lock] = {}
@@ -52,6 +56,57 @@ _featured_mover_cache_locks: Dict[
     tuple[str, str, str],
     asyncio.Lock,
 ] = {}
+
+
+def _prune_movers_cache(now: Optional[float] = None) -> None:
+    current_time = now or time.time()
+    evicted = 0
+
+    stale_limits = [
+        limit
+        for limit, (cached_at, _) in _movers_cache.items()
+        if current_time - cached_at > MOVERS_CACHE_TTL_SECONDS
+    ]
+    for limit in stale_limits:
+        _movers_cache.pop(limit, None)
+        _movers_cache_locks.pop(limit, None)
+        evicted += 1
+
+    if len(_movers_cache) > MOVERS_CACHE_MAX_SIZE:
+        sorted_limits = sorted(_movers_cache, key=lambda limit: _movers_cache[limit][0])
+        for limit in sorted_limits[: len(_movers_cache) - MOVERS_CACHE_MAX_SIZE]:
+            _movers_cache.pop(limit, None)
+            _movers_cache_locks.pop(limit, None)
+            evicted += 1
+
+    if evicted:
+        gc.collect()
+
+
+def _prune_featured_mover_cache(now: Optional[float] = None) -> None:
+    current_time = now or time.time()
+    evicted = 0
+
+    stale_keys = [
+        key
+        for key, (cached_at, payload) in _featured_mover_cache.items()
+        if current_time - cached_at
+        > FEATURED_MOVER_CACHE_TTL_SECONDS[FeaturedMoverPeriod(payload.period)]
+    ]
+    for key in stale_keys:
+        _featured_mover_cache.pop(key, None)
+        _featured_mover_cache_locks.pop(key, None)
+        evicted += 1
+
+    if len(_featured_mover_cache) > FEATURED_MOVER_CACHE_MAX_SIZE:
+        sorted_keys = sorted(_featured_mover_cache, key=lambda key: _featured_mover_cache[key][0])
+        for key in sorted_keys[: len(_featured_mover_cache) - FEATURED_MOVER_CACHE_MAX_SIZE]:
+            _featured_mover_cache.pop(key, None)
+            _featured_mover_cache_locks.pop(key, None)
+            evicted += 1
+
+    if evicted:
+        gc.collect()
 
 
 def _to_float(value: Any) -> Optional[float]:
@@ -105,7 +160,7 @@ def _build_featured_mover(
     metadata = metadata_map.get(symbol)
     return Mover(
         symbol=item.get("symbol") or symbol,
-        name=metadata.get("name") if metadata else None,
+        name=_resolve_mover_name(symbol, metadata),
         price=_to_float(item.get("price")),
         change_amount=_to_float(item.get("change_amount")),
         change_percent=item.get("change_percent"),
@@ -251,6 +306,16 @@ def _build_metadata_map(items: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]
     return metadata_map
 
 
+def _resolve_mover_name(symbol: str, metadata: Optional[Dict[str, Any]]) -> Optional[str]:
+    if metadata and metadata.get("name"):
+        return str(metadata["name"])
+
+    if get_symbol_asset_class(symbol) == "crypto":
+        return resolve_crypto_pair_name(symbol)
+
+    return None
+
+
 def _parse_movers(
     items: List[Dict[str, Any]],
     sparkline_map: Dict[str, List[MoverSparklinePoint]],
@@ -264,7 +329,7 @@ def _parse_movers(
         result.append(
             Mover(
                 symbol=symbol,
-                name=metadata.get("name") if metadata else None,
+                name=_resolve_mover_name(normalized_symbol, metadata),
                 price=_to_float(item.get("price")),
                 change_amount=_to_float(item.get("change_amount")),
                 change_percent=item.get("change_percent"),
@@ -469,6 +534,7 @@ async def _build_featured_mover_response(
 
 async def get_market_movers(limit: int = 5) -> MoversResponse:
     now = time.time()
+    _prune_movers_cache(now)
 
     if limit in _movers_cache:
         cached_at, payload = _movers_cache[limit]
@@ -485,6 +551,7 @@ async def get_market_movers(limit: int = 5) -> MoversResponse:
 
         payload = await _build_market_movers(limit)
         _movers_cache[limit] = (time.time(), payload)
+        _prune_movers_cache()
         return payload
 
 
@@ -497,6 +564,7 @@ async def get_featured_mover(
     cache_key = (period.value, direction.value, asset.value)
     cache_ttl = FEATURED_MOVER_CACHE_TTL_SECONDS[period]
     now = time.time()
+    _prune_featured_mover_cache(now)
 
     if cache_key in _featured_mover_cache:
         cached_at, payload = _featured_mover_cache[cache_key]
@@ -517,4 +585,5 @@ async def get_featured_mover(
             asset=asset,
         )
         _featured_mover_cache[cache_key] = (time.time(), payload)
+        _prune_featured_mover_cache()
         return payload

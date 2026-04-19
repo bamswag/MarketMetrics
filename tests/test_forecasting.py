@@ -48,7 +48,7 @@ class ForecastModelCacheTests(unittest.TestCase):
                 training.load_trained_model("v2")
                 training.load_trained_model("v3")
 
-        self.assertEqual(list(training._loaded_model_cache.keys()), ["v2", "v3"])
+        self.assertEqual(list(training._loaded_model_cache.keys()), ["v3"])
 
 
 @unittest.skipUnless(ML_DEPENDENCIES_AVAILABLE, "ML dependencies are not installed")

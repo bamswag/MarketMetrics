@@ -237,7 +237,7 @@ class MoversServiceTests(BaseAPITestCase):
                 "top_gainers": [
                     {"symbol": "BTC/USD", "price": 74250.0, "change_amount": 3621.2, "change_percent": "5.13%", "volume": 90_000},
                     {"symbol": "ETH/USD", "price": 3560.0, "change_amount": 88.6, "change_percent": "2.55%", "volume": 82_500},
-                    {"symbol": "SOL/USD", "price": 181.2, "change_amount": 2.5, "change_percent": "1.40%", "volume": 76_000},
+                    {"symbol": "PAXG/USD", "price": 3445.2, "change_amount": 47.58, "change_percent": "1.40%", "volume": 76_000},
                 ],
                 "top_losers": [
                     {"symbol": "DOGE/USD", "price": 0.18, "change_amount": -0.02, "change_percent": "-8.21%", "volume": 115_000},
@@ -283,8 +283,9 @@ class MoversServiceTests(BaseAPITestCase):
         )
         self.assertEqual(
             [item.symbol for item in payload.gainersByCategory.crypto],
-            ["BTC/USD", "ETH/USD", "SOL/USD"],
+            ["BTC/USD", "ETH/USD", "PAXG/USD"],
         )
+        self.assertEqual(payload.gainersByCategory.crypto[2].name, "PAX Gold / US Dollar")
         self.assertEqual(
             [item.symbol for item in payload.gainersByCategory.etfs],
             ["QQQ", "SPY", "DIA"],

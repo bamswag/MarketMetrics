@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.auth_dependencies import get_current_user
 from app.integrations.alpaca.client import AlpacaMarketDataError
-from app.projections.engine import LongTermProjectionError, project_long_term
 from app.schemas.growth_projections import (
     LongTermProjectionRequest,
     LongTermProjectionResponse,
@@ -18,6 +17,11 @@ async def project_long_term_growth(
     payload: LongTermProjectionRequest,
     user=Depends(get_current_user),
 ):
+    # Import projection dependencies lazily. The route is authenticated and
+    # infrequent, so normal dashboard/movers traffic should not pay this memory
+    # cost at startup.
+    from app.projections.engine import LongTermProjectionError, project_long_term
+
     try:
         return await project_long_term(payload)
     except AlpacaMarketDataError as exc:

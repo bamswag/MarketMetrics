@@ -242,36 +242,39 @@ def run_monte_carlo_projection(
     monthly_sigma = annual_volatility / math.sqrt(12)
     monthly_log_mean = math.log1p(max(annual_return, -0.95)) / 12
     rng = np.random.default_rng(MONTE_CARLO_SEED)
-    log_returns = rng.normal(
-        loc=monthly_log_mean - 0.5 * (monthly_sigma ** 2),
-        scale=monthly_sigma,
-        size=(simulation_runs, projection_months),
-    )
-    monthly_returns = np.exp(log_returns) - 1
-    monthly_returns = np.clip(monthly_returns, -0.95, None)
-
     portfolio_values = np.full(simulation_runs, initial_amount, dtype=float)
-    path_values = np.zeros((simulation_runs, projection_months), dtype=float)
     invested_capital = initial_amount
     projected_contribution_total = 0.0
+    p10_series: List[float] = []
+    p50_series: List[float] = []
+    p90_series: List[float] = []
 
     for month_index in range(1, projection_months + 1):
-        portfolio_values *= 1 + monthly_returns[:, month_index - 1]
+        # Generate one month at a time instead of materializing the full
+        # simulation_runs x projection_months matrix. On Render's 512 MB
+        # instances this avoids large temporary allocations for 50-year runs.
+        log_returns = rng.normal(
+            loc=monthly_log_mean - 0.5 * (monthly_sigma ** 2),
+            scale=monthly_sigma,
+            size=simulation_runs,
+        )
+        monthly_returns = np.clip(np.exp(log_returns) - 1, -0.95, None)
+        portfolio_values *= 1 + monthly_returns
         if recurring_contribution > 0 and _is_contribution_month(month_index, contribution_frequency):
             portfolio_values += recurring_contribution
             invested_capital += recurring_contribution
             projected_contribution_total += recurring_contribution
-        path_values[:, month_index - 1] = portfolio_values
 
-    p10_series = np.percentile(path_values, 10, axis=0)
-    p50_series = np.percentile(path_values, 50, axis=0)
-    p90_series = np.percentile(path_values, 90, axis=0)
-    final_values = path_values[:, -1]
+        p10_series.append(float(np.percentile(portfolio_values, 10)))
+        p50_series.append(float(np.percentile(portfolio_values, 50)))
+        p90_series.append(float(np.percentile(portfolio_values, 90)))
+
+    final_values = portfolio_values
 
     return {
-        "p10Series": p10_series.tolist(),
-        "p50Series": p50_series.tolist(),
-        "p90Series": p90_series.tolist(),
+        "p10Series": p10_series,
+        "p50Series": p50_series,
+        "p90Series": p90_series,
         "p10EndValue": float(np.percentile(final_values, 10)),
         "p50EndValue": float(np.percentile(final_values, 50)),
         "p90EndValue": float(np.percentile(final_values, 90)),
