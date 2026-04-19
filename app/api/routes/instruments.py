@@ -22,7 +22,6 @@ async def instrument_detail(
         if (
             "No historical bar data" in detail
             or "No quote data" in detail
-            or "No intraday bar data" in detail
         ):
             raise HTTPException(status_code=400, detail=detail)
         raise HTTPException(status_code=502, detail=detail)

@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 
 
 class InstrumentRange(str, Enum):
-    one_day = "1D"
     one_week = "1W"
     one_month = "1M"
     three_months = "3M"

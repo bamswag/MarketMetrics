@@ -10,7 +10,6 @@ from app.schemas.instruments import (
     InstrumentQuoteOut,
     InstrumentRange,
 )
-from app.integrations.alpaca.market_data import fetch_intraday_close_series
 from app.services.price_history import (
     get_daily_close_series_cached,
     get_earliest_available_close_date_cached,
@@ -99,56 +98,6 @@ async def get_instrument_detail(
 
     canonical_symbol = metadata.get("symbol") or normalized_symbol
 
-    # ── 1D: fetch intraday (15-min) bars, bypass daily pipeline ──────────────
-    if selected_range == InstrumentRange.one_day:
-        end_date = date.today()
-        try:
-            latest_quote, intraday_series = await asyncio.wait_for(
-                asyncio.gather(
-                    get_quote_cached(canonical_symbol),
-                    fetch_intraday_close_series(canonical_symbol, asset_class=asset_class),
-                ),
-                timeout=INSTRUMENT_DATA_TIMEOUT_SECONDS,
-            )
-        except asyncio.TimeoutError as exc:
-            raise AlpacaMarketDataError(
-                "Timed out while loading market data for that instrument. Please try again."
-            ) from exc
-        except AlpacaMarketDataError:
-            raise
-
-        _, earliest_available_date = await asyncio.wait_for(
-            get_earliest_available_close_date_cached(canonical_symbol, end=end_date),
-            timeout=INSTRUMENT_DATA_TIMEOUT_SECONDS,
-        )
-        available_ranges = determine_available_ranges(earliest_available_date, end_date=end_date)
-        # 1D is always available alongside the standard ranges
-        all_ranges = [InstrumentRange.one_day] + available_ranges
-
-        return InstrumentDetailResponse(
-            symbol=canonical_symbol,
-            companyName=resolve_company_name(canonical_symbol),
-            assetCategory=metadata.get("assetCategory"),
-            exchange=metadata.get("exchange"),
-            range=InstrumentRange.one_day,
-            availableRanges=all_ranges,
-            earliestAvailableDate=earliest_available_date,
-            latestQuote=InstrumentQuoteOut(
-                price=float(latest_quote["price"]),
-                change=latest_quote.get("change"),
-                changePercent=latest_quote.get("changePercent"),
-                latestTradingDay=latest_quote.get("latestTradingDay"),
-                source=latest_quote.get("source"),
-            ),
-            historicalSeries=[
-                InstrumentPricePoint(
-                    date=point_dt.strftime("%Y-%m-%dT%H:%M:%S"),
-                    close=close,
-                )
-                for point_dt, close in intraday_series
-            ],
-        )
-
     # ── Daily ranges (1W, 1M, 3M, 6M, 1Y, 5Y, MAX) ───────────────────────────
     _, end_date = resolve_history_window(selected_range)
 
@@ -174,8 +123,6 @@ async def get_instrument_detail(
         earliest_available_date,
         end_date=end_date,
     )
-    # Prepend 1D so it's always available in the range selector
-    all_ranges = [InstrumentRange.one_day] + available_ranges
     effective_range = resolve_effective_range(selected_range, available_ranges)
     effective_start_date, effective_end_date = resolve_history_window(effective_range)
 
@@ -204,7 +151,7 @@ async def get_instrument_detail(
         assetCategory=metadata.get("assetCategory"),
         exchange=metadata.get("exchange"),
         range=effective_range,
-        availableRanges=all_ranges,
+        availableRanges=available_ranges,
         earliestAvailableDate=earliest_available_date,
         latestQuote=InstrumentQuoteOut(
             price=float(latest_quote["price"]),
