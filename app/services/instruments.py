@@ -11,7 +11,7 @@ from app.schemas.instruments import (
     InstrumentRange,
 )
 from app.services.price_history import (
-    get_daily_close_series_cached,
+    get_daily_bar_series_cached,
     get_earliest_available_close_date_cached,
 )
 from app.services.search import (
@@ -41,6 +41,37 @@ STANDARD_RANGE_ORDER = [
     InstrumentRange.one_year,
     InstrumentRange.five_years,
 ]
+
+
+def _quote_out(latest_quote: dict) -> InstrumentQuoteOut:
+    return InstrumentQuoteOut(
+        price=float(latest_quote["price"]),
+        change=latest_quote.get("change"),
+        changePercent=latest_quote.get("changePercent"),
+        open=latest_quote.get("open"),
+        high=latest_quote.get("high"),
+        low=latest_quote.get("low"),
+        close=latest_quote.get("close"),
+        previousClose=latest_quote.get("previousClose"),
+        volume=latest_quote.get("volume"),
+        vwap=latest_quote.get("vwap"),
+        tradeCount=latest_quote.get("tradeCount"),
+        latestTradingDay=latest_quote.get("latestTradingDay"),
+        source=latest_quote.get("source"),
+    )
+
+
+def _price_point_from_bar(row: dict) -> InstrumentPricePoint:
+    return InstrumentPricePoint(
+        date=row["date"].isoformat(),
+        open=row.get("open"),
+        high=row.get("high"),
+        low=row.get("low"),
+        close=float(row["close"]),
+        volume=row.get("volume"),
+        vwap=row.get("vwap"),
+        tradeCount=row.get("trade_count"),
+    )
 
 
 def resolve_history_window(selected_range: InstrumentRange) -> tuple[date | None, date]:
@@ -128,7 +159,7 @@ async def get_instrument_detail(
 
     try:
         historical_series = await asyncio.wait_for(
-            get_daily_close_series_cached(
+            get_daily_bar_series_cached(
                 canonical_symbol,
                 start=earliest_available_date if effective_start_date is None else effective_start_date,
                 end=effective_end_date,
@@ -153,15 +184,9 @@ async def get_instrument_detail(
         range=effective_range,
         availableRanges=available_ranges,
         earliestAvailableDate=earliest_available_date,
-        latestQuote=InstrumentQuoteOut(
-            price=float(latest_quote["price"]),
-            change=latest_quote.get("change"),
-            changePercent=latest_quote.get("changePercent"),
-            latestTradingDay=latest_quote.get("latestTradingDay"),
-            source=latest_quote.get("source"),
-        ),
+        latestQuote=_quote_out(latest_quote),
         historicalSeries=[
-            InstrumentPricePoint(date=point_date.isoformat(), close=close)
-            for point_date, close in historical_series
+            _price_point_from_bar(row)
+            for row in historical_series
         ],
     )

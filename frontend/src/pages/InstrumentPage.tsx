@@ -17,10 +17,7 @@ import type {
   WatchlistItemDetailedOut,
 } from '../lib/api'
 import '../styles/components/RiskProfileQuiz.css'
-import {
-  formatCurrencyWithPreferences,
-  formatPriceChangeWithPreferences,
-} from '../lib/marketDisplay'
+import { formatCurrencyWithPreferences } from '../lib/marketDisplay'
 import { formatCurrency } from '../lib/formatters'
 import '../styles/pages/InstrumentPage.css'
 
@@ -398,10 +395,15 @@ export function InstrumentPage({
   const quote = instrumentDetail?.latestQuote
   const priceChange = quote?.change ?? 0
   const isPositive = priceChange >= 0
-  const priceChangeDisplay = formatPriceChangeWithPreferences(
-    { change: quote?.change, changePercent: quote?.changePercent },
-    preferences,
-  )
+  // Always show both dollar change + percent in the hero so the label is self-explanatory
+  const heroDayChange = (() => {
+    if (!quote) return null
+    const sign = isPositive ? '+' : ''
+    const dollar = quote.change != null ? `${sign}$${quote.change.toFixed(2)}` : null
+    const pct = quote.changePercent ?? null
+    if (dollar && pct) return `${dollar} (${pct})`
+    return dollar ?? pct ?? null
+  })()
 
   // Advisory logic
   const assetCategory = instrumentDetail?.assetCategory?.toLowerCase() ?? ''
@@ -443,11 +445,13 @@ export function InstrumentPage({
               <span className="instrument-live-price">
                 {formatCurrencyWithPreferences(quote.price, preferences)}
               </span>
-              <span className={`instrument-price-change ${isPositive ? 'instrument-price-change--up' : 'instrument-price-change--down'}`}>
-                {priceChangeDisplay}
-              </span>
+              {heroDayChange && (
+                <span className={`instrument-price-change ${isPositive ? 'instrument-price-change--up' : 'instrument-price-change--down'}`}>
+                  {heroDayChange}
+                </span>
+              )}
               <span className="instrument-price-date">
-                Last traded {quote.latestTradingDay ?? '--'}
+                Today's change · Last traded {quote.latestTradingDay ?? '--'}
               </span>
             </div>
           ) : null}

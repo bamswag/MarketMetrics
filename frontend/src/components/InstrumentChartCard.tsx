@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
-import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
+import { formatCurrency, formatLongDate, formatShortDate, formatShortTime } from '../lib/formatters'
 
 type ChartType = 'price' | 'ma-overlay'
 
@@ -33,6 +33,29 @@ const RANGE_LABELS: Record<InstrumentRange, string> = {
 }
 const AXIS_TICK = { fill: '#8b95a3', fontSize: 11 } as const
 
+function formatCompactNumber(value?: number | null): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '--'
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: value >= 1_000_000 ? 1 : 0,
+    notation: value >= 10_000 ? 'compact' : 'standard',
+  }).format(value)
+}
+
+function formatOptionalCurrency(value?: number | null): string {
+  return value === null || value === undefined ? '--' : formatCurrency(value)
+}
+
+function formatPointLabel(value: string): string {
+  return value.includes('T') ? formatShortTime(value) : formatLongDate(value)
+}
+
+function parseChartDate(value: string): Date {
+  return value.includes('T') ? new Date(value) : new Date(`${value}T00:00:00`)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltipContent(props: any) {
   const { active, payload, label } = props ?? {}
@@ -44,12 +67,21 @@ function ChartTooltipContent(props: any) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ma50Entry = payload.find((p: any) => p.dataKey === 'ma50')
   const value = Number(priceEntry?.value ?? payload[0]?.value ?? 0)
+  const point = priceEntry?.payload ?? payload[0]?.payload ?? {}
   return (
     <div className="instrument-tooltip">
       <span className="instrument-tooltip-date">
-        {typeof label === 'string' ? formatLongDate(label) : ''}
+        {typeof label === 'string' ? formatPointLabel(label) : ''}
       </span>
       <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
+      {point.open != null || point.high != null || point.low != null ? (
+        <div className="instrument-tooltip-grid">
+          <span>Open <strong>{formatOptionalCurrency(point.open)}</strong></span>
+          <span>High <strong>{formatOptionalCurrency(point.high)}</strong></span>
+          <span>Low <strong>{formatOptionalCurrency(point.low)}</strong></span>
+          <span>Volume <strong>{formatCompactNumber(point.volume)}</strong></span>
+        </div>
+      ) : null}
       {ma30Entry?.value != null && (
         <span className="instrument-tooltip-ma instrument-tooltip-ma--30">EMA30 {formatCurrency(Number(ma30Entry.value))}</span>
       )}
@@ -78,7 +110,7 @@ function formatYAxisTick(value: number): string {
 
 // Range-aware X-axis labels: year for MAX/5Y, "Apr '24" for 1Y/6M/3M, "Apr 17" for short ranges
 function formatXAxisTick(value: string, range: InstrumentRange): string {
-  const d = new Date(`${value}T00:00:00`)
+  const d = parseChartDate(value)
   if (range === 'MAX' || range === '5Y') {
     return String(d.getFullYear())
   }
@@ -90,36 +122,41 @@ function formatXAxisTick(value: string, range: InstrumentRange): string {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' })
 }
 
-// Compute explicit tick positions so each range shows clean calendar-aligned intervals:
-//   MAX / 5Y  → one tick per year
-//   1Y / 6M / 3M → one tick per month
-//   1M        → one tick per week (7-day block)
-//   1W        → one tick per trading day
+// Compute explicit tick positions for clean, evenly-spaced X-axis labels.
+//
+// Short ranges (1W, 1M) use evenly-spaced data indices so weekend gaps or
+// partial weeks never bunch two labels together.
+//
+// Longer ranges use calendar-aligned first trading days (per month / per year)
+// which are inherently ~equal since months/years have similar trading-day counts.
 function computeXTicks(series: Array<{ date: string }>, range: InstrumentRange): string[] {
   if (series.length === 0) return []
+  const n = series.length
+
+  if (range === '1W' || range === '1M') {
+    // Evenly spaced by array index: 5 ticks for both (≈ 1 per day for 1W, ≈ 1 per week for 1M)
+    const count = Math.min(5, n)
+    if (count >= n) return series.map((p) => p.date)
+    const ticks: string[] = []
+    for (let i = 0; i < count; i++) {
+      ticks.push(series[Math.round((i / (count - 1)) * (n - 1))].date)
+    }
+    return ticks
+  }
+
+  // Calendar-aligned: first trading day of each month (3M/6M/1Y) or year (5Y/MAX)
   const ticks: string[] = []
   const seen = new Set<string>()
-
   for (const { date } of series) {
-    const d = new Date(`${date}T00:00:00`)
-    let key: string
-
-    if (range === 'MAX' || range === '5Y') {
-      key = String(d.getFullYear())
-    } else if (range === '1Y' || range === '6M' || range === '3M') {
-      key = `${d.getFullYear()}-${d.getMonth()}`
-    } else if (range === '1M') {
-      key = `${d.getFullYear()}-${d.getMonth()}-${Math.floor((d.getDate() - 1) / 7)}`
-    } else {
-      key = date.slice(0, 10)
-    }
-
+    const d = parseChartDate(date)
+    const key = range === 'MAX' || range === '5Y'
+      ? String(d.getFullYear())
+      : `${d.getFullYear()}-${d.getMonth()}`
     if (!seen.has(key)) {
       seen.add(key)
       ticks.push(date)
     }
   }
-
   return ticks
 }
 
@@ -184,10 +221,17 @@ export function InstrumentChartCard({
   const rangeChange = lastClose - firstClose
   const rangeChangePct = firstClose > 0 ? ((rangeChange / firstClose) * 100).toFixed(2) : '0.00'
   const isRangePositive = rangeChange >= 0
-  const livePrice = instrumentDetail.latestQuote.price
-  const liveChange = instrumentDetail.latestQuote.change
-  const liveChangePct = instrumentDetail.latestQuote.changePercent
-  const isLivePositive = (liveChange ?? 0) >= 0
+  const quote = instrumentDetail.latestQuote
+  const livePrice = quote.price
+  const marketStats = [
+    { label: 'Open', value: formatOptionalCurrency(quote.open) },
+    { label: 'High', value: formatOptionalCurrency(quote.high) },
+    { label: 'Low', value: formatOptionalCurrency(quote.low) },
+    { label: 'Close', value: formatOptionalCurrency(quote.close) },
+    { label: 'Volume', value: formatCompactNumber(quote.volume) },
+    { label: 'VWAP', value: formatOptionalCurrency(quote.vwap) },
+  ]
+  const hasMarketStats = marketStats.some((stat) => stat.value !== '--')
 
   return (
     <div className="instrument-chart-wrapper">
@@ -228,19 +272,39 @@ export function InstrumentChartCard({
         </div>
       </div>
 
-      {/* ── Live price row ── */}
+      {/* ── Live price ── */}
       <div className="instrument-live-price-row">
         <span className="instrument-live-price-value">{formatCurrency(livePrice)}</span>
-        {(liveChange != null || liveChangePct) && (
-          <>
-            <span className={isLivePositive ? 'positive-pill instrument-live-pill' : 'negative-pill instrument-live-pill'}>
-              {liveChange != null ? `${isLivePositive ? '+' : ''}${liveChange.toFixed(2)}` : ''}
-              {liveChangePct ? ` (${liveChangePct})` : ''}
-            </span>
-            <span className="instrument-live-label">today's change</span>
-          </>
-        )}
       </div>
+
+      {hasMarketStats ? (
+        <div className="instrument-market-stat-grid" aria-label="Latest trading day market stats">
+          <div className="instrument-market-stat instrument-market-stat--range">
+            <span className="instrument-market-stat-label">Day range</span>
+            <strong className="instrument-market-stat-value">
+              {formatOptionalCurrency(quote.low)} - {formatOptionalCurrency(quote.high)}
+            </strong>
+          </div>
+          {marketStats.map((stat) => (
+            <div className="instrument-market-stat" key={stat.label}>
+              <span className="instrument-market-stat-label">{stat.label}</span>
+              <strong className="instrument-market-stat-value">{stat.value}</strong>
+            </div>
+          ))}
+          {quote.previousClose != null ? (
+            <div className="instrument-market-stat">
+              <span className="instrument-market-stat-label">Previous close</span>
+              <strong className="instrument-market-stat-value">{formatCurrency(quote.previousClose)}</strong>
+            </div>
+          ) : null}
+          {quote.tradeCount != null ? (
+            <div className="instrument-market-stat">
+              <span className="instrument-market-stat-label">Trades</span>
+              <strong className="instrument-market-stat-value">{formatCompactNumber(quote.tradeCount)}</strong>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {chartType === 'ma-overlay' && (
         <div className="instrument-chart-legend">

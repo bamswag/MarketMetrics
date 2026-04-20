@@ -577,6 +577,50 @@
   letter-spacing: 0.01em;
 }
 
+.instrument-market-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 28px 6px;
+}
+
+.instrument-market-stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(128, 143, 163, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 249, 252, 0.76)),
+    rgba(255, 255, 255, 0.7);
+}
+
+.instrument-market-stat--range {
+  grid-column: span 2;
+  background:
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 249, 252, 0.8));
+}
+
+.instrument-market-stat-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.instrument-market-stat-value {
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .instrument-chart-frame {
   padding: 12px 20px 8px;
 }
@@ -602,6 +646,29 @@
   font-size: 1.05rem;
   color: #fff;
   font-weight: 700;
+}
+
+.instrument-tooltip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+  padding-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.instrument-tooltip-grid span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.instrument-tooltip-grid strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.76rem;
 }
 
 .instrument-tooltip-ma {
@@ -664,10 +731,24 @@
     align-items: stretch;
   }
 
+  .instrument-market-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .instrument-chart-header,
   .instrument-chart-footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .instrument-market-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .instrument-market-stat--range {
+    grid-column: auto;
   }
 }
 

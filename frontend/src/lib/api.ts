@@ -216,12 +216,26 @@ export type InstrumentDetailResponse = {
     price: number
     change?: number | null
     changePercent?: string | null
+    open?: number | null
+    high?: number | null
+    low?: number | null
+    close?: number | null
+    previousClose?: number | null
+    volume?: number | null
+    vwap?: number | null
+    tradeCount?: number | null
     latestTradingDay?: string | null
     source?: string | null
   }
   historicalSeries: Array<{
     date: string
+    open?: number | null
+    high?: number | null
+    low?: number | null
     close: number
+    volume?: number | null
+    vwap?: number | null
+    tradeCount?: number | null
   }>
 }
 
@@ -1034,4 +1048,109 @@ export async function fetchForecast(
     signal,
   })
   return parseResponse<ForecastResponse>(response)
+}
+
+// ── Growth Projections ────────────────────────────────────────────────────────
+
+export type GrowthProjectionRequest = {
+  symbol: string
+  years: number
+  initialAmount: number
+  recurringContribution?: number
+  contributionFrequency?: 'monthly' | 'quarterly' | 'yearly'
+  expectedAnnualReturn?: number
+  annualVolatility?: number
+  inflationRate?: number
+  simulationRuns?: number
+}
+
+export type MonthlyProjectionPoint = {
+  date: string
+  investedCapital: number
+  pessimisticValue: number
+  baselineValue: number
+  optimisticValue: number
+  monteCarloP10: number
+  monteCarloP50: number
+  monteCarloP90: number
+}
+
+export type DeterministicScenario = {
+  annualReturnUsed: number
+  projectedEndValue: number
+  projectedGrowthPct: number
+}
+
+export type DeterministicScenarios = {
+  pessimistic: DeterministicScenario
+  baseline: DeterministicScenario
+  optimistic: DeterministicScenario
+}
+
+export type MonteCarloSummary = {
+  runs: number
+  p10EndValue: number
+  p50EndValue: number
+  p90EndValue: number
+  probabilityOfProfit: number
+  bestCaseEndValue: number
+  worstCaseEndValue: number
+}
+
+export type ProjectionEndValues = {
+  pessimistic: number
+  baseline: number
+  optimistic: number
+  monteCarloP10: number
+  monteCarloP50: number
+  monteCarloP90: number
+}
+
+export type ProjectionAssumptions = {
+  source: string
+  expectedAnnualReturn: number
+  annualVolatility: number
+  inflationRate: number
+  historyWindowYearsUsed: number
+}
+
+export type GrowthProjectionResponse = {
+  symbol: string
+  companyName?: string | null
+  lastActualClose: number
+  projectionYears: number
+  projectionMonths: number
+  assumptionsUsed: ProjectionAssumptions
+  monthlyChartData: MonthlyProjectionPoint[]
+  deterministicScenarios: DeterministicScenarios
+  monteCarloSummary: MonteCarloSummary
+  projectedContributionTotal: number
+  initialAmount: number
+  totalInvested: number
+  nominalEndValues: ProjectionEndValues
+  nominalProfitGain: ProjectionEndValues
+  nominalGrowthPct: ProjectionEndValues
+  realEndValues?: ProjectionEndValues | null
+  realProfitGain?: ProjectionEndValues | null
+  realGrowthPct?: ProjectionEndValues | null
+}
+
+export async function fetchGrowthProjection(
+  token: string | undefined,
+  payload: GrowthProjectionRequest,
+  signal?: AbortSignal,
+): Promise<GrowthProjectionResponse> {
+  if (!token) {
+    throw new Error('Sign in to run investment simulations.')
+  }
+  const response = await safeFetch(`${getApiUrl()}/project/long-term`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    signal,
+  })
+  return parseResponse<GrowthProjectionResponse>(response)
 }

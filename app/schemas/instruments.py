@@ -21,6 +21,14 @@ class InstrumentQuoteOut(BaseModel):
     price: float
     change: Optional[float] = None
     changePercent: Optional[str] = None
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    close: Optional[float] = None
+    previousClose: Optional[float] = None
+    volume: Optional[int] = None
+    vwap: Optional[float] = None
+    tradeCount: Optional[int] = None
     latestTradingDay: Optional[str] = None
     source: Optional[str] = None
 
@@ -28,6 +36,12 @@ class InstrumentQuoteOut(BaseModel):
 class InstrumentPricePoint(BaseModel):
     date: str  # ISO date "YYYY-MM-DD" or ISO datetime "YYYY-MM-DDTHH:MM:SS" for intraday
     close: float
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    volume: Optional[int] = None
+    vwap: Optional[float] = None
+    tradeCount: Optional[int] = None
 
 
 class InstrumentDetailResponse(BaseModel):

@@ -287,18 +287,37 @@ def _extract_snapshot_price(snapshot: Dict[str, Any]) -> Optional[float]:
     return None
 
 
+def _optional_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        parsed = int(float(value))
+    except (TypeError, ValueError):
+        return None
+    return parsed or None
+
+
 def _normalize_snapshot(symbol: str, snapshot: Dict[str, Any]) -> Dict[str, Any]:
     latest_trade = snapshot.get("latestTrade") or {}
     daily_bar = snapshot.get("dailyBar") or {}
     prev_daily_bar = snapshot.get("prevDailyBar") or {}
 
     price = _extract_snapshot_price(snapshot)
-    previous_close = prev_daily_bar.get("c")
+    previous_close = _optional_float(prev_daily_bar.get("c"))
     change = None
     change_percent = None
     if price is not None and previous_close not in (None, 0):
-        change = price - float(previous_close)
-        change_percent = f"{((change / float(previous_close)) * 100):.2f}%"
+        change = price - previous_close
+        change_percent = f"{((change / previous_close) * 100):.2f}%"
 
     latest_trading_day = None
     raw_latest_day = daily_bar.get("t") or prev_daily_bar.get("t")
@@ -310,7 +329,14 @@ def _normalize_snapshot(symbol: str, snapshot: Dict[str, Any]) -> Dict[str, Any]
         "price": price,
         "change": round(change, 4) if change is not None else None,
         "changePercent": change_percent,
-        "volume": int(daily_bar.get("v") or prev_daily_bar.get("v") or 0) or None,
+        "open": _optional_float(daily_bar.get("o")),
+        "high": _optional_float(daily_bar.get("h")),
+        "low": _optional_float(daily_bar.get("l")),
+        "close": _optional_float(daily_bar.get("c")),
+        "previousClose": previous_close,
+        "volume": _optional_int(daily_bar.get("v") or prev_daily_bar.get("v")),
+        "vwap": _optional_float(daily_bar.get("vw")),
+        "tradeCount": _optional_int(daily_bar.get("n")),
         "latestTradingDay": latest_trading_day,
         "source": "alpaca",
     }

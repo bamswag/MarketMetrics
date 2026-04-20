@@ -1,7 +1,7 @@
 /* ── Shell ── */
 .forecast-page {
   display: grid;
-  gap: 24px;
+  gap: 22px;
   padding-bottom: 64px;
 }
 
@@ -9,13 +9,13 @@
 .forecast-hero {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 28px 32px;
+  gap: 20px;
+  padding: 26px 30px;
   border: 1px solid var(--panel-border);
-  border-radius: 28px;
+  border-radius: 26px;
   background:
-    radial-gradient(circle at top left, rgba(201, 106, 69, 0.07), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.05), transparent 40%),
+    radial-gradient(circle at top left, rgba(201, 106, 69, 0.07), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.05), transparent 42%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -87,25 +87,34 @@
 }
 
 /* ── Horizon selector ── */
-.forecast-horizon-row {
+.forecast-horizon-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .forecast-horizon-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
-  margin-right: 4px;
+}
+
+.forecast-horizon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .forecast-horizon-btn {
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: 999px;
   border: 1.5px solid var(--panel-border);
-  background: none;
+  background: var(--panel-bg);
   font-family: var(--sans);
   font-size: 0.82rem;
   font-weight: 600;
@@ -114,9 +123,14 @@
   transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
 }
 
-.forecast-horizon-btn:hover {
+.forecast-horizon-btn:hover:not(:disabled) {
   color: var(--text-main);
   border-color: var(--text-main);
+}
+
+.forecast-horizon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .forecast-horizon-btn.is-active {
@@ -125,24 +139,91 @@
   color: #fff;
 }
 
-/* ── Stats row ── */
-.forecast-stats-row {
+/* ── Verdict (plain-language summary) card ── */
+.forecast-verdict-card {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 20px 24px;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 28px 32px;
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  background: var(--soft-bg);
+  border-radius: 24px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  position: relative;
+  overflow: hidden;
 }
 
-.forecast-stat {
+.forecast-verdict-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.forecast-verdict-card--positive::before {
+  background: radial-gradient(circle at 100% 0%, rgba(15, 118, 110, 0.10), transparent 55%);
+}
+
+.forecast-verdict-card--negative::before {
+  background: radial-gradient(circle at 100% 0%, rgba(192, 60, 50, 0.10), transparent 55%);
+}
+
+.forecast-verdict-card--neutral::before {
+  background: radial-gradient(circle at 100% 0%, rgba(104, 116, 135, 0.08), transparent 55%);
+}
+
+.forecast-verdict-main {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
 }
 
-.forecast-stat-label {
+.forecast-verdict-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.forecast-verdict-headline {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.forecast-verdict-sub {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+  max-width: 52ch;
+}
+
+.forecast-verdict-figures {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.forecast-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.forecast-figure-label {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -150,22 +231,35 @@
   color: var(--muted);
 }
 
-.forecast-stat-value {
-  font-size: 1.6rem;
+.forecast-figure-value {
+  font-size: 1.7rem;
   font-weight: 800;
   color: var(--text-main);
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.05;
 }
 
-.forecast-stat-value--accent {
-  color: var(--accent);
-}
+.forecast-figure-value--positive { color: #0f766e; }
+.forecast-figure-value--negative { color: #b84a33; }
+/* Forecast values always render in cobalt — direction is shown by the delta, not the price */
+.forecast-figure-value--forecast { color: #2563EB; }
 
-.forecast-stat-sub {
-  font-size: 0.74rem;
+.forecast-figure-delta {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--muted);
-  font-weight: 500;
+}
+
+.forecast-figure-delta--positive { color: #0f766e; }
+.forecast-figure-delta--negative { color: #b84a33; }
+
+.forecast-figure-arrow {
+  font-size: 1.5rem;
+  color: var(--muted);
+  opacity: 0.6;
+  flex-shrink: 0;
+  /* Offset downward to align visually with the price values beneath the labels */
+  margin-top: 1.5rem;
 }
 
 /* ── Chart card ── */
@@ -179,25 +273,34 @@
 
 .forecast-chart-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
 
 .forecast-chart-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-main);
-  margin: 0;
+  margin: 0 0 4px;
   letter-spacing: -0.01em;
+}
+
+.forecast-chart-subtitle {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+  max-width: 62ch;
 }
 
 .forecast-chart-legend {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .forecast-legend-item {
@@ -238,7 +341,7 @@
 }
 
 .forecast-chart-wrap {
-  height: 320px;
+  height: 340px;
 }
 
 /* ── Bottom grid ── */
@@ -248,6 +351,29 @@
   gap: 18px;
 }
 
+/* ── Accuracy / signals card shared heading ── */
+.forecast-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.forecast-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.forecast-card-subtitle {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+}
+
 /* ── Accuracy card ── */
 .forecast-accuracy-card {
   padding: 22px 24px;
@@ -255,15 +381,6 @@
   border-radius: 22px;
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
-}
-
-.forecast-card-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin: 0 0 16px;
 }
 
 .forecast-metrics-grid {
@@ -276,29 +393,54 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 14px 14px;
+  border-radius: 14px;
   background: var(--soft-bg);
   border: 1px solid var(--panel-border);
+  cursor: help;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.forecast-metric-tile:hover {
+  border-color: rgba(201, 106, 69, 0.35);
+  transform: translateY(-1px);
 }
 
 .forecast-metric-label {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.forecast-metric-hint {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.55;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .forecast-metric-value {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: var(--text-main);
   letter-spacing: -0.01em;
+  margin-top: 2px;
 }
 
 .forecast-metric-value--positive {
   color: #0f766e;
+}
+
+.forecast-metric-sub {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 /* ── Features card ── */
@@ -317,7 +459,8 @@
 }
 
 .forecast-feature-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1.5fr) minmax(70px, 2fr) 48px;
   align-items: center;
   gap: 12px;
 }
@@ -326,22 +469,23 @@
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--muted);
-  min-width: 16px;
   text-align: center;
+  background: var(--soft-bg);
+  border-radius: 999px;
+  padding: 3px 0;
 }
 
 .forecast-feature-name {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--text-main);
-  font-weight: 500;
-  min-width: 120px;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: help;
 }
 
 .forecast-feature-bar-track {
-  flex: 1;
   height: 7px;
   background: var(--panel-border);
   border-radius: 999px;
@@ -356,29 +500,73 @@
 }
 
 .forecast-feature-pct {
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: var(--muted);
-  min-width: 38px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
   text-align: right;
+}
+
+/* ── Forecast tooltip ── */
+.forecast-tooltip {
+  min-width: 160px;
+}
+
+.forecast-tooltip-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.forecast-tooltip-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  opacity: 0.9;
+}
+
+.forecast-tooltip-price {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #93c5fd;
+  letter-spacing: -0.01em;
+}
+
+.forecast-tooltip-change {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.forecast-tooltip-change--up   { color: #4ade80; }
+.forecast-tooltip-change--down { color: #f87171; }
+
+.forecast-tooltip-range {
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
 }
 
 /* ── Disclaimer ── */
 .forecast-disclaimer {
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.6;
   padding: 14px 18px;
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--soft-bg);
+  margin: 0;
 }
 
 /* ── Loading ── */
 .forecast-loading {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .forecast-skeleton {
@@ -425,13 +613,35 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 900px) {
-  .forecast-stats-row {
-    grid-template-columns: repeat(2, 1fr);
+@media (max-width: 960px) {
+  .forecast-verdict-card {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 24px;
+  }
+
+  .forecast-verdict-figures {
+    justify-content: flex-start;
   }
 
   .forecast-bottom-grid {
     grid-template-columns: 1fr;
+  }
+
+  .forecast-horizon-group {
+    align-items: flex-start;
+  }
+
+  .forecast-horizon-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Dark mode: soften the band and use a darker cutout */
+  .forecast-chart-wrap .recharts-area-area[name="predictedCloseHigh"] {
+    /* Gradient stop opacities reduced — handled by rgba(147,197,253,0.12) in the stop */
+    opacity: 0.75;
   }
 }
 
@@ -440,21 +650,41 @@
     padding: 20px 18px;
   }
 
-  .forecast-stats-row {
-    grid-template-columns: 1fr 1fr;
-    padding: 16px;
+  .forecast-verdict-headline {
+    font-size: 1.25rem;
   }
 
-  .forecast-stat-value {
-    font-size: 1.3rem;
+  .forecast-verdict-figures {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .forecast-figure-value {
+    font-size: 1.4rem;
+  }
+
+  .forecast-figure-arrow {
+    display: none;
+  }
+
+  .forecast-metrics-grid {
+    grid-template-columns: 1fr;
   }
 
   .forecast-chart-wrap {
-    height: 240px;
+    height: 260px;
   }
 
-  .instrument-forecast-cta {
-    flex-direction: column;
-    align-items: flex-start;
+  .forecast-feature-row {
+    grid-template-columns: 20px minmax(0, 1fr) 44px;
+    grid-template-areas:
+      'rank name pct'
+      '. bar bar';
+    row-gap: 6px;
   }
+
+  .forecast-feature-rank { grid-area: rank; }
+  .forecast-feature-name { grid-area: name; }
+  .forecast-feature-pct { grid-area: pct; }
+  .forecast-feature-bar-track { grid-area: bar; }
 }
