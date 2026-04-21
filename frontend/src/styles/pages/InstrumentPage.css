@@ -585,6 +585,7 @@
 }
 
 .instrument-market-stat {
+  position: relative;
   display: grid;
   gap: 4px;
   min-width: 0;
@@ -594,13 +595,27 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 249, 252, 0.76)),
     rgba(255, 255, 255, 0.7);
+  cursor: help;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
-.instrument-market-stat--range {
-  grid-column: span 2;
-  background:
-    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 48%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 249, 252, 0.8));
+.instrument-market-stat:hover,
+.instrument-market-stat:focus-visible {
+  border-color: rgba(15, 118, 110, 0.24);
+  box-shadow: 0 14px 30px rgba(20, 32, 51, 0.1);
+  transform: translateY(-1px);
+}
+
+.instrument-market-stat:focus {
+  outline: none;
+}
+
+.instrument-market-stat:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.18);
+  outline-offset: 3px;
 }
 
 .instrument-market-stat-label {
@@ -619,6 +634,49 @@
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.instrument-market-stat-tooltip {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 10px);
+  left: 12px;
+  width: min(260px, calc(100vw - 64px));
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(20, 32, 51, 0.96);
+  box-shadow: 0 14px 36px rgba(20, 32, 51, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms ease;
+  visibility: hidden;
+}
+
+.instrument-market-stat-tooltip::before {
+  position: absolute;
+  top: -5px;
+  left: 18px;
+  width: 10px;
+  height: 10px;
+  background: rgba(20, 32, 51, 0.96);
+  content: '';
+  transform: rotate(45deg);
+}
+
+.instrument-market-stat:hover .instrument-market-stat-tooltip,
+.instrument-market-stat:focus-visible .instrument-market-stat-tooltip,
+.instrument-market-stat:focus-within .instrument-market-stat-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .instrument-chart-frame {
@@ -746,9 +804,18 @@
   .instrument-market-stat-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .instrument-market-stat--range {
-    grid-column: auto;
+/* ── CTA group (Forecast + Simulator side-by-side) ── */
+.instrument-cta-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .instrument-cta-group {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -792,6 +859,21 @@
   font-size: 0.82rem;
   color: var(--muted);
   font-style: italic;
+}
+
+.instrument-forecast-cta--simulator {
+  background:
+    radial-gradient(circle at 90% 50%, rgba(37, 99, 235, 0.07), transparent 55%),
+    var(--panel-bg);
+}
+
+.primary-action--secondary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.primary-action--secondary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
 @media (max-width: 540px) {

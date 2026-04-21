@@ -76,6 +76,10 @@ const ForecastPage = lazy(() =>
   import('../pages/ForecastPage').then((module) => ({ default: module.ForecastPage })),
 )
 
+const GrowthProjectionPage = lazy(() =>
+  import('../pages/GrowthProjectionPage').then((module) => ({ default: module.GrowthProjectionPage })),
+)
+
 type DashboardData = {
   alerts: AlertListResponse | null
   movers: MoversResponse | null
@@ -1559,6 +1563,21 @@ function AppContent() {
             )
           }
           path="/forecast/:symbol"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <Suspense fallback={<RouteLoadingState />}>
+                  <GrowthProjectionPage token={token} />
+                </Suspense>
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/instrument/:symbol/project"
         />
         <Route path="*" element={<Navigate replace to={token ? '/dashboard' : '/'} />} />
       </Routes>

@@ -21,6 +21,12 @@ type InstrumentChartCardProps = {
   onSelectRange: (range: InstrumentRange) => void
 }
 
+type MarketStat = {
+  description: string
+  label: string
+  value: string
+}
+
 const RANGE_OPTIONS: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'MAX']
 const RANGE_LABELS: Record<InstrumentRange, string> = {
   '1W': '1W',
@@ -223,13 +229,27 @@ export function InstrumentChartCard({
   const isRangePositive = rangeChange >= 0
   const quote = instrumentDetail.latestQuote
   const livePrice = quote.price
-  const marketStats = [
-    { label: 'Open', value: formatOptionalCurrency(quote.open) },
-    { label: 'High', value: formatOptionalCurrency(quote.high) },
-    { label: 'Low', value: formatOptionalCurrency(quote.low) },
-    { label: 'Close', value: formatOptionalCurrency(quote.close) },
-    { label: 'Volume', value: formatCompactNumber(quote.volume) },
-    { label: 'VWAP', value: formatOptionalCurrency(quote.vwap) },
+  const marketStats: MarketStat[] = [
+    {
+      label: 'High',
+      value: formatOptionalCurrency(quote.high),
+      description: 'The highest price reached during the latest trading day.',
+    },
+    {
+      label: 'Low',
+      value: formatOptionalCurrency(quote.low),
+      description: 'The lowest price reached during the latest trading day.',
+    },
+    {
+      label: 'Volume',
+      value: formatCompactNumber(quote.volume),
+      description: 'The amount traded during the latest trading day.',
+    },
+    {
+      label: 'VWAP',
+      value: formatOptionalCurrency(quote.vwap),
+      description: 'The volume-weighted average price. Bigger trades have more influence on this average.',
+    },
   ]
   const hasMarketStats = marketStats.some((stat) => stat.value !== '--')
 
@@ -279,30 +299,24 @@ export function InstrumentChartCard({
 
       {hasMarketStats ? (
         <div className="instrument-market-stat-grid" aria-label="Latest trading day market stats">
-          <div className="instrument-market-stat instrument-market-stat--range">
-            <span className="instrument-market-stat-label">Day range</span>
-            <strong className="instrument-market-stat-value">
-              {formatOptionalCurrency(quote.low)} - {formatOptionalCurrency(quote.high)}
-            </strong>
-          </div>
-          {marketStats.map((stat) => (
-            <div className="instrument-market-stat" key={stat.label}>
-              <span className="instrument-market-stat-label">{stat.label}</span>
-              <strong className="instrument-market-stat-value">{stat.value}</strong>
-            </div>
-          ))}
-          {quote.previousClose != null ? (
-            <div className="instrument-market-stat">
-              <span className="instrument-market-stat-label">Previous close</span>
-              <strong className="instrument-market-stat-value">{formatCurrency(quote.previousClose)}</strong>
-            </div>
-          ) : null}
-          {quote.tradeCount != null ? (
-            <div className="instrument-market-stat">
-              <span className="instrument-market-stat-label">Trades</span>
-              <strong className="instrument-market-stat-value">{formatCompactNumber(quote.tradeCount)}</strong>
-            </div>
-          ) : null}
+          {marketStats.map((stat, index) => {
+            const tooltipId = `instrument-market-stat-${index}`
+            return (
+              <div
+                aria-describedby={tooltipId}
+                className="instrument-market-stat"
+                key={stat.label}
+                role="group"
+                tabIndex={0}
+              >
+                <span className="instrument-market-stat-label">{stat.label}</span>
+                <strong className="instrument-market-stat-value">{stat.value}</strong>
+                <span className="instrument-market-stat-tooltip" id={tooltipId} role="tooltip">
+                  {stat.description}
+                </span>
+              </div>
+            )
+          })}
         </div>
       ) : null}
 

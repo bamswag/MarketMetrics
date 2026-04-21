@@ -371,7 +371,7 @@ async def project_long_term(request: LongTermProjectionRequest) -> LongTermProje
         end=history_end,
         asset_class=asset_class,
     )
-    company_name = await fetch_company_name(symbol)
+    company_name = fetch_company_name(symbol)
     if not rows:
         raise LongTermProjectionError("No historical data is available for that symbol.")
 

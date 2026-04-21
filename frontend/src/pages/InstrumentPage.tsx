@@ -684,23 +684,43 @@ export function InstrumentPage({
       ) : null}
 
       {instrumentDetail && !isLoadingInstrument ? (
-        <div className="instrument-forecast-cta">
-          <div className="instrument-forecast-cta-info">
-            <h3 className="instrument-forecast-cta-heading">AI Price Forecast</h3>
-            <p className="instrument-forecast-cta-sub">
-              See where {symbol} could be heading — powered by a trained ML model.
-            </p>
+        <div className="instrument-cta-group">
+          <div className="instrument-forecast-cta">
+            <div className="instrument-forecast-cta-info">
+              <h3 className="instrument-forecast-cta-heading">AI Price Forecast</h3>
+              <p className="instrument-forecast-cta-sub">
+                See where {symbol} could be heading — powered by a trained ML model.
+              </p>
+            </div>
+            {token ? (
+              <Link
+                className="primary-action"
+                to={`/forecast/${encodeURIComponent(symbol)}`}
+              >
+                Run forecast →
+              </Link>
+            ) : (
+              <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
+            )}
           </div>
-          {token ? (
-            <Link
-              className="primary-action"
-              to={`/forecast/${encodeURIComponent(symbol)}`}
-            >
-              Run forecast →
-            </Link>
-          ) : (
-            <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
-          )}
+          <div className="instrument-forecast-cta instrument-forecast-cta--simulator">
+            <div className="instrument-forecast-cta-info">
+              <h3 className="instrument-forecast-cta-heading">Investment Simulator</h3>
+              <p className="instrument-forecast-cta-sub">
+                Project long-term growth with Monte Carlo scenarios — up to 50 years out.
+              </p>
+            </div>
+            {token ? (
+              <Link
+                className="primary-action primary-action--secondary"
+                to={`/instrument/${encodeURIComponent(symbol)}/project`}
+              >
+                Simulate →
+              </Link>
+            ) : (
+              <span className="instrument-forecast-cta-lock">Sign in to simulate</span>
+            )}
+          </div>
         </div>
       ) : null}
     </section>
