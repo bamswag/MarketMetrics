@@ -103,6 +103,8 @@ export type UserOut = {
   email: string
   displayName: string
   primaryAuthProvider: string
+  passwordAuthEnabled?: boolean
+  googleLinked?: boolean
   emailNotificationsEnabled?: boolean
   emailVerifiedAt?: string | null
   pendingEmail?: string | null
@@ -427,7 +429,7 @@ export type AlertTriggeredWebSocketMessage = {
     id: string
     symbol: string
     condition: AlertCondition
-    targetPrice: number
+    targetPrice: number | null
     severity?: AlertSeverity | null
     triggeredAt?: string | null
   }

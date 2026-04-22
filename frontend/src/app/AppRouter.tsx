@@ -91,6 +91,22 @@ type AuthRedirectPayload = {
   redirectedToken: string | null
 }
 
+function formatPercentThreshold(value: number): string {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
+}
+
+function formatAlertToastBody(toast: AlertToast): string {
+  if (toast.condition === 'percent_change') {
+    return `${toast.symbol} moved by ${toast.targetPrice != null ? formatPercentThreshold(toast.targetPrice) : 'its percent threshold'}.`
+  }
+
+  if (toast.condition === 'range_exit') {
+    return `${toast.symbol} moved outside its alert range.`
+  }
+
+  return `${toast.symbol} moved ${toast.condition} ${toast.targetPrice != null ? formatCurrency(toast.targetPrice) : 'its target price'}.`
+}
+
 type NotificationPermissionState = NotificationPermission | 'unsupported'
 
 type PendingAlertAction = 'delete' | 'reset' | 'pause' | 'resume' | 'edit' | null
@@ -693,7 +709,7 @@ function AppContent() {
         void new window.Notification(
           `${isUrgent ? '[URGENT] ' : ''}${toast.symbol} alert triggered`,
           {
-            body: `${toast.symbol} moved ${toast.condition} ${toast.targetPrice != null ? formatCurrency(toast.targetPrice) : ''}.`,
+            body: formatAlertToastBody(toast),
             requireInteraction: isUrgent,
           },
         )

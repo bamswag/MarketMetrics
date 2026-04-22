@@ -29,6 +29,32 @@ type AdvisoryMessage = {
   text: string
 } | null
 
+const DEFAULT_PERCENT_CHANGE_THRESHOLD = '5'
+
+function formatPercentThreshold(value: number): string {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
+}
+
+function isEditableAlertCondition(condition: AlertCondition): boolean {
+  return condition === 'above' || condition === 'below' || condition === 'percent_change'
+}
+
+function formatInstrumentAlertTarget(alert: PriceAlert): string {
+  if (alert.condition === 'percent_change' && alert.targetPrice != null) {
+    const referenceText = alert.referencePrice != null
+      ? ` from ${formatCurrency(alert.referencePrice)}`
+      : ''
+    return `Moves by ${formatPercentThreshold(alert.targetPrice)}${referenceText}`
+  }
+
+  if (alert.condition === 'range_exit' && alert.lowerBound != null && alert.upperBound != null) {
+    return `Outside ${formatCurrency(alert.lowerBound)} - ${formatCurrency(alert.upperBound)}`
+  }
+
+  const target = alert.targetPrice != null ? formatCurrency(alert.targetPrice) : '--'
+  return `${alert.condition === 'above' ? 'Above' : 'Below'} ${target}`
+}
+
 function getRiskAdvisory(
   profile: RiskProfile | null,
   isCrypto: boolean,
@@ -191,12 +217,22 @@ export function InstrumentPage({
   }, [loadSymbolAlerts])
 
   useEffect(() => {
-    if (!instrumentDetail?.latestQuote.price || alertTargetPrice) {
+    if (alertTargetPrice) {
       return
     }
 
-    setAlertTargetPrice(instrumentDetail.latestQuote.price.toFixed(2))
-  }, [alertTargetPrice, instrumentDetail?.latestQuote.price])
+    if (alertCondition === 'percent_change') {
+      setAlertTargetPrice(DEFAULT_PERCENT_CHANGE_THRESHOLD)
+      return
+    }
+
+    const latestPrice = instrumentDetail?.latestQuote.price
+    if (typeof latestPrice !== 'number' || !Number.isFinite(latestPrice) || latestPrice <= 0) {
+      return
+    }
+
+    setAlertTargetPrice(latestPrice.toFixed(2))
+  }, [alertCondition, alertTargetPrice, instrumentDetail?.latestQuote.price])
 
   useEffect(() => {
     if (!symbol) {
@@ -295,6 +331,25 @@ export function InstrumentPage({
     }
   }
 
+  function handleAlertConditionChange(nextCondition: AlertCondition) {
+    setAlertCondition(nextCondition)
+    setAlertError('')
+    setAlertSuccess('')
+
+    if (nextCondition === 'percent_change') {
+      setAlertTargetPrice(DEFAULT_PERCENT_CHANGE_THRESHOLD)
+      return
+    }
+
+    const latestPrice = instrumentDetail?.latestQuote.price
+    if (typeof latestPrice === 'number' && Number.isFinite(latestPrice) && latestPrice > 0) {
+      setAlertTargetPrice(latestPrice.toFixed(2))
+      return
+    }
+
+    setAlertTargetPrice('')
+  }
+
   async function handleCreateAlertSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -304,7 +359,23 @@ export function InstrumentPage({
 
     const parsedTargetPrice = Number.parseFloat(alertTargetPrice)
     if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
-      setAlertError('Please enter a price greater than zero.')
+      setAlertError(
+        alertCondition === 'percent_change'
+          ? 'Please enter a percent greater than zero.'
+          : 'Please enter a price greater than zero.',
+      )
+      setAlertSuccess('')
+      return
+    }
+
+    const latestPrice = instrumentDetail?.latestQuote.price
+    const referencePrice =
+      typeof latestPrice === 'number' && Number.isFinite(latestPrice) && latestPrice > 0
+        ? latestPrice
+        : null
+
+    if (alertCondition === 'percent_change' && referencePrice == null) {
+      setAlertError('Live reference price is unavailable. Reload the quote before creating a percent-change alert.')
       setAlertSuccess('')
       return
     }
@@ -315,6 +386,10 @@ export function InstrumentPage({
       targetPrice: parsedTargetPrice,
     }
 
+    if (alertCondition === 'percent_change' && referencePrice != null) {
+      payload.referencePrice = referencePrice
+    }
+
     setAlertError('')
     setAlertSuccess('')
     setIsCreatingAlert(true)
@@ -322,7 +397,9 @@ export function InstrumentPage({
     try {
       await onCreateAlert(payload)
       setAlertSuccess(
-        `Done! You'll be notified when ${symbol} goes ${alertCondition === 'above' ? 'above' : 'below'} ${formatCurrency(parsedTargetPrice)}.`,
+        alertCondition === 'percent_change' && referencePrice != null
+          ? `Done! You'll be notified when ${symbol} moves by ${formatPercentThreshold(parsedTargetPrice)} from ${formatCurrency(referencePrice)}.`
+          : `Done! You'll be notified when ${symbol} goes ${alertCondition === 'above' ? 'above' : 'below'} ${formatCurrency(parsedTargetPrice)}.`,
       )
       setIsAlertFormOpen(false)
       void loadSymbolAlerts()
@@ -358,7 +435,11 @@ export function InstrumentPage({
 
     const parsedPrice = Number.parseFloat(editState.targetPrice)
     if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
-      setEditError('Enter a valid target price greater than zero.')
+      setEditError(
+        editState.condition === 'percent_change'
+          ? 'Enter a valid percent greater than zero.'
+          : 'Enter a valid target price greater than zero.',
+      )
       return
     }
 
@@ -394,6 +475,11 @@ export function InstrumentPage({
   }
 
   const quote = instrumentDetail?.latestQuote
+  const liveReferencePrice =
+    typeof quote?.price === 'number' && Number.isFinite(quote.price) && quote.price > 0
+      ? quote.price
+      : null
+  const isPercentAlertDraft = alertCondition === 'percent_change'
   const priceChange = quote?.change ?? 0
   const isPositive = priceChange >= 0
   // Always show both dollar change + percent in the hero so the label is self-explanatory
@@ -515,20 +601,32 @@ export function InstrumentPage({
           isAlertFormOpen ? (
             <form className="instrument-alert-form instrument-alert-form--expanded" onSubmit={(event) => void handleCreateAlertSubmit(event)}>
               <label className="instrument-alert-field">
-                <span className="instrument-alert-label">Notify me when price goes</span>
+                <span className="instrument-alert-label">Notify me when price</span>
                 <select
                   className="instrument-alert-select"
-                  onChange={(event) => setAlertCondition(event.target.value as AlertCondition)}
+                  onChange={(event) => handleAlertConditionChange(event.target.value as AlertCondition)}
                   value={alertCondition}
                 >
-                  <option value="above">Above this price</option>
-                  <option value="below">Below this price</option>
+                  <option value="above">Goes above this price</option>
+                  <option value="below">Goes below this price</option>
+                  <option value="percent_change">Moves by this percent</option>
                 </select>
               </label>
 
               <label className="instrument-alert-field">
-                <span className="instrument-alert-label">Price ($)</span>
-                <input className="search-input instrument-alert-input" inputMode="decimal" min="0" onChange={(e) => setAlertTargetPrice(e.target.value)} placeholder="e.g. 200.00" step="0.01" type="number" value={alertTargetPrice} />
+                <span className="instrument-alert-label">
+                  {isPercentAlertDraft ? 'Move threshold (%)' : 'Price ($)'}
+                </span>
+                <input
+                  className="search-input instrument-alert-input"
+                  inputMode="decimal"
+                  min="0"
+                  onChange={(e) => setAlertTargetPrice(e.target.value)}
+                  placeholder={isPercentAlertDraft ? 'e.g. 5' : 'e.g. 200.00'}
+                  step={isPercentAlertDraft ? '0.1' : '0.01'}
+                  type="number"
+                  value={alertTargetPrice}
+                />
               </label>
 
               <div className="instrument-alert-submit">
@@ -540,7 +638,11 @@ export function InstrumentPage({
                 </button>
               </div>
               <p className="panel-note">
-                You'll get a notification when the price crosses your target while you're signed in.
+                {isPercentAlertDraft
+                  ? liveReferencePrice != null
+                    ? `Reference price locks to the current quote: ${formatCurrency(liveReferencePrice)}.`
+                    : 'A live quote is needed before creating a percent-change alert.'
+                  : "You'll get a notification when the price crosses your target while you're signed in."}
               </p>
             </form>
           ) : (
@@ -577,13 +679,16 @@ export function InstrumentPage({
             {symbolAlerts.map((alert) => {
               const isActionPending = symbolAlertActionId === alert.id
               const isEditing = editState?.alertId === alert.id
+              const canEditAlert = alert.targetPrice != null && isEditableAlertCondition(alert.condition)
 
               if (isEditing && editState) {
+                const isPercentEdit = editState.condition === 'percent_change'
+
                 return (
                   <article className="instrument-alert-row instrument-alert-row--editing" key={alert.id}>
                     <div className="alert-edit-form">
                       <label className="alert-edit-field">
-                        <span className="alert-edit-label">When price goes</span>
+                        <span className="alert-edit-label">Condition</span>
                         <select
                           className="alert-edit-select"
                           onChange={(e) =>
@@ -591,13 +696,21 @@ export function InstrumentPage({
                           }
                           value={editState.condition}
                         >
-                          <option value="above">Above this price</option>
-                          <option value="below">Below this price</option>
+                          {isPercentEdit ? (
+                            <option value="percent_change">Moves by this percent</option>
+                          ) : (
+                            <>
+                              <option value="above">Above this price</option>
+                              <option value="below">Below this price</option>
+                            </>
+                          )}
                         </select>
                       </label>
 
                       <label className="alert-edit-field">
-                        <span className="alert-edit-label">Price ($)</span>
+                        <span className="alert-edit-label">
+                          {isPercentEdit ? 'Move threshold (%)' : 'Price ($)'}
+                        </span>
                         <input
                           className="alert-edit-input"
                           inputMode="decimal"
@@ -605,7 +718,7 @@ export function InstrumentPage({
                           onChange={(e) =>
                             setEditState({ ...editState, targetPrice: e.target.value })
                           }
-                          step="0.01"
+                          step={isPercentEdit ? '0.1' : '0.01'}
                           type="number"
                           value={editState.targetPrice}
                         />
@@ -637,11 +750,11 @@ export function InstrumentPage({
               return (
                 <article className="instrument-alert-row" key={alert.id}>
                   <div className="instrument-alert-row-info">
-                    <strong>{alert.condition === 'above' ? 'Above' : 'Below'} {alert.targetPrice != null ? formatCurrency(alert.targetPrice) : '--'}</strong>
+                    <strong>{formatInstrumentAlertTarget(alert)}</strong>
                     <span className={alertStatusPill(alert)}>{formatAlertStatus(alert)}</span>
                   </div>
                   <div className="instrument-alert-row-actions">
-                    {onUpdateAlert && alert.isActive ? (
+                    {onUpdateAlert && alert.isActive && canEditAlert ? (
                       <button
                         className="ghost-action alert-inline-button"
                         disabled={isActionPending}

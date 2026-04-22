@@ -59,6 +59,8 @@ class SQLiteSchemaCompatTests(unittest.TestCase):
             user_columns = {column["name"] for column in inspector.get_columns("users")}
             alert_columns = {column["name"] for column in inspector.get_columns("price_alerts")}
 
+            self.assertIn("passwordAuthEnabled", user_columns)
+            self.assertIn("googleSubject", user_columns)
             self.assertIn("emailNotificationsEnabled", user_columns)
             self.assertIn("riskProfile", user_columns)
             self.assertIn("sessionVersion", user_columns)

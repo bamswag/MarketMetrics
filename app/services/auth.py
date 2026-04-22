@@ -131,6 +131,7 @@ def register_user(db: Session, email: str, password: str, display_name: str) -> 
         passwordHash=hash_password(password),
         displayName=display_name.strip(),
         primaryAuthProvider="password",
+        passwordAuthEnabled=True,
         emailVerifiedAt=now,
         sessionVersion=1,
         createdAt=now,
@@ -147,6 +148,9 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[UserDB
 
     user = db.query(UserDB).filter(UserDB.email == normalize_email(email)).first()
     if not user:
+        return None
+
+    if not user.passwordAuthEnabled:
         return None
 
     if not verify_password(password, user.passwordHash):
@@ -237,7 +241,7 @@ def change_user_password(
 ) -> None:
     ensure_user_schema(db.get_bind())
 
-    if current_user.primaryAuthProvider == "password":
+    if current_user.passwordAuthEnabled:
         if not current_password:
             raise ValueError("Enter your current password to continue.")
         if not verify_password(current_password, current_user.passwordHash):
@@ -247,6 +251,7 @@ def change_user_password(
         raise ValueError("Choose a password that is different from your current one.")
 
     current_user.passwordHash = hash_password(new_password)
+    current_user.passwordAuthEnabled = True
     current_user.sessionVersion = _next_session_version(current_user)
     current_user.passwordResetTokenHash = None
     current_user.passwordResetTokenExpiresAt = None
@@ -312,6 +317,7 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Non
         raise ValueError("Choose a password that is different from your current one.")
 
     user.passwordHash = hash_password(new_password)
+    user.passwordAuthEnabled = True
     user.passwordResetTokenHash = None
     user.passwordResetTokenExpiresAt = None
     user.sessionVersion = _next_session_version(user)
@@ -504,9 +510,12 @@ async def exchange_google_code_for_userinfo(
 
     email = userinfo.get("email")
     email_verified = userinfo.get("email_verified")
+    google_subject = userinfo.get("sub")
 
     if not email or email_verified not in (True, "true", "True", 1):
         raise GoogleAuthError("Google account email is unavailable or unverified.")
+    if not google_subject:
+        raise GoogleAuthError("Google account identifier is unavailable.")
 
     return userinfo, google_state
 
@@ -514,6 +523,7 @@ async def exchange_google_code_for_userinfo(
 def get_or_create_google_user(
     db: Session,
     *,
+    google_subject: str,
     email: str,
     display_name: Optional[str],
     intent: str = "login",
@@ -521,14 +531,32 @@ def get_or_create_google_user(
 ) -> UserDB:
     ensure_user_schema(db.get_bind())
 
+    normalized_google_subject = google_subject.strip()
+    if not normalized_google_subject:
+        raise GoogleAuthError("Google account identifier is unavailable.")
+
     normalized_email = normalize_email(email)
-    user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
     now = datetime.utcnow()
 
+    user = db.query(UserDB).filter(UserDB.googleSubject == normalized_google_subject).first()
     if user:
         user.lastLoginAt = now
-        user.primaryAuthProvider = "google"
         user.emailVerifiedAt = user.emailVerifiedAt or now
+        if display_name and not user.displayName:
+            user.displayName = display_name
+        db.commit()
+        db.refresh(user)
+        return user
+
+    user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
+    if user:
+        if user.googleSubject and user.googleSubject != normalized_google_subject:
+            raise GoogleAuthError("This MarketMetrics account is already linked to a different Google account.")
+        user.googleSubject = normalized_google_subject
+        user.lastLoginAt = now
+        user.emailVerifiedAt = user.emailVerifiedAt or now
+        if not user.passwordAuthEnabled:
+            user.primaryAuthProvider = "google"
         if display_name and not user.displayName:
             user.displayName = display_name
         db.commit()
@@ -547,6 +575,8 @@ def get_or_create_google_user(
         passwordHash=hash_password(token_urlsafe(32)),
         displayName=(display_name or normalized_email.split("@")[0]).strip(),
         primaryAuthProvider="google",
+        passwordAuthEnabled=False,
+        googleSubject=normalized_google_subject,
         emailVerifiedAt=now,
         sessionVersion=1,
         createdAt=now,

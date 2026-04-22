@@ -20,6 +20,15 @@ function authProviderLabel(provider?: string | null) {
   return provider === 'google' ? 'Google sign-in' : 'Email and password'
 }
 
+function authAccessLabel(user: UserOut) {
+  const hasPasswordAccess = user.passwordAuthEnabled !== false
+  const hasGoogleAccess = user.googleLinked === true || user.primaryAuthProvider === 'google'
+
+  if (hasPasswordAccess && hasGoogleAccess) return 'Email password + Google'
+  if (hasGoogleAccess) return 'Google sign-in'
+  return 'Email and password'
+}
+
 export function AccountPage({
   currentUser,
   onChangePassword,
@@ -49,6 +58,8 @@ export function AccountPage({
   const [isSavingProfile2, setIsSavingProfile2] = useState(false)
 
   const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
+  const passwordAuthEnabled = currentUser?.passwordAuthEnabled !== false
+  const googleLinked = currentUser?.googleLinked === true || currentUser?.primaryAuthProvider === 'google'
 
   useEffect(() => {
     setDisplayName(currentUser?.displayName ?? '')
@@ -113,7 +124,7 @@ export function AccountPage({
     setPasswordError('')
     setPasswordSuccess('')
 
-    if (currentUser.primaryAuthProvider === 'password' && !currentPassword) {
+    if (passwordAuthEnabled && !currentPassword) {
       setPasswordError('Enter your current password to continue.')
       return
     }
@@ -309,7 +320,7 @@ export function AccountPage({
               <p className="section-label">Authentication</p>
               <h2 className="panel-title">Review your provider and keep sign-in recovery ready</h2>
             </div>
-            <span className="neutral-pill">{authProviderLabel(currentUser.primaryAuthProvider)}</span>
+            <span className="neutral-pill">{authAccessLabel(currentUser)}</span>
           </div>
 
           <div className="account-auth-layout">
@@ -319,17 +330,21 @@ export function AccountPage({
                 <p>{authProviderLabel(currentUser.primaryAuthProvider)}</p>
               </div>
               <div className="account-inline-note">
+                <strong>Google sign-in</strong>
+                <p>{googleLinked ? 'Linked to this account.' : 'Not linked to this account yet.'}</p>
+              </div>
+              <div className="account-inline-note">
                 <strong>Password access</strong>
                 <p>
-                  {currentUser.primaryAuthProvider === 'google'
-                    ? 'Google stays primary, but you can set a password for account recovery and direct email sign-in later.'
-                    : 'Password-based access is active. Updating it signs out every current session for safety.'}
+                  {passwordAuthEnabled
+                    ? 'Password-based access is active. Updating it signs out every current session for safety.'
+                    : 'Google sign-in is active. You can set a password for account recovery and direct email sign-in later.'}
                 </p>
               </div>
             </div>
 
             <div className="account-form">
-              {currentUser.primaryAuthProvider === 'password' ? (
+              {passwordAuthEnabled ? (
                 <label className="field">
                   <span className="field-label">Current password</span>
                   <div className="password-input-shell">
@@ -358,7 +373,7 @@ export function AccountPage({
 
               <label className="field">
                 <span className="field-label">
-                  {currentUser.primaryAuthProvider === 'google' ? 'Set a password' : 'New password'}
+                  {passwordAuthEnabled ? 'New password' : 'Set a password'}
                 </span>
                 <div className="password-input-shell">
                   <input
@@ -411,9 +426,9 @@ export function AccountPage({
                 >
                   {isChangingPassword
                     ? 'Updating password...'
-                    : currentUser.primaryAuthProvider === 'google'
-                      ? 'Set password'
-                      : 'Change password'}
+                    : passwordAuthEnabled
+                      ? 'Change password'
+                      : 'Set password'}
                 </button>
               </div>
             </div>

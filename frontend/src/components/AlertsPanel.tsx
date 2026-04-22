@@ -34,20 +34,33 @@ type AlertsPanelProps = {
 function formatCondition(condition: string) {
   if (condition === 'above') return 'Above'
   if (condition === 'below') return 'Below'
-  if (condition === 'percent_change') return '% Change'
+  if (condition === 'percent_change') return 'Percent change'
   if (condition === 'range_exit') return 'Range exit'
   return condition
 }
 
+function formatPercentThreshold(value: number): string {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
+}
+
 function formatAlertTarget(alert: PriceAlert) {
   if (alert.condition === 'range_exit' && alert.lowerBound != null && alert.upperBound != null) {
-    return `${formatCurrency(alert.lowerBound)}–${formatCurrency(alert.upperBound)}`
+    return `${formatCurrency(alert.lowerBound)} - ${formatCurrency(alert.upperBound)}`
   }
   if (alert.condition === 'percent_change' && alert.targetPrice != null) {
     const refStr = alert.referencePrice != null ? ` from ${formatCurrency(alert.referencePrice)}` : ''
-    return `${alert.targetPrice}%${refStr}`
+    return `${formatPercentThreshold(alert.targetPrice)}${refStr}`
   }
   return alert.targetPrice != null ? formatCurrency(alert.targetPrice) : '--'
+}
+
+function canEditInline(alert: PriceAlert): boolean {
+  return (
+    alert.targetPrice != null &&
+    (alert.condition === 'above' ||
+      alert.condition === 'below' ||
+      alert.condition === 'percent_change')
+  )
 }
 
 function expiresLabel(expiresAt?: string | null): string | null {
@@ -166,7 +179,11 @@ export function AlertsPanel({
 
     const parsedPrice = Number.parseFloat(editState.targetPrice)
     if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
-      setEditError('Enter a valid target price greater than zero.')
+      setEditError(
+        editState.condition === 'percent_change'
+          ? 'Enter a valid percent greater than zero.'
+          : 'Enter a valid target price greater than zero.',
+      )
       return
     }
 
@@ -277,19 +294,29 @@ export function AlertsPanel({
                 const expires = expiresLabel(alert.expiresAt)
 
                 if (isEditing && editState) {
+                  const isPercentEdit = editState.condition === 'percent_change'
+
                   return (
                     <article className="alert-row alert-row--editing" key={alert.id}>
                       <div className="alert-edit-form">
                         <label className="alert-edit-field">
                           <span className="alert-edit-label">Condition</span>
                           <select className="alert-edit-select" onChange={(e) => setEditState({ ...editState, condition: e.target.value as AlertCondition })} value={editState.condition}>
-                            <option value="above">Above target</option>
-                            <option value="below">Below target</option>
+                            {isPercentEdit ? (
+                              <option value="percent_change">Percent change</option>
+                            ) : (
+                              <>
+                                <option value="above">Above target</option>
+                                <option value="below">Below target</option>
+                              </>
+                            )}
                           </select>
                         </label>
                         <label className="alert-edit-field">
-                          <span className="alert-edit-label">Target price</span>
-                          <input className="alert-edit-input" inputMode="decimal" min="0" onChange={(e) => setEditState({ ...editState, targetPrice: e.target.value })} step="0.01" type="number" value={editState.targetPrice} />
+                          <span className="alert-edit-label">
+                            {isPercentEdit ? 'Percent threshold' : 'Target price'}
+                          </span>
+                          <input className="alert-edit-input" inputMode="decimal" min="0" onChange={(e) => setEditState({ ...editState, targetPrice: e.target.value })} step={isPercentEdit ? '0.1' : '0.01'} type="number" value={editState.targetPrice} />
                         </label>
                       </div>
                       <div className="alert-row-actions">
@@ -325,7 +352,7 @@ export function AlertsPanel({
                       </div>
                     </div>
                     <div className="alert-row-actions">
-                      {onUpdateAlert ? (
+                      {onUpdateAlert && canEditInline(alert) ? (
                         <button className="ghost-action alert-inline-button" disabled={isPausing || isDeleting} onClick={() => startEditing(alert.id, alert.condition, alert.targetPrice)} type="button">Edit</button>
                       ) : null}
                       <button className="ghost-action alert-inline-button" disabled={isPausing || isDeleting} onClick={() => void onPauseAlert(alert.id)} type="button">{isPausing ? 'Pausing...' : 'Pause'}</button>

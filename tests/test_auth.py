@@ -192,6 +192,7 @@ class AuthTests(BaseAPITestCase):
             {
                 "email": "googleuser@example.com",
                 "name": "Google User",
+                "sub": "google-sub-1",
             },
             {"returnTo": "/", "intent": "signup", "acceptedTerms": True},
         )
@@ -216,7 +217,53 @@ class AuthTests(BaseAPITestCase):
             self.assertIsNotNone(user)
             self.assertEqual(user.displayName, "Google User")
             self.assertEqual(user.primaryAuthProvider, "google")
+            self.assertFalse(user.passwordAuthEnabled)
+            self.assertEqual(user.googleSubject, "google-sub-1")
             self.assertIsNotNone(user.emailVerifiedAt)
+
+    @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
+    def test_google_callback_links_existing_password_account_without_weakening_password_rules(
+        self,
+        mock_exchange_google_code,
+    ):
+        token = self.register_and_login(email="hybrid@example.com", password="password123")
+        mock_exchange_google_code.return_value = (
+            {
+                "email": "hybrid@example.com",
+                "name": "Hybrid User",
+                "sub": "google-sub-hybrid",
+            },
+            {"returnTo": "/", "intent": "login", "acceptedTerms": False},
+        )
+
+        response = self.client.get(
+            "/auth/google/callback",
+            params={"code": "google-code", "state": "signed-state"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 307)
+        with self.TestingSessionLocal() as db:
+            user = db.query(UserDB).filter_by(email="hybrid@example.com").first()
+            self.assertIsNotNone(user)
+            self.assertEqual(user.primaryAuthProvider, "password")
+            self.assertTrue(user.passwordAuthEnabled)
+            self.assertEqual(user.googleSubject, "google-sub-hybrid")
+
+        missing_current_password_response = self.client.post(
+            "/auth/me/password",
+            json={"newPassword": "newpassword123"},
+            headers=self.auth_headers(token),
+        )
+        self.assertEqual(missing_current_password_response.status_code, 400)
+        self.assertIn("current password", missing_current_password_response.text)
+
+        change_response = self.client.post(
+            "/auth/me/password",
+            json={"currentPassword": "password123", "newPassword": "newpassword123"},
+            headers=self.auth_headers(token),
+        )
+        self.assertEqual(change_response.status_code, 200)
 
     def test_protected_route_requires_valid_token(self):
         token = self.register_and_login()

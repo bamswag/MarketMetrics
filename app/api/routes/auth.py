@@ -236,6 +236,7 @@ async def google_callback(
         fallback_frontend_origin = google_state.get("frontendOrigin") or None
         user = get_or_create_google_user(
             db,
+            google_subject=google_userinfo["sub"],
             email=google_userinfo["email"],
             display_name=google_userinfo.get("name"),
             intent=str(google_state["intent"]),

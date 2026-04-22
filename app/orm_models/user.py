@@ -13,6 +13,8 @@ class UserDB(Base):
     passwordHash = Column(String, nullable=False)
     displayName = Column(String, nullable=False)
     primaryAuthProvider = Column(String, default="password", nullable=False)
+    passwordAuthEnabled = Column(Boolean, default=True, nullable=False)
+    googleSubject = Column(String, unique=True, index=True, nullable=True)
     emailNotificationsEnabled = Column(Boolean, default=False, nullable=True)
     emailVerifiedAt = Column(DateTime, nullable=True)
     pendingEmail = Column(String, nullable=True)
@@ -32,3 +34,7 @@ class UserDB(Base):
     @property
     def accountStatus(self) -> str:
         return "Active"
+
+    @property
+    def googleLinked(self) -> bool:
+        return bool(self.googleSubject)

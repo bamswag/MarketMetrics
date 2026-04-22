@@ -30,6 +30,8 @@ _ENSURED_SQLITE_SCHEMA_KEYS: set[str] = set()
 _SQLITE_SCHEMA_PATCHES: dict[str, tuple[tuple[str, str], ...]] = {
     "users": (
         ("primaryAuthProvider", "ALTER TABLE users ADD COLUMN primaryAuthProvider VARCHAR DEFAULT 'password'"),
+        ("passwordAuthEnabled", "ALTER TABLE users ADD COLUMN passwordAuthEnabled BOOLEAN DEFAULT 1"),
+        ("googleSubject", "ALTER TABLE users ADD COLUMN googleSubject VARCHAR"),
         ("emailNotificationsEnabled", "ALTER TABLE users ADD COLUMN emailNotificationsEnabled BOOLEAN DEFAULT 0"),
         ("emailVerifiedAt", "ALTER TABLE users ADD COLUMN emailVerifiedAt DATETIME"),
         ("pendingEmail", "ALTER TABLE users ADD COLUMN pendingEmail VARCHAR"),
@@ -88,6 +90,7 @@ def ensure_local_sqlite_schema(bind=engine) -> None:
                         """
                         UPDATE users
                         SET primaryAuthProvider = COALESCE(NULLIF(primaryAuthProvider, ''), 'password'),
+                            passwordAuthEnabled = COALESCE(passwordAuthEnabled, 1),
                             emailNotificationsEnabled = COALESCE(emailNotificationsEnabled, 0),
                             sessionVersion = COALESCE(sessionVersion, 1),
                             emailVerifiedAt = COALESCE(emailVerifiedAt, createdAt)

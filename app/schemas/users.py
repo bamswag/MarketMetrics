@@ -30,6 +30,8 @@ class UserOut(BaseModel):
     email: EmailStr
     displayName: str
     primaryAuthProvider: str
+    passwordAuthEnabled: bool = True
+    googleLinked: bool = False
     emailNotificationsEnabled: bool = False
     emailVerifiedAt: Optional[datetime] = None
     pendingEmail: Optional[EmailStr] = None
