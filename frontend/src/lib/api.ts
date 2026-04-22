@@ -6,6 +6,8 @@ const ALLOW_REMOTE_API_IN_DEV = import.meta.env.VITE_ALLOW_REMOTE_API_IN_DEV ===
 const FEATURED_MOVER_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_TTL_MS = 60_000
 const INSTRUMENT_DETAIL_CACHE_MAX_SIZE = 40
+const PUBLIC_QUOTE_CACHE_TTL_MS = 30_000
+const PUBLIC_QUOTE_CACHE_MAX_SIZE = 300
 
 type FeaturedMoverCacheEntry = {
   expiresAt: number
@@ -17,10 +19,16 @@ type InstrumentDetailCacheEntry = {
   payload: InstrumentDetailResponse
 }
 
+type PublicQuoteCacheEntry = {
+  expiresAt: number
+  payload: PublicQuote
+}
+
 const featuredMoverCache = new Map<string, FeaturedMoverCacheEntry>()
 const featuredMoverInflight = new Map<string, Promise<FeaturedMoverResponse>>()
 const instrumentDetailCache = new Map<string, InstrumentDetailCacheEntry>()
 const instrumentDetailInflight = new Map<string, Promise<InstrumentDetailResponse>>()
+const publicQuoteCache = new Map<string, PublicQuoteCacheEntry>()
 
 function featuredMoverCacheKey(selection: FeaturedMoverSelection): string {
   return `${selection.period}:${selection.direction}:${selection.asset}`
@@ -51,6 +59,30 @@ function pruneInstrumentDetailCache(now = Date.now()): void {
       break
     }
     instrumentDetailCache.delete(key)
+  }
+}
+
+function publicQuoteCacheKey(symbol: string): string {
+  return symbol.trim().toUpperCase()
+}
+
+function prunePublicQuoteCache(now = Date.now()): void {
+  for (const [key, entry] of publicQuoteCache.entries()) {
+    if (entry.expiresAt <= now) {
+      publicQuoteCache.delete(key)
+    }
+  }
+
+  if (publicQuoteCache.size <= PUBLIC_QUOTE_CACHE_MAX_SIZE) {
+    return
+  }
+
+  const targetSize = Math.floor(PUBLIC_QUOTE_CACHE_MAX_SIZE / 2)
+  for (const key of publicQuoteCache.keys()) {
+    if (publicQuoteCache.size <= targetSize) {
+      break
+    }
+    publicQuoteCache.delete(key)
   }
 }
 
@@ -122,6 +154,20 @@ export type CompanySearchResult = {
 export type CompanySearchResponse = {
   query: string
   results: CompanySearchResult[]
+}
+
+export type PublicQuote = {
+  symbol: string
+  price?: number | null
+  change?: number | null
+  changePercent?: string | null
+  latestTradingDay?: string | null
+  source?: string | null
+  unavailableReason?: string | null
+}
+
+export type PublicQuotesResponse = {
+  quotes: PublicQuote[]
 }
 
 export type Mover = {
@@ -237,6 +283,23 @@ export type InstrumentDetailResponse = {
     vwap?: number | null
     tradeCount?: number | null
   }>
+}
+
+export type SimilarInstrument = {
+  symbol: string
+  name: string
+  type?: string | null
+  assetCategory?: string | null
+  exchange?: string | null
+  currency?: string | null
+  similarityReason?: string | null
+  latestQuote?: PublicQuote | null
+}
+
+export type SimilarInstrumentsResponse = {
+  symbol: string
+  assetCategory?: string | null
+  results: SimilarInstrument[]
 }
 
 const LEGACY_INSTRUMENT_RANGES: InstrumentRange[] = ['1W', '1M', '3M', '6M', '1Y', '5Y']
@@ -701,6 +764,63 @@ export async function fetchSearchResults(
   return parseResponse<CompanySearchResponse>(response)
 }
 
+export async function fetchPublicQuotes(
+  symbols: string[],
+  signal?: AbortSignal,
+): Promise<PublicQuote[]> {
+  prunePublicQuoteCache()
+
+  const normalizedSymbols = Array.from(
+    new Set(
+      symbols
+        .map((symbol) => publicQuoteCacheKey(symbol))
+        .filter(Boolean),
+    ),
+  )
+
+  if (normalizedSymbols.length === 0) {
+    return []
+  }
+
+  const quotesBySymbol = new Map<string, PublicQuote>()
+  const missingSymbols: string[] = []
+
+  for (const symbol of normalizedSymbols) {
+    const cachedEntry = publicQuoteCache.get(symbol)
+    if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
+      quotesBySymbol.set(symbol, cachedEntry.payload)
+    } else {
+      missingSymbols.push(symbol)
+    }
+  }
+
+  if (missingSymbols.length > 0) {
+    const response = await safeFetch(
+      `${getApiUrl()}/quotes/?symbols=${encodeURIComponent(missingSymbols.join(','))}`,
+      { signal },
+    )
+    const payload = await parseResponse<PublicQuotesResponse>(response)
+
+    for (const quote of payload.quotes) {
+      const key = publicQuoteCacheKey(quote.symbol)
+      publicQuoteCache.set(key, {
+        expiresAt: Date.now() + PUBLIC_QUOTE_CACHE_TTL_MS,
+        payload: quote,
+      })
+      quotesBySymbol.set(key, quote)
+    }
+
+    prunePublicQuoteCache()
+  }
+
+  return normalizedSymbols.map((symbol) => (
+    quotesBySymbol.get(symbol) ?? {
+      symbol,
+      unavailableReason: 'No quote data available.',
+    }
+  ))
+}
+
 export async function fetchMovers(
   token?: string,
   limit = 5,
@@ -850,6 +970,19 @@ export async function fetchInstrumentDetail(
   } finally {
     instrumentDetailInflight.delete(key)
   }
+}
+
+export async function fetchSimilarInstruments(
+  symbol: string,
+  limit = 8,
+  signal?: AbortSignal,
+): Promise<SimilarInstrumentsResponse> {
+  const response = await safeFetch(
+    `${getApiUrl()}/instruments/similar/${encodeURIComponent(symbol)}?limit=${encodeURIComponent(limit)}`,
+    { signal },
+  )
+
+  return parseResponse<SimilarInstrumentsResponse>(response)
 }
 
 export function prefetchInstrumentDetail(

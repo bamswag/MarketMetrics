@@ -6,6 +6,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.quotes import PublicQuoteOut
+
 
 class InstrumentRange(str, Enum):
     one_week = "1W"
@@ -54,3 +56,20 @@ class InstrumentDetailResponse(BaseModel):
     earliestAvailableDate: Optional[date] = None
     latestQuote: InstrumentQuoteOut
     historicalSeries: List[InstrumentPricePoint]
+
+
+class SimilarInstrumentOut(BaseModel):
+    symbol: str
+    name: str
+    type: Optional[str] = None
+    assetCategory: Optional[str] = None
+    exchange: Optional[str] = None
+    currency: Optional[str] = None
+    similarityReason: Optional[str] = None
+    latestQuote: Optional[PublicQuoteOut] = None
+
+
+class SimilarInstrumentsResponse(BaseModel):
+    symbol: str
+    assetCategory: Optional[str] = None
+    results: List[SimilarInstrumentOut] = Field(default_factory=list)

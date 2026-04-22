@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from app.integrations.alpaca.client import AlpacaMarketDataError
 from app.schemas.instruments import InstrumentRange
+from app.schemas.quotes import PublicQuoteOut
 from app.services.instruments import resolve_history_window
 
 try:
@@ -367,6 +368,142 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["companyName"], "Bitcoin")
         self.assertEqual(payload["exchange"], "CRYPTO")
         self.assertEqual(payload["latestQuote"]["price"], 84250.0)
+
+    @patch("app.services.search.get_symbol_metadata")
+    @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.load_symbol_catalog")
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_similar_instruments_returns_same_category_public_quotes(
+        self,
+        mock_get_symbol_metadata,
+        mock_load_symbol_catalog,
+        mock_get_public_quotes_cached,
+        mock_search_get_symbol_metadata,
+    ):
+        catalog = [
+            {
+                "symbol": "AAPL",
+                "name": "Apple Inc.",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "MSFT",
+                "name": "Microsoft Corporation",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "NVDA",
+                "name": "NVIDIA Corporation",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "SPY",
+                "name": "SPDR S&P 500 ETF Trust",
+                "exchange": "ARCA",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+        ]
+        metadata_by_symbol = {item["symbol"]: item for item in catalog}
+        mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_load_symbol_catalog.return_value = catalog
+        mock_get_public_quotes_cached.return_value = [
+            PublicQuoteOut(
+                symbol="NVDA",
+                price=950.25,
+                change=11.5,
+                changePercent="1.23%",
+                source="alpaca",
+            ),
+            PublicQuoteOut(
+                symbol="MSFT",
+                price=420.1,
+                change=-1.5,
+                changePercent="-0.36%",
+                source="alpaca",
+            ),
+        ]
+
+        response = self.client.get("/instruments/similar/AAPL?limit=2")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        symbols = [item["symbol"] for item in payload["results"]]
+        self.assertEqual(payload["symbol"], "AAPL")
+        self.assertEqual(payload["assetCategory"], "stocks")
+        self.assertEqual(len(symbols), 2)
+        self.assertNotIn("AAPL", symbols)
+        self.assertNotIn("SPY", symbols)
+        self.assertEqual(payload["results"][0]["latestQuote"]["price"], 950.25)
+        mock_get_public_quotes_cached.assert_awaited_once()
+
+    @patch("app.services.search.get_symbol_metadata")
+    @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.load_symbol_catalog")
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_similar_instruments_keeps_crypto_with_crypto_quote_market(
+        self,
+        mock_get_symbol_metadata,
+        mock_load_symbol_catalog,
+        mock_get_public_quotes_cached,
+        mock_search_get_symbol_metadata,
+    ):
+        catalog = [
+            {
+                "symbol": "BTC/USD",
+                "name": "Bitcoin",
+                "exchange": "CRYPTO",
+                "asset_class": "crypto",
+                "tradable": True,
+            },
+            {
+                "symbol": "ETH/USD",
+                "name": "Ethereum",
+                "exchange": "CRYPTO",
+                "asset_class": "crypto",
+                "tradable": True,
+            },
+            {
+                "symbol": "SOL/USDT",
+                "name": "Solana / Tether",
+                "exchange": "CRYPTO",
+                "asset_class": "crypto",
+                "tradable": True,
+            },
+            {
+                "symbol": "AAPL",
+                "name": "Apple Inc.",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+        ]
+        metadata_by_symbol = {item["symbol"]: item for item in catalog}
+        mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_load_symbol_catalog.return_value = catalog
+        mock_get_public_quotes_cached.return_value = [
+            PublicQuoteOut(symbol="ETH/USD", price=3200.0, changePercent="2.10%"),
+            PublicQuoteOut(symbol="SOL/USDT", price=145.0, changePercent="-1.20%"),
+        ]
+
+        response = self.client.get("/instruments/similar/BTC%2FUSD?limit=2")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        symbols = [item["symbol"] for item in payload["results"]]
+        self.assertEqual(payload["assetCategory"], "crypto")
+        self.assertIn("ETH/USD", symbols)
+        self.assertIn("SOL/USDT", symbols)
+        self.assertNotIn("AAPL", symbols)
+        self.assertEqual(payload["results"][0]["similarityReason"], "Same crypto quote market")
 
 
 class InstrumentServiceTests(BaseAPITestCase):

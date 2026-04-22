@@ -37,6 +37,22 @@ const HORIZON_OPTIONS = [
 
 const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
 const HISTORY_BARS = 60
+const Y_AXIS_TICK_STEP = 25
+
+type ConfidenceLevel = 'low' | 'medium' | 'high'
+
+type LastForecastReview = {
+  actualClose: number
+  date?: string | null
+  predictedClose: number
+}
+
+type ForecastResponseWithMetadata = ForecastResponse & {
+  trainedThroughDate?: string | null
+  lastResolvedForecast?: Partial<LastForecastReview> | null
+  previousForecast?: Partial<LastForecastReview> | null
+  lastForecastEvaluation?: Partial<LastForecastReview> | null
+}
 
 // ── Ticker / concept dictionary for humanizing feature names ───────────────
 const TICKER_LABELS: Record<string, string> = {
@@ -129,18 +145,120 @@ const METRIC_DESCRIPTIONS: Record<string, string> = {
     'Mean Absolute Error on price — the average dollar distance between predicted and actual price during backtesting. Lower is better.',
   rmsePrice:
     'Root Mean Squared Error — like MAE but penalises large misses more heavily. Useful for spotting tail risk.',
-  maeReturn:
-    'Average absolute error expressed as a percent return. Keeps the number comparable across high- and low-priced instruments.',
+}
+
+function resolveConfidenceLevel(dirAcc: number): ConfidenceLevel {
+  const pct = dirAcc * 100
+  if (pct <= 55) return 'low'
+  if (pct <= 70) return 'medium'
+  return 'high'
+}
+
+function describeConfidence(level: ConfidenceLevel): string {
+  if (level === 'high') return 'High confidence'
+  if (level === 'medium') return 'Medium confidence'
+  return 'Low confidence'
+}
+
+function buildDirectionalExplanation(dirAcc: number): string {
+  const pct = dirAcc * 100
+  if (pct < 50) return 'This model has recently been less reliable than a coin flip on direction.'
+  if (pct <= 55) return 'This model is correct about as often as a coin flip.'
+  if (pct <= 70) return 'This model has a modest edge on direction in backtests.'
+  return 'This model has shown a stronger directional edge in backtests.'
+}
+
+function getModelUpdatedDate(result: ForecastResponse): string | null {
+  return (result as ForecastResponseWithMetadata).trainedThroughDate ?? null
+}
+
+function getLastForecastReview(result: ForecastResponse): LastForecastReview | null {
+  const typed = result as ForecastResponseWithMetadata
+  const candidate =
+    typed.lastResolvedForecast ?? typed.previousForecast ?? typed.lastForecastEvaluation ?? null
+
+  if (
+    candidate?.predictedClose == null ||
+    candidate.actualClose == null ||
+    !Number.isFinite(candidate.predictedClose) ||
+    !Number.isFinite(candidate.actualClose)
+  ) {
+    return null
+  }
+
+  return {
+    actualClose: candidate.actualClose,
+    date: candidate.date ?? null,
+    predictedClose: candidate.predictedClose,
+  }
+}
+
+function buildYAxisScale(prices: number[]): { domain: [number, number]; ticks: number[] } {
+  if (!prices.length) {
+    return { domain: [0, Y_AXIS_TICK_STEP], ticks: [0, Y_AXIS_TICK_STEP] }
+  }
+
+  const yMin = Math.min(...prices)
+  const yMax = Math.max(...prices)
+  const yPad = (yMax - yMin) * 0.1 || Y_AXIS_TICK_STEP
+  const paddedMin = Math.max(0, yMin - yPad)
+  const paddedMax = yMax + yPad
+  const minTick = Math.max(0, Math.floor(paddedMin / Y_AXIS_TICK_STEP) * Y_AXIS_TICK_STEP)
+  const rawStep = (paddedMax - minTick) / 4
+  const step = Math.max(
+    Y_AXIS_TICK_STEP,
+    Math.ceil(rawStep / Y_AXIS_TICK_STEP) * Y_AXIS_TICK_STEP,
+  )
+  const maxTick = Math.max(minTick + step, Math.ceil(paddedMax / step) * step)
+  const ticks: number[] = []
+
+  for (let tick = minTick; tick <= maxTick; tick += step) {
+    ticks.push(tick)
+  }
+
+  return { domain: [minTick, maxTick], ticks }
+}
+
+function WarningIcon() {
+  return (
+    <svg
+      aria-hidden
+      className="forecast-disclaimer-icon"
+      fill="none"
+      height="16"
+      viewBox="0 0 20 20"
+      width="16"
+    >
+      <path
+        d="M9.1 3.2 2.2 15.1A1.2 1.2 0 0 0 3.2 17h13.6a1.2 1.2 0 0 0 1-1.9L10.9 3.2a1.05 1.05 0 0 0-1.8 0Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+      <path d="M10 7.4v4.2" stroke="currentColor" strokeLinecap="round" strokeWidth="1.5" />
+      <circle cx="10" cy="14.1" fill="currentColor" r="1" />
+    </svg>
+  )
 }
 
 // Builds a plain-language verdict summarising the forecast.
 function buildVerdict(
   symbol: string,
+  horizon: number,
   returnPct: number | null,
   dirAcc: number,
-): { headline: string; sub: string; tone: 'positive' | 'negative' | 'neutral' } {
+): {
+  caveat: string
+  confidence: ConfidenceLevel
+  headline: string
+  sub: string
+  tone: 'positive' | 'negative' | 'neutral'
+} {
+  const confidence = resolveConfidenceLevel(dirAcc)
   if (returnPct == null) {
     return {
+      caveat: 'There is not enough model output to estimate confidence for this horizon.',
+      confidence,
       headline: 'Forecast unavailable',
       sub: 'The model could not produce a reliable forecast for this horizon.',
       tone: 'neutral',
@@ -149,6 +267,8 @@ function buildVerdict(
 
   const mag = Math.abs(returnPct)
   const direction = returnPct >= 0 ? 'rise' : 'fall'
+  const directionalLean =
+    returnPct > 0.25 ? 'bullish' : returnPct < -0.25 ? 'bearish' : 'mostly neutral'
   const tone: 'positive' | 'negative' | 'neutral' =
     returnPct > 0.5 ? 'positive' : returnPct < -0.5 ? 'negative' : 'neutral'
 
@@ -159,15 +279,13 @@ function buildVerdict(
   else strength = `${direction} sharply`
 
   const accPct = dirAcc * 100
-  let confidence: string
-  if (accPct >= 60) confidence = 'moderate historical confidence'
-  else if (accPct >= 55) confidence = 'low historical confidence'
-  else if (accPct >= 50) confidence = 'barely above a coin flip on past data'
-  else confidence = 'worse than random on past data — take with care'
-
   return {
-    headline: `The model expects ${symbol} to ${strength}.`,
-    sub: `Directional accuracy in backtesting is ${accPct.toFixed(0)}% — ${confidence}.`,
+    caveat: `Directional accuracy in backtesting is ${accPct.toFixed(0)}%, so treat this as a probability-weighted estimate rather than a guarantee.`,
+    confidence,
+    headline: confidence === 'low'
+      ? `The model leans ${directionalLean} on ${symbol} — but with low confidence`
+      : `The model leans ${directionalLean} on ${symbol}`,
+    sub: `It projects ${symbol} could ${strength} over the next ${horizon} days.`,
     tone,
   }
 }
@@ -188,28 +306,38 @@ function makeForecastTooltip(currentPrice: number) {
     const lowEntry  = payload.find((p: any) => p.dataKey === 'predictedCloseLow')
 
     const forecastVal = forecast?.value != null ? Number(forecast.value) : null
+    const row = forecast?.payload ?? actual?.payload ?? null
     const pctChange =
       forecastVal != null && currentPrice > 0
         ? ((forecastVal - currentPrice) / currentPrice) * 100
         : null
-    const highVal = highEntry?.value != null ? Number(highEntry.value) : null
-    const lowVal  = lowEntry?.value  != null ? Number(lowEntry.value)  : null
+    const highVal =
+      highEntry?.value != null
+        ? Number(highEntry.value)
+        : row?.predictedCloseHigh != null
+          ? Number(row.predictedCloseHigh)
+          : null
+    const lowVal =
+      lowEntry?.value != null
+        ? Number(lowEntry.value)
+        : row?.predictedCloseLow != null
+          ? Number(row.predictedCloseLow)
+          : null
+    const formattedDate = typeof label === 'string' ? formatLongDate(label) : ''
 
     return (
       <div className="instrument-tooltip forecast-tooltip">
-        <span className="instrument-tooltip-date">
-          {typeof label === 'string' ? formatLongDate(label) : ''}
-        </span>
-
         {actual?.value != null && (
-          <span className="instrument-tooltip-price">
-            {formatCurrency(Number(actual.value))}
+          <span className="forecast-tooltip-value-row">
+            Actual · {formattedDate} · {formatCurrency(Number(actual.value))}
           </span>
         )}
 
         {forecastVal != null && (
           <div className="forecast-tooltip-block">
-            <span className="forecast-tooltip-tag">Model forecast</span>
+            <span className="forecast-tooltip-tag">
+              Forecast · {formattedDate} · {formatCurrency(forecastVal)}
+            </span>
             <span className="forecast-tooltip-price">{formatCurrency(forecastVal)}</span>
             {pctChange != null && (
               <span
@@ -247,7 +375,7 @@ function TodayLabel(props: { viewBox?: { x: number; y: number; height: number } 
         strokeWidth={0.5}
         width={46}
         x={x - 23}
-        y={y + 10}
+        y={y}
       />
       <text
         dominantBaseline="middle"
@@ -257,7 +385,7 @@ function TodayLabel(props: { viewBox?: { x: number; y: number; height: number } 
         letterSpacing={0.8}
         textAnchor="middle"
         x={x}
-        y={y + 19}
+        y={y + 9}
       >
         TODAY
       </text>
@@ -280,6 +408,7 @@ function buildChartData(result: ForecastResponse) {
       predictedClose:    isLast ? (p.close as number | null) : (null as number | null),
       predictedCloseLow: isLast ? (p.close as number | null) : (null as number | null),
       predictedCloseHigh:isLast ? (p.close as number | null) : (null as number | null),
+      uncertaintyRange:  isLast ? ([p.close, p.close] as [number, number]) : (null as [number, number] | null),
     }
   })
 
@@ -295,6 +424,7 @@ function buildChartData(result: ForecastResponse) {
       predictedClose:     p.predictedClose,
       predictedCloseLow:  low,
       predictedCloseHigh: high,
+      uncertaintyRange:   [low, high] as [number, number],
     }
   })
 
@@ -393,10 +523,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
     if (p.predictedCloseHigh != null) vals.push(p.predictedCloseHigh)
     return vals
   })
-  const yMin = allPrices.length ? Math.min(...allPrices) : 0
-  const yMax = allPrices.length ? Math.max(...allPrices) : 1
-  const yPad = (yMax - yMin) * 0.1 || 1
-  const yDomain: [number, number] = [Math.max(0, yMin - yPad), yMax + yPad]
+  const yScale = buildYAxisScale(allPrices)
 
   // Feature importances
   const topFeatures = result
@@ -408,7 +535,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
   const predictedEndPrice = result?.forecastSeries.at(-1)?.predictedClose ?? null
   const returnPct = result?.predictedReturnPctOverHorizon ?? null
   const verdict = result
-    ? buildVerdict(symbol, returnPct, result.metrics.directionalAccuracy)
+    ? buildVerdict(symbol, horizon, returnPct, result.metrics.directionalAccuracy)
     : null
   const priceDelta =
     result && predictedEndPrice != null
@@ -416,6 +543,8 @@ export function ForecastPage({ token }: ForecastPageProps) {
       : null
 
   const companyName = instrument?.companyName ?? symbol
+  const modelUpdatedDate = result ? getModelUpdatedDate(result) : null
+  const lastForecastReview = result ? getLastForecastReview(result) : null
   const is503 = statusCode === 503 || error.toLowerCase().includes('model') || error.toLowerCase().includes('not available')
 
   return (
@@ -434,24 +563,27 @@ export function ForecastPage({ token }: ForecastPageProps) {
               {companyName !== symbol && (
                 <span className="forecast-hero-name">{companyName}</span>
               )}
-              <span className="forecast-hero-badge">AI Price Forecast</span>
-            </div>
-          </div>
-
-          <div className="forecast-horizon-group">
-            <span className="forecast-horizon-label">Forecast horizon</span>
-            <div className="forecast-horizon-row">
-              {HORIZON_OPTIONS.map((opt) => (
-                <button
-                  className={`forecast-horizon-btn${horizon === opt.value ? ' is-active' : ''}`}
-                  disabled={isLoading}
-                  key={opt.value}
-                  onClick={() => setHorizon(opt.value)}
-                  type="button"
-                >
-                  {opt.label}
-                </button>
-              ))}
+              {modelUpdatedDate && (
+                <span className="forecast-hero-meta">
+                  Model updated {formatLongDate(modelUpdatedDate)}
+                </span>
+              )}
+              <div className="forecast-horizon-group">
+                <span className="forecast-horizon-label">Forecast horizon</span>
+                <div className="forecast-horizon-row">
+                  {HORIZON_OPTIONS.map((opt) => (
+                    <button
+                      className={`forecast-horizon-btn${horizon === opt.value ? ' is-active' : ''}`}
+                      disabled={isLoading}
+                      key={opt.value}
+                      onClick={() => setHorizon(opt.value)}
+                      type="button"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -505,27 +637,43 @@ export function ForecastPage({ token }: ForecastPageProps) {
             </span>
             <h2 className="forecast-verdict-headline">{verdict.headline}</h2>
             <p className="forecast-verdict-sub">{verdict.sub}</p>
+            <p className="forecast-verdict-caveat">{verdict.caveat}</p>
+            <div
+              aria-label={`${describeConfidence(verdict.confidence)} based on directional accuracy`}
+              className={`forecast-confidence-meter forecast-confidence-meter--${verdict.confidence}`}
+            >
+              {(['low', 'medium', 'high'] as const).map((level) => (
+                <span
+                  className={`forecast-confidence-segment${
+                    verdict.confidence === level ? ' is-active' : ''
+                  }`}
+                  key={level}
+                >
+                  {level}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="forecast-verdict-figures">
-            <div className="forecast-figure">
-              <span className="forecast-figure-label">Today</span>
-              <span className="forecast-figure-value">
-                {formatCurrency(result.lastActualClose)}
-              </span>
-            </div>
+            {/* Row 1 — labels */}
+            <span className="forecast-figure-label">Today</span>
+            {/* Arrow: col 2, spans both rows — auto-placement skips it for subsequent items */}
             <span className="forecast-figure-arrow" aria-hidden>→</span>
-            <div className="forecast-figure">
-              <span className="forecast-figure-label">
-                Predicted in {horizon}d
-              </span>
+            <span className="forecast-figure-label">{horizon}-day forecast</span>
+
+            {/* Row 2 — values (col 2 is occupied; auto-placement jumps to col 3) */}
+            <span className="forecast-figure-value">
+              {formatCurrency(result.lastActualClose)}
+            </span>
+            <div className="forecast-figure-right">
               <span className="forecast-figure-value forecast-figure-value--forecast">
                 {predictedEndPrice != null ? formatCurrency(predictedEndPrice) : '—'}
               </span>
               {priceDelta != null && returnPct != null && (
                 <span className={`forecast-figure-delta forecast-figure-delta--${verdict.tone}`}>
                   {priceDelta >= 0 ? '+' : '−'}
-                  {formatCurrency(Math.abs(priceDelta)).replace('$', '$')} (
+                  {formatCurrency(Math.abs(priceDelta))} (
                   {returnPct >= 0 ? '+' : ''}
                   {returnPct.toFixed(2)}%)
                 </span>
@@ -535,16 +683,49 @@ export function ForecastPage({ token }: ForecastPageProps) {
         </div>
       )}
 
+      {token && !isLoading && !error && result && (
+        <div className="forecast-last-check">
+          <span className="forecast-last-check-title">How did the last forecast do?</span>
+          {lastForecastReview ? (
+            <>
+              <span>
+                Previous forecast: <strong>{formatCurrency(lastForecastReview.predictedClose)}</strong>
+              </span>
+              <span>
+                Actual{lastForecastReview.date ? ` on ${formatShortDate(lastForecastReview.date)}` : ''}:{' '}
+                <strong>{formatCurrency(lastForecastReview.actualClose)}</strong>
+              </span>
+              <span>
+                Miss:{' '}
+                <strong>
+                  {formatCurrency(Math.abs(lastForecastReview.predictedClose - lastForecastReview.actualClose))}
+                  {' · '}
+                  {lastForecastReview.actualClose
+                    ? (
+                        (Math.abs(lastForecastReview.predictedClose - lastForecastReview.actualClose) /
+                          lastForecastReview.actualClose) *
+                        100
+                      ).toFixed(2)
+                    : '0.00'}
+                  %
+                </strong>
+              </span>
+            </>
+          ) : (
+            <span>
+              Resolved prior-forecast data is not available yet. Current backtest average miss:{' '}
+              <strong>±{formatCurrency(result.metrics.maePrice)}</strong>.
+            </span>
+          )}
+        </div>
+      )}
+
       {/* ── Chart ── */}
       {token && !isLoading && !error && result && chartData.length > 0 && (
         <div className="forecast-chart-card">
           <div className="forecast-chart-header">
             <div>
               <h2 className="forecast-chart-title">Recent price + {horizon}-day outlook</h2>
-              <p className="forecast-chart-subtitle">
-                Solid teal = confirmed closes. Dotted blue = model projection.
-                Shaded band widens over time to reflect growing uncertainty.
-              </p>
             </div>
             <div className="forecast-chart-legend">
               <span className="forecast-legend-item">
@@ -608,43 +789,28 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 />
                 <YAxis
                   axisLine={false}
-                  domain={yDomain}
+                  domain={yScale.domain}
                   orientation="left"
                   tick={AXIS_TICK}
                   tickFormatter={(v: number) => formatCurrency(v)}
                   tickLine={false}
+                  ticks={yScale.ticks}
                   width={80}
                 />
                 <Tooltip content={tooltipComponent} />
 
                 {/* ── Uncertainty band (render before lines so lines sit on top) ── */}
                 {showBand && (
-                  <>
-                    {/* Upper envelope filled with expanding orange tint */}
-                    <Area
-                      baseValue="dataMin"
-                      connectNulls
-                      dataKey="predictedCloseHigh"
-                      dot={false}
-                      fill="url(#fc-band-h)"
-                      fillOpacity={1}
-                      isAnimationActive={false}
-                      stroke="none"
-                      type="monotone"
-                    />
-                    {/* Lower cutout — fills below lower bound with background to create a band */}
-                    <Area
-                      baseValue="dataMin"
-                      connectNulls
-                      dataKey="predictedCloseLow"
-                      dot={false}
-                      fill="#ffffff"
-                      fillOpacity={1}
-                      isAnimationActive={false}
-                      stroke="none"
-                      type="monotone"
-                    />
-                  </>
+                  <Area
+                    connectNulls
+                    dataKey="uncertaintyRange"
+                    dot={false}
+                    fill="url(#fc-band-h)"
+                    fillOpacity={1}
+                    isAnimationActive={false}
+                    stroke="none"
+                    type="monotone"
+                  />
                 )}
 
                 {/* ── Today boundary ── */}
@@ -715,8 +881,15 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 Measured on past data the model has never seen during training.
               </p>
             </div>
-            <div className="forecast-metrics-grid">
-              <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.directional}>
+            <div className="forecast-metrics-grid forecast-metrics-grid--reliability">
+              <div
+                className={`forecast-metric-tile forecast-metric-tile--directional${
+                  result.metrics.directionalAccuracy < 0.55
+                    ? ' forecast-metric-tile--low-confidence'
+                    : ''
+                }`}
+                title={METRIC_DESCRIPTIONS.directional}
+              >
                 <span className="forecast-metric-label">
                   Right direction
                   <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
@@ -730,8 +903,9 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 >
                   {(result.metrics.directionalAccuracy * 100).toFixed(1)}%
                 </span>
-                <span className="forecast-metric-sub">
-                  of the time (50% = random)
+                <span className="forecast-metric-sub">of the time (50% = random)</span>
+                <span className="forecast-metric-explain">
+                  {buildDirectionalExplanation(result.metrics.directionalAccuracy)}
                 </span>
               </div>
               <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.maePrice}>
@@ -743,26 +917,22 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   ±{formatCurrency(result.metrics.maePrice)}
                 </span>
                 <span className="forecast-metric-sub">per prediction</span>
+                <span className="forecast-metric-explain">
+                  On average, predictions are off by this amount in either direction.
+                </span>
               </div>
               <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.rmsePrice}>
                 <span className="forecast-metric-label">
-                  Worst-case error
+                  Prediction error (RMSE)
                   <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
                 </span>
                 <span className="forecast-metric-value">
                   ±{formatCurrency(result.metrics.rmsePrice)}
                 </span>
                 <span className="forecast-metric-sub">RMSE</span>
-              </div>
-              <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.maeReturn}>
-                <span className="forecast-metric-label">
-                  Return error
-                  <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
+                <span className="forecast-metric-explain">
+                  Larger misses count more heavily in this score.
                 </span>
-                <span className="forecast-metric-value">
-                  ±{(result.metrics.maeReturn * 100).toFixed(2)}%
-                </span>
-                <span className="forecast-metric-sub">avg percent miss</span>
               </div>
             </div>
           </div>
@@ -789,7 +959,9 @@ export function ForecastPage({ token }: ForecastPageProps) {
                     <div className="forecast-feature-bar-track">
                       <div
                         className="forecast-feature-bar-fill"
-                        style={{ width: `${(f.importance / maxImportance) * 100}%` }}
+                        style={{
+                          width: `${Math.min(100, maxImportance > 0 ? (f.importance / maxImportance) * 100 : 0)}%`,
+                        }}
                       />
                     </div>
                     <span className="forecast-feature-pct">
@@ -803,13 +975,50 @@ export function ForecastPage({ token }: ForecastPageProps) {
         </div>
       )}
 
+      {/* ── Related tools ── */}
+      {token && !isLoading && !error && result && (
+        <div className="forecast-page-cta-group">
+          <div className="forecast-page-cta-card">
+            <div className="forecast-page-cta-info">
+              <h3 className="forecast-page-cta-heading">Investment Simulator</h3>
+              <p className="forecast-page-cta-sub">
+                Project long-term growth with 1,000 computer-run scenarios — up to 50 years out.
+              </p>
+            </div>
+            <Link
+              className="primary-action primary-action--teal"
+              to={`/instrument/${encodeURIComponent(symbol)}/project`}
+            >
+              Simulate →
+            </Link>
+          </div>
+          <div className="forecast-page-cta-card forecast-page-cta-card--chart">
+            <div className="forecast-page-cta-info">
+              <h3 className="forecast-page-cta-heading">Price chart</h3>
+              <p className="forecast-page-cta-sub">
+                See {symbol}'s recent price history, indicators, and market data.
+              </p>
+            </div>
+            <Link
+              className="primary-action"
+              to={`/instrument/${encodeURIComponent(symbol)}`}
+            >
+              View chart →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* ── Disclaimer ── */}
       {token && !isLoading && !error && result && (
-        <p className="forecast-disclaimer">
-          ⚠️ Forecasts are generated by a machine learning model trained on historical price data.
-          They are not financial advice and should not be used as the sole basis for investment decisions.
-          Past model performance does not guarantee future accuracy. Always do your own research.
-        </p>
+        <div className="forecast-disclaimer">
+          <WarningIcon />
+          <p>
+            Forecasts are generated by a machine learning model trained on historical price data.
+            They are not financial advice and should not be used as the sole basis for investment decisions.
+            Past model performance does not guarantee future accuracy. Always do your own research.
+          </p>
+        </div>
       )}
     </section>
   )

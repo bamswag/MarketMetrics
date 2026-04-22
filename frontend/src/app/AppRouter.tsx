@@ -104,6 +104,8 @@ const initialDashboardData: DashboardData = {
 const DASHBOARD_CACHE_TTL_MS = 30_000
 const TRIGGERED_ALERT_DEDUPE_TTL_MS = 6 * 60 * 60 * 1000
 const TRIGGERED_ALERT_DEDUPE_MAX_SIZE = 500
+const ALERT_SOCKET_RECONNECT_BASE_MS = 4_000
+const ALERT_SOCKET_RECONNECT_MAX_MS = 120_000
 
 type DashboardCacheEntry = {
   token: string
@@ -278,6 +280,8 @@ function AppContent() {
 
   const alertSocketsRef = useRef<Map<string, WebSocket>>(new Map())
   const alertReconnectTimersRef = useRef<Map<string, number>>(new Map())
+  const alertReconnectAttemptsRef = useRef<Map<string, number>>(new Map())
+  const alertRetryAfterMsRef = useRef<Map<string, number>>(new Map())
   const triggeredAlertIdsRef = useRef<Map<string, number>>(new Map())
   const alertWorkspaceRefreshPromiseRef = useRef<Promise<void> | null>(null)
   const alertWorkspaceRefreshQueuedRef = useRef(false)
@@ -309,6 +313,8 @@ function AppContent() {
       window.clearTimeout(timeoutId)
     }
     alertReconnectTimersRef.current.clear()
+    alertReconnectAttemptsRef.current.clear()
+    alertRetryAfterMsRef.current.clear()
 
     for (const socket of alertSocketsRef.current.values()) {
       socket.close()
@@ -579,6 +585,8 @@ function AppContent() {
       window.clearTimeout(timeoutId)
     }
     alertReconnectTimersRef.current.clear()
+    alertReconnectAttemptsRef.current.clear()
+    alertRetryAfterMsRef.current.clear()
 
     for (const socket of alertSocketsRef.current.values()) {
       socket.close()
@@ -699,6 +707,8 @@ function AppContent() {
       window.clearTimeout(reconnectTimer)
       alertReconnectTimersRef.current.delete(symbol)
     }
+    alertReconnectAttemptsRef.current.delete(symbol)
+    alertRetryAfterMsRef.current.delete(symbol)
 
     const existingSocket = alertSocketsRef.current.get(symbol)
     if (existingSocket) {
@@ -713,10 +723,25 @@ function AppContent() {
     }
   })
 
-  const scheduleAlertSocketReconnect = useEffectEvent((symbol: string, retryInMs = 4000) => {
+  const scheduleAlertSocketReconnect = useEffectEvent((symbol: string, retryInMs?: number) => {
     if (!token || alertReconnectTimersRef.current.has(symbol)) {
       return
     }
+
+    const attempt = alertReconnectAttemptsRef.current.get(symbol) ?? 0
+    const providerRetryMs = alertRetryAfterMsRef.current.get(symbol)
+    const exponentialBackoffMs = Math.min(
+      ALERT_SOCKET_RECONNECT_BASE_MS * 2 ** attempt,
+      ALERT_SOCKET_RECONNECT_MAX_MS,
+    )
+    const reconnectDelayMs = Math.min(
+      Math.max(
+        retryInMs ?? providerRetryMs ?? exponentialBackoffMs,
+        ALERT_SOCKET_RECONNECT_BASE_MS,
+      ),
+      ALERT_SOCKET_RECONNECT_MAX_MS,
+    )
+    alertReconnectAttemptsRef.current.set(symbol, attempt + 1)
 
     const timeoutId = window.setTimeout(() => {
       alertReconnectTimersRef.current.delete(symbol)
@@ -729,7 +754,7 @@ function AppContent() {
       }
 
       connectAlertSocket(symbol)
-    }, retryInMs)
+    }, reconnectDelayMs)
 
     alertReconnectTimersRef.current.set(symbol, timeoutId)
   })
@@ -764,12 +789,22 @@ function AppContent() {
     },
   )
 
-  const handleAlertSocketMessage = useEffectEvent((rawPayload: string) => {
+  const handleAlertSocketMessage = useEffectEvent((symbol: string, rawPayload: string) => {
     let payload: AlertWebSocketMessage
 
     try {
       payload = JSON.parse(rawPayload) as AlertWebSocketMessage
     } catch {
+      return
+    }
+
+    if (payload.type === 'error') {
+      if (payload.retryInSeconds && Number.isFinite(payload.retryInSeconds)) {
+        alertRetryAfterMsRef.current.set(
+          symbol,
+          Math.min(payload.retryInSeconds * 1000, ALERT_SOCKET_RECONNECT_MAX_MS),
+        )
+      }
       return
     }
 
@@ -817,7 +852,11 @@ function AppContent() {
     alertSocketsRef.current.set(symbol, socket)
 
     socket.onmessage = (event) => {
-      handleAlertSocketMessage(event.data)
+      handleAlertSocketMessage(symbol, event.data)
+    }
+    socket.onopen = () => {
+      alertReconnectAttemptsRef.current.delete(symbol)
+      alertRetryAfterMsRef.current.delete(symbol)
     }
     socket.onclose = (event) => {
       handleAlertSocketClose(symbol, socket, event)
@@ -848,6 +887,8 @@ function AppContent() {
       if (!activeSymbolSet.has(symbol)) {
         window.clearTimeout(timeoutId)
         alertReconnectTimersRef.current.delete(symbol)
+        alertReconnectAttemptsRef.current.delete(symbol)
+        alertRetryAfterMsRef.current.delete(symbol)
       }
     }
 
@@ -865,6 +906,8 @@ function AppContent() {
         window.clearTimeout(timeoutId)
       }
       alertReconnectTimersRef.current.clear()
+      alertReconnectAttemptsRef.current.clear()
+      alertRetryAfterMsRef.current.clear()
     }
   }, [closeAllAlertSockets])
 
@@ -1132,6 +1175,8 @@ function AppContent() {
         window.clearTimeout(timeoutId)
       }
       alertReconnectTimersRef.current.clear()
+      alertReconnectAttemptsRef.current.clear()
+      alertRetryAfterMsRef.current.clear()
 
       for (const socket of alertSocketsRef.current.values()) {
         socket.close()

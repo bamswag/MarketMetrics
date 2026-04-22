@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, search
+from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, quotes, search
 from app.api.routes import simulations, watchlists, websocket_quotes
 from app.api.routes.auth import router as auth_router
 from app.core.config import settings
@@ -34,6 +34,7 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(simulations.router)
 app.include_router(movers.router)
 app.include_router(search.router)
+app.include_router(quotes.router)
 app.include_router(instruments.router)
 app.include_router(forecasts.router)
 app.include_router(growth_projections.router)

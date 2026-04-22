@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { SearchResultCard } from '../components/SearchResultCard'
 import { TopResultCard } from '../components/TopResultCard'
-import type { CompanySearchResult } from '../lib/api'
-import { createWatchlistItem, fetchSearchResults } from '../lib/api'
+import type { CompanySearchResult, PublicQuote } from '../lib/api'
+import { createWatchlistItem, fetchPublicQuotes, fetchSearchResults } from '../lib/api'
 import { assetCategoryLabel } from '../lib/marketPreferences'
 import '../styles/pages/SearchResultsPage.css'
 
 type CategoryFilter = 'all' | 'stocks' | 'crypto' | 'etfs'
 
 const PAGE_SIZE = 18
+
+function quoteKey(symbol: string): string {
+  return symbol.trim().toUpperCase()
+}
 
 type SearchResultsPageProps = {
   token?: string
@@ -33,6 +37,9 @@ export function SearchResultsPage({
   const [pageIndex, setPageIndex] = useState(1)
   const [addingSymbol, setAddingSymbol] = useState<string | null>(null)
   const [addedSymbols, setAddedSymbols] = useState<Set<string>>(new Set())
+  const [quotesBySymbol, setQuotesBySymbol] = useState<Record<string, PublicQuote>>({})
+  const [loadingQuoteSymbols, setLoadingQuoteSymbols] = useState<Set<string>>(new Set())
+  const loadingQuoteSymbolsRef = useRef<Set<string>>(new Set())
 
   // Fetch results when query changes
   useEffect(() => {
@@ -42,6 +49,9 @@ export function SearchResultsPage({
     setIsLoading(true)
     setError('')
     setPageIndex(1)
+    setQuotesBySymbol({})
+    loadingQuoteSymbolsRef.current.clear()
+    setLoadingQuoteSymbols(new Set())
 
     fetchSearchResults(token, query, abortController.signal)
       .then((res) => {
@@ -90,8 +100,28 @@ export function SearchResultsPage({
     return resultsByCategory[activeCategory] ?? []
   }, [activeCategory, allResults, resultsByCategory])
 
-  const displayedResults = filteredResults.slice(0, pageIndex * PAGE_SIZE)
+  const displayedResults = useMemo(
+    () => filteredResults.slice(0, pageIndex * PAGE_SIZE),
+    [filteredResults, pageIndex],
+  )
   const hasMore = displayedResults.length < filteredResults.length
+
+  const normalCardResults = useMemo(() => {
+    if (activeCategory === 'all') {
+      return [
+        ...resultsByCategory.stocks.slice(0, PAGE_SIZE),
+        ...resultsByCategory.crypto.slice(0, PAGE_SIZE),
+        ...resultsByCategory.etfs.slice(0, PAGE_SIZE),
+      ]
+    }
+
+    return displayedResults.slice(1)
+  }, [activeCategory, displayedResults, resultsByCategory])
+
+  const normalCardSymbols = useMemo(
+    () => Array.from(new Set(normalCardResults.map((result) => quoteKey(result.symbol)))),
+    [normalCardResults],
+  )
 
   // Category counts for tab badges
   const counts: Record<CategoryFilter, number> = {
@@ -105,6 +135,78 @@ export function SearchResultsPage({
     () => new Set([...trackedSymbols, ...addedSymbols]),
     [trackedSymbols, addedSymbols],
   )
+
+  useEffect(() => {
+    if (isLoading || error || normalCardSymbols.length === 0) {
+      return
+    }
+
+    const missingSymbols = normalCardSymbols.filter((symbol) => (
+      !quotesBySymbol[symbol] && !loadingQuoteSymbolsRef.current.has(symbol)
+    ))
+
+    if (missingSymbols.length === 0) {
+      return
+    }
+
+    const abortController = new AbortController()
+    let cancelled = false
+    for (const symbol of missingSymbols) {
+      loadingQuoteSymbolsRef.current.add(symbol)
+    }
+    setLoadingQuoteSymbols((previous) => {
+      const next = new Set(previous)
+      for (const symbol of missingSymbols) next.add(symbol)
+      return next
+    })
+
+    fetchPublicQuotes(missingSymbols, abortController.signal)
+      .then((quotes) => {
+        if (cancelled) return
+        setQuotesBySymbol((previous) => {
+          const next = { ...previous }
+          for (const quote of quotes) {
+            next[quoteKey(quote.symbol)] = quote
+          }
+          return next
+        })
+      })
+      .catch((err) => {
+        if (cancelled || (err instanceof DOMException && err.name === 'AbortError')) {
+          return
+        }
+
+        setQuotesBySymbol((previous) => {
+          const next = { ...previous }
+          for (const symbol of missingSymbols) {
+            next[symbol] = {
+              symbol,
+              unavailableReason: err instanceof Error ? err.message : 'Quote data unavailable.',
+            }
+          }
+          return next
+        })
+      })
+      .finally(() => {
+        if (cancelled) return
+        for (const symbol of missingSymbols) {
+          loadingQuoteSymbolsRef.current.delete(symbol)
+        }
+        setLoadingQuoteSymbols((previous) => {
+          const next = new Set(previous)
+          for (const symbol of missingSymbols) next.delete(symbol)
+          return next
+        })
+      })
+
+    return () => {
+      cancelled = true
+      abortController.abort()
+      for (const symbol of missingSymbols) {
+        loadingQuoteSymbolsRef.current.delete(symbol)
+      }
+    }
+  }, [error, isLoading, normalCardSymbols, quotesBySymbol])
 
   async function handleAddWatchlist(symbol: string) {
     if (!token) {
@@ -135,11 +237,12 @@ export function SearchResultsPage({
         {items.map((result) => (
           <SearchResultCard
             isAddingWatchlist={addingSymbol === result.symbol}
+            isQuoteLoading={loadingQuoteSymbols.has(quoteKey(result.symbol))}
             isTracked={trackedSet.has(result.symbol)}
             key={result.symbol}
             onAddWatchlist={handleAddWatchlist}
+            quote={quotesBySymbol[quoteKey(result.symbol)] ?? null}
             result={result}
-            token={token}
           />
         ))}
       </div>

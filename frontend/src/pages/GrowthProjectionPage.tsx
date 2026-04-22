@@ -19,14 +19,14 @@ import {
   type GrowthProjectionResponse,
   type InstrumentDetailResponse,
 } from '../lib/api'
-import { formatCurrency } from '../lib/formatters'
+import '../styles/pages/ForecastPage.css'
 import '../styles/pages/GrowthProjectionPage.css'
 
 type GrowthProjectionPageProps = {
   token?: string
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sampleData<T>(arr: T[], maxPoints: number): T[] {
   if (arr.length <= maxPoints) return arr
@@ -40,10 +40,43 @@ function formatYAxisValue(value: number): string {
   return `$${Math.round(value)}`
 }
 
-function formatXAxisDate(dateStr: string, years: number): string {
-  const d = new Date(dateStr)
-  if (years <= 5) return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-  return String(d.getFullYear())
+/** Compact formatter — no cents, $K/$M for large numbers, handles negatives */
+function formatCompact(value: number): string {
+  const abs = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 1_000) return `${sign}$${Math.round(abs / 1_000)}K`
+  return `${sign}$${Math.round(abs)}`
+}
+
+function formatHistoryDateRange(yearsUsed: number): string {
+  const end = new Date()
+  const start = new Date()
+  start.setMonth(end.getMonth() - Math.round(yearsUsed * 12))
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', year: 'numeric' }
+  return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`
+}
+
+function resolveSourceLabel(source: string): string {
+  if (source === 'historical_defaults' || source === 'historical') return 'Historical price data'
+  return source
+}
+
+/** Sanitise a text input to digits only, stripping leading zeros */
+function sanitiseAmount(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  return digits.replace(/^0+(?=\d)/, '')
+}
+
+// ── Volatility badge ──────────────────────────────────────────────────────────
+
+function VolatilityBadge({ value }: { value: number }) {
+  const pct = value * 100
+  if (pct > 40)
+    return <span className="proj-vol-badge proj-vol-badge--high">High — this stock swings a lot</span>
+  if (pct >= 20)
+    return <span className="proj-vol-badge proj-vol-badge--moderate">Moderate</span>
+  return <span className="proj-vol-badge proj-vol-badge--low">Low — relatively stable</span>
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -69,22 +102,22 @@ function ProjectionTooltip(props: any) {
       <span className="instrument-tooltip-date">{year}</span>
       {p50 != null && (
         <span className="projection-tooltip-row projection-tooltip-row--main">
-          Median: {formatCurrency(p50)}
+          Most likely: {formatCompact(p50)}
         </span>
       )}
       {p10 != null && p90 != null && (
         <span className="projection-tooltip-row">
-          Range: {formatCurrency(p10)} – {formatCurrency(p90)}
+          Range: {formatCompact(p10)} – {formatCompact(p90)}
         </span>
       )}
       {baseline != null && (
         <span className="projection-tooltip-row">
-          Baseline: {formatCurrency(baseline)}
+          Expected: {formatCompact(baseline)}
         </span>
       )}
       {invested != null && (
         <span className="projection-tooltip-row projection-tooltip-row--invested">
-          Invested: {formatCurrency(invested)}
+          Invested: {formatCompact(invested)}
         </span>
       )}
     </div>
@@ -97,25 +130,41 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const { symbol: rawSymbol } = useParams<{ symbol: string }>()
   const symbol = rawSymbol?.toUpperCase() ?? ''
 
-  // Form state
+  // Form state — string values for display, derived numbers for calculations
   const [years, setYears] = useState(10)
-  const [initialAmount, setInitialAmount] = useState(1000)
-  const [monthlyContribution, setMonthlyContribution] = useState(0)
+  const [initialAmountStr, setInitialAmountStr] = useState('1000')
+  const [monthlyContributionStr, setMonthlyContributionStr] = useState('0')
   const [inflationAdjust, setInflationAdjust] = useState(false)
+
+  // Derived numeric values — empty string treated as 0, no error state
+  const initialAmount = initialAmountStr === '' ? 0 : Math.max(0, parseInt(initialAmountStr, 10) || 0)
+  const monthlyContribution = monthlyContributionStr === '' ? 0 : Math.max(0, parseInt(monthlyContributionStr, 10) || 0)
 
   // Async state
   const [result, setResult] = useState<GrowthProjectionResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [instrument, setInstrument] = useState<InstrumentDetailResponse | null>(null)
+  const [simulationVersion, setSimulationVersion] = useState(0)
 
   const abortRef = useRef<AbortController | null>(null)
+  // Gate: auto-run only fires after the first simulation has returned results
+  const initialRunDoneRef = useRef(false)
+  // Debounce timer for param-change auto-run
+  const paramDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch instrument context (name + logo) once on mount
   useEffect(() => {
     if (!symbol) return
     void fetchInstrumentDetail(token, symbol, '1M').then(setInstrument).catch(() => null)
   }, [symbol, token])
+
+  function handleInitialAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInitialAmountStr(sanitiseAmount(e.target.value))
+  }
+
+  function handleMonthlyContributionChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setMonthlyContributionStr(sanitiseAmount(e.target.value))
+  }
 
   const runSimulation = useCallback(() => {
     if (!token || !symbol) return
@@ -142,7 +191,11 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
       controller.signal,
     )
       .then((data) => {
-        if (!cancelled) setResult(data)
+        if (!cancelled) {
+          setResult(data)
+          setSimulationVersion((v) => v + 1)
+          initialRunDoneRef.current = true
+        }
       })
       .catch((err) => {
         if (err instanceof DOMException && err.name === 'AbortError') {
@@ -170,76 +223,210 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
     }
   }, [token, symbol, years, initialAmount, monthlyContribution, inflationAdjust])
 
-  // Auto-run on mount and when symbol/token change
+  // Keep a stable ref so the debounced callback always calls the latest closure
+  const runSimulationRef = useRef(runSimulation)
+  runSimulationRef.current = runSimulation
+
+  // Initial run whenever symbol or token changes — clears stale data
   useEffect(() => {
+    initialRunDoneRef.current = false
+    setResult(null)
+    setError('')
     const cleanup = runSimulation()
     return cleanup
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, token])
 
-  // Chart data — sampled to max 240 points
+  // Auto-run on param changes (debounced 300ms), gated until first result is ready
+  useEffect(() => {
+    if (!initialRunDoneRef.current) return
+    if (paramDebounceRef.current) clearTimeout(paramDebounceRef.current)
+    paramDebounceRef.current = setTimeout(() => {
+      runSimulationRef.current()
+    }, 300)
+    return () => {
+      if (paramDebounceRef.current) clearTimeout(paramDebounceRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [years, initialAmount, monthlyContribution, inflationAdjust])
+
   const chartData = useMemo(() => {
     if (!result) return []
     return sampleData(result.monthlyChartData, 240)
   }, [result])
 
-  // Y-axis domain with 8% padding
   const yDomain = useMemo((): [number, number] => {
     if (!chartData.length) return [0, 1]
-    const vals: number[] = []
+    let hi = 0
     for (const pt of chartData) {
-      if (pt.monteCarloP10 != null) vals.push(pt.monteCarloP10)
-      if (pt.monteCarloP90 != null) vals.push(pt.monteCarloP90)
-      if (pt.investedCapital != null) vals.push(pt.investedCapital)
+      if (pt.monteCarloP90 != null && pt.monteCarloP90 > hi) hi = pt.monteCarloP90
     }
-    if (!vals.length) return [0, 1]
-    const lo = Math.min(...vals)
-    const hi = Math.max(...vals)
-    const pad = (hi - lo) * 0.08 || hi * 0.08 || 1
-    return [Math.max(0, lo - pad), hi + pad]
+    return [0, hi * 1.08 || 1]
+  }, [chartData])
+
+  const xTicks = useMemo(() => {
+    if (!chartData.length) return undefined
+    const seen = new Set<number>()
+    const ticks: string[] = []
+    for (const pt of chartData) {
+      const yr = new Date(pt.date).getFullYear()
+      if (!seen.has(yr)) {
+        seen.add(yr)
+        ticks.push(pt.date)
+      }
+    }
+    if (ticks.length > 12) {
+      const step = Math.ceil(ticks.length / 10)
+      return ticks.filter((_, i) => i % step === 0 || i === ticks.length - 1)
+    }
+    return ticks
   }, [chartData])
 
   const companyName = instrument?.companyName ?? symbol
-
   const scenarios = result?.deterministicScenarios ?? null
   const assumptions = result?.assumptionsUsed ?? null
 
+  // Show results as long as we have data — even while a re-run is in progress
+  const hasResults = Boolean(result && !error)
+  // Distinguish between a fresh first load (no data yet) and a background update
+  const isFirstLoad = isLoading && !result
+  const isUpdating = isLoading && Boolean(result)
+
+  // Auto-generated plain-English summary sentence
+  const summaryLine = useMemo(() => {
+    if (!result) return null
+    const probPct = Math.round(result.monteCarloSummary.probabilityOfProfit * 100)
+    const p50 = formatCompact(result.monteCarloSummary.p50EndValue)
+    const invested = formatCompact(result.totalInvested)
+    return `Based on your inputs, there's a ${probPct}% chance your ${invested} investment grows to at least ${p50} over ${years} year${years !== 1 ? 's' : ''}.`
+  }, [result, years])
+
+  // CSS custom property for slider track fill
+  const sliderFill = `${((years - 1) / 49) * 100}%`
+
   return (
     <section className="projection-page page-section">
+
       {/* ── Hero ── */}
       <div className="projection-hero">
         <Link className="forecast-back-link" to={`/instrument/${encodeURIComponent(symbol)}`}>
           ← Back to {symbol}
         </Link>
-
         <div className="forecast-hero-row">
           <div className="forecast-hero-identity">
             <MoverLogo name={companyName} symbol={symbol} />
             <div className="forecast-hero-text">
               <h1 className="forecast-hero-symbol">{symbol}</h1>
-              {companyName !== symbol && (
-                <span className="forecast-hero-name">{companyName}</span>
-              )}
-              <span className="forecast-hero-badge">Investment Simulator</span>
+              <span className="forecast-hero-name">
+                {companyName !== symbol ? `${companyName} · ` : ''}Investment Simulator
+              </span>
             </div>
           </div>
         </div>
       </div>
 
+      {/* ── Summary cards (above the fold once results arrive) ── */}
+      {hasResults && result && (
+        <>
+          <div className={`projection-summary-grid${isUpdating ? ' projection-summary-grid--updating' : ''}`}>
+
+            {/* Card 1: Most likely outcome */}
+            <div className="projection-summary-card projection-summary-card--main">
+              <span className="projection-summary-label">Most likely outcome</span>
+              <span className="projection-summary-value projection-summary-value--positive">
+                {formatCompact(result.monteCarloSummary.p50EndValue)}
+              </span>
+              <span className="projection-summary-sub">
+                your most likely portfolio value after {years} year{years !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            {/* Card 2: Chance of profit */}
+            <div className="projection-summary-card">
+              <span className="projection-summary-label">
+                Chance of profit
+                <span
+                  className="proj-info-icon"
+                  title="Out of 1,000 simulated futures, this many ended with more money than you put in"
+                >
+                  {' '}ⓘ
+                </span>
+              </span>
+              <span
+                className={`projection-summary-value ${
+                  result.monteCarloSummary.probabilityOfProfit >= 0.5
+                    ? 'projection-summary-value--positive'
+                    : 'projection-summary-value--negative'
+                }`}
+              >
+                {(result.monteCarloSummary.probabilityOfProfit * 100).toFixed(0)}%
+              </span>
+              <span className="projection-summary-sub">
+                across {result.monteCarloSummary.runs.toLocaleString()} simulated futures
+              </span>
+            </div>
+
+            {/* Card 3: Estimated profit */}
+            <div className="projection-summary-card">
+              <span className="projection-summary-label">Estimated profit</span>
+              <span
+                className={`projection-summary-value ${
+                  result.nominalProfitGain.monteCarloP50 >= 0
+                    ? 'projection-summary-value--positive'
+                    : 'projection-summary-value--negative'
+                }`}
+              >
+                {result.nominalProfitGain.monteCarloP50 >= 0 ? '+' : ''}
+                {formatCompact(result.nominalProfitGain.monteCarloP50)}
+              </span>
+              <span className="projection-summary-sub">
+                {result.nominalGrowthPct.monteCarloP50 >= 0 ? '+' : ''}
+                {result.nominalGrowthPct.monteCarloP50.toFixed(1)}% total growth
+              </span>
+            </div>
+
+            {/* Card 4: Total you'll invest */}
+            <div className="projection-summary-card">
+              <span className="projection-summary-label">Total you'll invest</span>
+              <span className="projection-summary-value">
+                {formatCompact(result.totalInvested)}
+              </span>
+              <span className="projection-summary-sub">
+                your total money put in over {years} year{years !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
+          {/* Auto-generated summary sentence */}
+          {summaryLine && (
+            <p className={`projection-summary-sentence${isUpdating ? ' projection-summary-sentence--updating' : ''}`}>
+              {summaryLine}
+            </p>
+          )}
+        </>
+      )}
+
       {/* ── Parameters card ── */}
-      <div className="projection-params-card">
-        <p className="projection-params-heading">Simulation parameters</p>
+      <div className={`projection-params-card${hasResults ? ' projection-params-card--secondary' : ''}`}>
+        <p className="projection-params-heading">
+          {hasResults ? 'Adjust parameters' : 'Simulation parameters'}
+        </p>
+        <p className="projection-params-explainer">
+          Adjust the sliders and fields below — your results update instantly.
+        </p>
 
         <div className="projection-params-grid">
-          {/* Years */}
+
+          {/* Investment period slider */}
           <div className="projection-field">
-            <label className="projection-field-label">Years</label>
+            <label className="projection-field-label">Investment period</label>
             <div className="projection-years-row">
               <input
                 className="projection-slider"
                 max={50}
                 min={1}
                 onChange={(e) => setYears(Number(e.target.value))}
+                style={{ '--slider-fill': sliderFill } as React.CSSProperties}
                 type="range"
                 value={years}
               />
@@ -247,59 +434,57 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             </div>
           </div>
 
-          {/* Initial investment */}
+          {/* Starting amount */}
           <div className="projection-field">
-            <label className="projection-field-label">Initial investment</label>
+            <label className="projection-field-label">Starting amount</label>
             <div className="projection-input-wrapper">
               <span className="projection-input-prefix">$</span>
               <input
                 className="projection-input"
-                min={1}
-                onChange={(e) => setInitialAmount(Number(e.target.value))}
-                step={100}
-                type="number"
-                value={initialAmount}
+                inputMode="numeric"
+                onChange={handleInitialAmountChange}
+                placeholder="1000"
+                type="text"
+                value={initialAmountStr}
               />
             </div>
           </div>
 
-          {/* Monthly contribution */}
+          {/* Monthly top-up */}
           <div className="projection-field">
-            <label className="projection-field-label">Monthly contribution</label>
+            <label className="projection-field-label">Monthly top-up</label>
             <div className="projection-input-wrapper">
               <span className="projection-input-prefix">$</span>
               <input
                 className="projection-input"
-                min={0}
-                onChange={(e) => setMonthlyContribution(Number(e.target.value))}
-                step={50}
-                type="number"
-                value={monthlyContribution}
+                inputMode="numeric"
+                onChange={handleMonthlyContributionChange}
+                placeholder="0"
+                type="text"
+                value={monthlyContributionStr}
               />
             </div>
           </div>
 
-          {/* Inflation adjusted */}
+          {/* Inflation toggle */}
           <div className="projection-field projection-field--toggle">
-            <span className="projection-field-label">Inflation adjusted</span>
-            <button
-              className={inflationAdjust ? 'workspace-toggle is-active' : 'workspace-toggle'}
-              onClick={() => setInflationAdjust((v) => !v)}
-              type="button"
-            >
-              {inflationAdjust ? 'On (2.5%)' : 'Off'}
-            </button>
+            <span className="projection-field-label">Adjust for inflation</span>
+            <div className="projection-toggle-group">
+              <button
+                aria-checked={inflationAdjust}
+                className={`projection-toggle${inflationAdjust ? ' projection-toggle--on' : ''}`}
+                onClick={() => setInflationAdjust((v) => !v)}
+                role="switch"
+                type="button"
+              >
+                <span className="projection-toggle-thumb" />
+              </button>
+              <span className="projection-toggle-label">
+                {inflationAdjust ? 'On · 2.5% / yr' : 'Off'}
+              </span>
+            </div>
           </div>
         </div>
-
-        <button
-          className="primary-action projection-run-btn"
-          disabled={isLoading || !token}
-          onClick={runSimulation}
-          type="button"
-        >
-          {isLoading ? 'Running…' : 'Run Simulation'}
-        </button>
       </div>
 
       {/* ── No auth ── */}
@@ -323,8 +508,8 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
         </div>
       )}
 
-      {/* ── Loading skeleton ── */}
-      {token && isLoading && (
+      {/* ── Loading skeleton (first load only — param updates keep showing the chart) ── */}
+      {token && isFirstLoad && (
         <div className="projection-loading">
           <div className="forecast-skeleton" style={{ height: 96, borderRadius: 22 }} />
           <div className="forecast-skeleton" style={{ height: 380, borderRadius: 22 }} />
@@ -332,127 +517,63 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
         </div>
       )}
 
-      {/* ── Summary grid ── */}
-      {result && !isLoading && !error && (
-        <div className="projection-summary-grid">
-          <div className="projection-summary-card">
-            <span className="projection-summary-label">Median outcome</span>
-            <span className="projection-summary-value projection-summary-value--main">
-              {formatCurrency(result.monteCarloSummary.p50EndValue)}
-            </span>
-            <span className="projection-summary-sub">after {years} year{years !== 1 ? 's' : ''} (P50)</span>
-          </div>
-
-          <div className="projection-summary-card">
-            <span className="projection-summary-label">Total invested</span>
-            <span className="projection-summary-value">
-              {formatCurrency(result.totalInvested)}
-            </span>
-            <span className="projection-summary-sub">
-              {formatCurrency(initialAmount)} + contributions
-            </span>
-          </div>
-
-          <div className="projection-summary-card">
-            <span className="projection-summary-label">Projected profit</span>
-            <span
-              className={`projection-summary-value ${
-                result.nominalProfitGain.monteCarloP50 >= 0
-                  ? 'projection-summary-value--positive'
-                  : 'projection-summary-value--negative'
-              }`}
-            >
-              {result.nominalProfitGain.monteCarloP50 >= 0 ? '+' : ''}
-              {formatCurrency(result.nominalProfitGain.monteCarloP50)}
-            </span>
-            <span className="projection-summary-sub">
-              ({result.nominalGrowthPct.monteCarloP50 >= 0 ? '+' : ''}
-              {result.nominalGrowthPct.monteCarloP50.toFixed(1)}% nominal)
-            </span>
-          </div>
-
-          <div className="projection-summary-card">
-            <span className="projection-summary-label">Probability of profit</span>
-            <span
-              className={`projection-summary-value ${
-                result.monteCarloSummary.probabilityOfProfit >= 0.5
-                  ? 'projection-summary-value--positive'
-                  : 'projection-summary-value--negative'
-              }`}
-            >
-              {(result.monteCarloSummary.probabilityOfProfit * 100).toFixed(0)}%
-            </span>
-            <span className="projection-summary-sub">
-              across {result.monteCarloSummary.runs.toLocaleString()} simulations
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* ── Fan chart ── */}
-      {result && !isLoading && !error && chartData.length > 0 && (
-        <div className="projection-chart-card">
-          <div className="forecast-chart-header">
-            <div>
-              <h2 className="forecast-chart-title">
+      {hasResults && chartData.length > 0 && (
+        <div className={`projection-chart-card${isUpdating ? ' projection-chart-card--updating' : ''}`}>
+          <div className="projection-chart-header">
+            <div className="projection-chart-header-top">
+              <h2 className="projection-chart-title">
                 Portfolio growth — {years}-year projection
               </h2>
-              <p className="forecast-chart-subtitle">
-                {result.monteCarloSummary.runs.toLocaleString()} Monte Carlo simulations.
-                {inflationAdjust ? ' Inflation-adjusted at 2.5% per year.' : ' Nominal values (not inflation-adjusted).'}
-              </p>
-            </div>
-            <div className="forecast-chart-legend">
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <line stroke="#2563EB" strokeWidth="2.5" x1="0" x2="28" y1="6" y2="6" />
-                </svg>
-                Median P50
-              </span>
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <rect fill="rgba(147,197,253,0.35)" height="8" rx="2" width="28" x="0" y="2" />
-                </svg>
-                P10–P90 range
-              </span>
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <line
-                    stroke="#0f766e"
-                    strokeDasharray="4 3"
-                    strokeWidth="1.5"
-                    x1="0"
-                    x2="28"
-                    y1="6"
-                    y2="6"
+              <div className="projection-legend">
+                <span className="projection-legend-item">
+                  <span
+                    className="projection-legend-swatch projection-legend-swatch--solid"
+                    style={{ background: '#1D9E75' }}
                   />
-                </svg>
-                Baseline
-              </span>
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <line
-                    stroke="#9ca3af"
-                    strokeDasharray="3 3"
-                    strokeWidth="1.5"
-                    x1="0"
-                    x2="28"
-                    y1="6"
-                    y2="6"
+                  Most likely outcome
+                </span>
+                <span className="projection-legend-item">
+                  <span className="projection-legend-swatch projection-legend-swatch--band" />
+                  Likely range (80% of scenarios)
+                </span>
+                <span className="projection-legend-item">
+                  <span
+                    className="projection-legend-swatch projection-legend-swatch--dashed"
+                    style={{ borderTopColor: '#7c3aed' }}
                   />
-                </svg>
-                Invested
-              </span>
+                  Expected (fixed rate)
+                </span>
+                <span className="projection-legend-item">
+                  <span
+                    className="projection-legend-swatch projection-legend-swatch--solid"
+                    style={{ background: '#9ca3af' }}
+                  />
+                  Invested
+                </span>
+              </div>
             </div>
+            <p className="projection-chart-subtitle">
+              {result!.monteCarloSummary.runs.toLocaleString()} computer-run scenarios
+              {inflationAdjust
+                ? ' · Adjusted for 2.5% inflation per year'
+                : " · Today's dollars, not adjusted for inflation"}
+            </p>
           </div>
 
           <div className="projection-chart-wrap">
             <ResponsiveContainer height="100%" width="100%">
-              <ComposedChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+              <ComposedChart
+                key={simulationVersion}
+                data={chartData}
+                margin={{ top: 8, right: 24, bottom: 0, left: 0 }}
+              >
                 <defs>
-                  <linearGradient id="proj-band" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="rgb(147,197,253)" stopOpacity={0.30} />
-                    <stop offset="100%" stopColor="rgb(147,197,253)" stopOpacity={0.08} />
+                  {/* Nearly transparent at left → more opaque at right (growing uncertainty) */}
+                  <linearGradient id="proj-band" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%"   stopColor="rgb(29,158,117)" stopOpacity={0.06} />
+                    <stop offset="35%"  stopColor="rgb(29,158,117)" stopOpacity={0.22} />
+                    <stop offset="100%" stopColor="rgb(29,158,117)" stopOpacity={0.42} />
                   </linearGradient>
                 </defs>
 
@@ -465,10 +586,10 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <XAxis
                   axisLine={false}
                   dataKey="date"
-                  minTickGap={60}
                   tick={{ fill: '#687487', fontSize: 11 }}
-                  tickFormatter={(d: string) => formatXAxisDate(d, years)}
+                  tickFormatter={(d: string) => String(new Date(d).getFullYear())}
                   tickLine={false}
+                  ticks={xTicks}
                 />
 
                 <YAxis
@@ -481,64 +602,78 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   width={72}
                 />
 
-                <Tooltip content={ProjectionTooltip} />
+                <Tooltip
+                  animationDuration={150}
+                  animationEasing="ease-out"
+                  content={ProjectionTooltip}
+                />
 
-                {/* Band: upper fill then lower cutout */}
+                {/* P90 upper band fill */}
                 <Area
-                  baseValue="dataMin"
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                  baseValue={0}
                   connectNulls
                   dataKey="monteCarloP90"
                   dot={false}
                   fill="url(#proj-band)"
                   fillOpacity={1}
-                  isAnimationActive={false}
+                  isAnimationActive
                   stroke="none"
                   type="monotone"
                 />
+                {/* P10 cutout — paints out the area below the lower bound */}
                 <Area
-                  baseValue="dataMin"
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                  baseValue={0}
                   connectNulls
                   dataKey="monteCarloP10"
                   dot={false}
                   fill="#ffffff"
                   fillOpacity={1}
-                  isAnimationActive={false}
+                  isAnimationActive
                   stroke="none"
                   type="monotone"
                 />
 
-                {/* Invested capital — grey dashed */}
+                {/* Invested capital — medium gray, slightly heavier so it reads at a glance */}
                 <Line
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                   connectNulls
                   dataKey="investedCapital"
                   dot={false}
-                  isAnimationActive={false}
+                  isAnimationActive
                   stroke="#9ca3af"
-                  strokeDasharray="3 3"
                   strokeWidth={1.5}
                   type="monotone"
                 />
 
-                {/* Baseline — teal dashed */}
+                {/* Expected (baseline fixed rate) — indigo dashed, clearly distinct from the teal band */}
                 <Line
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                   connectNulls
                   dataKey="baselineValue"
                   dot={false}
-                  isAnimationActive={false}
-                  stroke="#0f766e"
-                  strokeDasharray="4 3"
-                  strokeWidth={1.5}
+                  isAnimationActive
+                  stroke="#7c3aed"
+                  strokeDasharray="6 4"
+                  strokeWidth={2.5}
                   type="monotone"
                 />
 
-                {/* Median P50 — cobalt solid */}
+                {/* Most likely outcome (median) — thick teal, dominant line on the chart */}
                 <Line
+                  animationDuration={1000}
+                  animationEasing="ease-out"
                   connectNulls
                   dataKey="monteCarloP50"
                   dot={false}
-                  isAnimationActive={false}
-                  stroke="#2563EB"
-                  strokeWidth={2.2}
+                  isAnimationActive
+                  stroke="#1D9E75"
+                  strokeWidth={3.5}
                   type="monotone"
                 />
               </ComposedChart>
@@ -548,53 +683,54 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
       )}
 
       {/* ── Bottom grid ── */}
-      {result && !isLoading && !error && scenarios && assumptions && (
-        <div className="forecast-bottom-grid">
-          {/* Deterministic scenarios */}
+      {hasResults && scenarios && assumptions && (
+        <div className={`forecast-bottom-grid${isUpdating ? ' forecast-bottom-grid--updating' : ''}`}>
+
+          {/* Fixed-rate estimates */}
           <div className="forecast-accuracy-card">
             <div className="forecast-card-heading">
-              <p className="forecast-card-title">Deterministic scenarios</p>
+              <p className="forecast-card-title">Fixed-rate estimates</p>
               <p className="forecast-card-subtitle">
-                Fixed-rate projections using pessimistic, baseline, and optimistic annual return assumptions.
+                What you'd end up with if this stock grew at a slow, average, or strong fixed rate every year.
               </p>
             </div>
 
             <div className="projection-scenarios-grid">
               <div className="projection-scenario-header">
-                <span className="projection-scenario-key"></span>
-                <span>Pessimistic</span>
-                <span>Baseline</span>
-                <span>Optimistic</span>
+                <span />
+                <span>If growth is slow</span>
+                <span className="projection-scenario-col--baseline">If growth is average</span>
+                <span>If growth is strong</span>
               </div>
 
               <div className="projection-scenario-row">
-                <span className="projection-scenario-key">Annual return</span>
+                <span className="projection-scenario-key">Yearly return</span>
                 <span>{(scenarios.pessimistic.annualReturnUsed * 100).toFixed(1)}%</span>
-                <span>{(scenarios.baseline.annualReturnUsed * 100).toFixed(1)}%</span>
+                <span className="projection-scenario-col--baseline">
+                  {(scenarios.baseline.annualReturnUsed * 100).toFixed(1)}%
+                </span>
                 <span>{(scenarios.optimistic.annualReturnUsed * 100).toFixed(1)}%</span>
               </div>
 
               <div className="projection-scenario-row">
                 <span className="projection-scenario-key">End value</span>
-                <span>{formatCurrency(scenarios.pessimistic.projectedEndValue)}</span>
-                <span>{formatCurrency(scenarios.baseline.projectedEndValue)}</span>
-                <span>{formatCurrency(scenarios.optimistic.projectedEndValue)}</span>
+                <span>{formatCompact(scenarios.pessimistic.projectedEndValue)}</span>
+                <span className="projection-scenario-col--baseline">
+                  {formatCompact(scenarios.baseline.projectedEndValue)}
+                </span>
+                <span>{formatCompact(scenarios.optimistic.projectedEndValue)}</span>
               </div>
 
               <div className="projection-scenario-row">
-                <span className="projection-scenario-key">Growth</span>
-                <span
-                  className={
-                    scenarios.pessimistic.projectedGrowthPct >= 0 ? 'positive-text' : 'negative-text'
-                  }
-                >
+                <span className="projection-scenario-key">Total growth</span>
+                <span className="projection-scenario-pess-growth">
                   {scenarios.pessimistic.projectedGrowthPct >= 0 ? '+' : ''}
                   {scenarios.pessimistic.projectedGrowthPct.toFixed(1)}%
                 </span>
                 <span
-                  className={
+                  className={`projection-scenario-col--baseline ${
                     scenarios.baseline.projectedGrowthPct >= 0 ? 'positive-text' : 'negative-text'
-                  }
+                  }`}
                 >
                   {scenarios.baseline.projectedGrowthPct >= 0 ? '+' : ''}
                   {scenarios.baseline.projectedGrowthPct.toFixed(1)}%
@@ -609,6 +745,13 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 </span>
               </div>
             </div>
+
+            {/* Only shown when volatility is high enough to warrant a warning */}
+            {(assumptions.annualVolatility * 100) > 40 && (
+              <p className="projection-vol-note">
+                This stock's price swings a lot historically, so the range of outcomes is wider than average.
+              </p>
+            )}
           </div>
 
           {/* Model assumptions */}
@@ -616,39 +759,44 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             <div className="forecast-card-heading">
               <p className="forecast-card-title">Model assumptions</p>
               <p className="forecast-card-subtitle">
-                Derived from {assumptions.historyWindowYearsUsed.toFixed(1)} years of historical data.
+                Based on price data from {formatHistoryDateRange(assumptions.historyWindowYearsUsed)}
               </p>
             </div>
 
             <div className="projection-assumptions-list">
               <div className="projection-assumption-row">
-                <span className="projection-assumption-key">Expected annual return</span>
+                <span className="projection-assumption-key">Average yearly return (historical)</span>
                 <span className="projection-assumption-val">
                   {(assumptions.expectedAnnualReturn * 100).toFixed(2)}%
                 </span>
               </div>
               <div className="projection-assumption-row">
                 <span className="projection-assumption-key">Annual volatility</span>
-                <span className="projection-assumption-val">
-                  {(assumptions.annualVolatility * 100).toFixed(2)}%
-                </span>
+                <div className="proj-assumption-val-group">
+                  <span className="projection-assumption-val">
+                    {(assumptions.annualVolatility * 100).toFixed(2)}%
+                  </span>
+                  <VolatilityBadge value={assumptions.annualVolatility} />
+                </div>
               </div>
               <div className="projection-assumption-row">
                 <span className="projection-assumption-key">Data source</span>
-                <span className="projection-assumption-val">{assumptions.source}</span>
+                <span className="projection-assumption-val">
+                  {resolveSourceLabel(assumptions.source)}
+                </span>
               </div>
               {inflationAdjust && (
                 <div className="projection-assumption-row">
-                  <span className="projection-assumption-key">Inflation rate</span>
+                  <span className="projection-assumption-key">Inflation rate applied</span>
                   <span className="projection-assumption-val">
                     {(assumptions.inflationRate * 100).toFixed(1)}%
                   </span>
                 </div>
               )}
               <div className="projection-assumption-row">
-                <span className="projection-assumption-key">Simulation runs</span>
+                <span className="projection-assumption-key">Scenarios simulated</span>
                 <span className="projection-assumption-val">
-                  {result.monteCarloSummary.runs.toLocaleString()}
+                  {result!.monteCarloSummary.runs.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -656,11 +804,61 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
         </div>
       )}
 
+      {/* ── Related tools ── */}
+      {hasResults && (
+        <div className="forecast-page-cta-group">
+          <div className="forecast-page-cta-card forecast-page-cta-card--chart">
+            <div className="forecast-page-cta-info">
+              <h3 className="forecast-page-cta-heading">AI Price Forecast</h3>
+              <p className="forecast-page-cta-sub">
+                See where {companyName !== symbol ? companyName : symbol} could be heading — powered by a trained ML model.
+              </p>
+            </div>
+            <Link
+              className="primary-action"
+              to={`/forecast/${encodeURIComponent(symbol)}`}
+            >
+              Run forecast →
+            </Link>
+          </div>
+          <div className="forecast-page-cta-card">
+            <div className="forecast-page-cta-info">
+              <h3 className="forecast-page-cta-heading">Price chart</h3>
+              <p className="forecast-page-cta-sub">
+                See {symbol}'s recent price history, indicators, and market data.
+              </p>
+            </div>
+            <Link
+              className="primary-action primary-action--teal"
+              to={`/instrument/${encodeURIComponent(symbol)}`}
+            >
+              View chart →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* ── Disclaimer ── */}
-      {result && !isLoading && !error && (
-        <p className="forecast-disclaimer">
-          ⚠️ Investment simulations are hypothetical and based on historical price data. Past performance does not guarantee future results. These projections are for educational purposes only and do not constitute financial advice.
-        </p>
+      {hasResults && (
+        <div className="projection-disclaimer">
+          <svg
+            aria-hidden
+            className="projection-disclaimer-icon"
+            fill="none"
+            height="16"
+            viewBox="0 0 20 20"
+            width="16"
+          >
+            <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
+            <line stroke="currentColor" strokeLinecap="round" strokeWidth="1.5" x1="10" x2="10" y1="6" y2="11" />
+            <circle cx="10" cy="14" fill="currentColor" r="1" />
+          </svg>
+          <p>
+            Investment simulations are hypothetical and based on historical price data. Past performance
+            does not guarantee future results. These projections are for educational purposes only and
+            do not constitute financial advice.
+          </p>
+        </div>
       )}
     </section>
   )

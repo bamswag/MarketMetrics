@@ -5,6 +5,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
 import { InstrumentChartCard } from '../components/InstrumentChartCard'
 import { MoverLogo } from '../components/MoverLogo'
+import { SimilarInstrumentsSection } from '../components/SimilarInstrumentsSection'
 import { ApiError, fetchAlertsForSymbol, fetchInstrumentDetail } from '../lib/api'
 import type {
   AlertCondition,
@@ -683,6 +684,13 @@ export function InstrumentPage({
         />
       ) : null}
 
+      {instrumentDetail ? (
+        <SimilarInstrumentsSection
+          assetCategory={instrumentDetail.assetCategory}
+          symbol={instrumentDetail.symbol}
+        />
+      ) : null}
+
       {instrumentDetail && !isLoadingInstrument ? (
         <div className="instrument-cta-group">
           <div className="instrument-forecast-cta">
@@ -694,10 +702,11 @@ export function InstrumentPage({
             </div>
             {token ? (
               <Link
-                className="primary-action"
+                className="primary-action instrument-cta-action"
                 to={`/forecast/${encodeURIComponent(symbol)}`}
               >
-                Run forecast →
+                <span>Run forecast</span>
+                <span aria-hidden="true" className="instrument-cta-arrow">→</span>
               </Link>
             ) : (
               <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
@@ -712,10 +721,11 @@ export function InstrumentPage({
             </div>
             {token ? (
               <Link
-                className="primary-action primary-action--secondary"
+                className="primary-action primary-action--secondary instrument-cta-action"
                 to={`/instrument/${encodeURIComponent(symbol)}/project`}
               >
-                Simulate →
+                <span>Simulate</span>
+                <span aria-hidden="true" className="instrument-cta-arrow">→</span>
               </Link>
             ) : (
               <span className="instrument-forecast-cta-lock">Sign in to simulate</span>

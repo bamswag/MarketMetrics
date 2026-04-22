@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Line, LineChart, ResponsiveContainer } from 'recharts'
 
-import type { CompanySearchResult, InstrumentDetailResponse } from '../lib/api'
-import { fetchInstrumentDetail } from '../lib/api'
+import type { CompanySearchResult, PublicQuote } from '../lib/api'
 import { assetCategoryLabel } from '../lib/marketPreferences'
 import { MoverLogo } from './MoverLogo'
 
 type SearchResultCardProps = {
   result: CompanySearchResult
-  token?: string
   onAddWatchlist?: (symbol: string) => void
   isAddingWatchlist?: boolean
   isTracked?: boolean
+  quote?: PublicQuote | null
+  isQuoteLoading?: boolean
 }
 
 type Tone = 'positive' | 'negative' | 'neutral'
@@ -51,39 +49,13 @@ function formatChangePct(changePercent: string | null | undefined): string {
 
 export function SearchResultCard({
   result,
-  token,
   onAddWatchlist,
   isAddingWatchlist,
   isTracked,
+  quote = null,
+  isQuoteLoading = false,
 }: SearchResultCardProps) {
-  const [detail, setDetail] = useState<InstrumentDetailResponse | null>(null)
-  const [detailLoading, setDetailLoading] = useState(true)
-
-  useEffect(() => {
-    const abortController = new AbortController()
-    let cancelled = false
-    setDetailLoading(true)
-    fetchInstrumentDetail(token, result.symbol, '1M', abortController.signal)
-      .then((data) => {
-        if (!cancelled) {
-          setDetail(data)
-          setDetailLoading(false)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setDetailLoading(false)
-      })
-    return () => {
-      cancelled = true
-      abortController.abort()
-    }
-  }, [result.symbol, token])
-
-  const quote = detail?.latestQuote ?? null
   const tone = getTone(quote?.changePercent)
-  const sparklineData = (detail?.historicalSeries ?? []).slice(-14)
-  const hasSparkline = sparklineData.length >= 2
-  const sparklineColor = tone === 'positive' ? '#0f766e' : tone === 'negative' ? '#b14f2b' : '#687487'
 
   const metaParts = [
     result.exchange ?? null,
@@ -111,10 +83,10 @@ export function SearchResultCard({
           <p className="search-result-card-meta">{metaParts.join(' • ')}</p>
         )}
 
-        {/* Bottom: price + change + sparkline */}
+        {/* Bottom: lightweight public quote */}
         <div className="search-result-card-footer">
           <div className="search-result-card-price-block">
-            {detailLoading ? (
+            {isQuoteLoading ? (
               <span className="search-result-skeleton" />
             ) : (
               <>
@@ -129,23 +101,6 @@ export function SearchResultCard({
               </>
             )}
           </div>
-
-          {hasSparkline && !detailLoading && (
-            <div className="search-result-sparkline">
-              <ResponsiveContainer height={40} width="100%">
-                <LineChart data={sparklineData}>
-                  <Line
-                    dataKey="close"
-                    dot={false}
-                    isAnimationActive={false}
-                    stroke={sparklineColor}
-                    strokeWidth={1.5}
-                    type="monotone"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
         </div>
       </Link>
 

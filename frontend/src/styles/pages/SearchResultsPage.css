@@ -289,9 +289,10 @@
 }
 
 .search-result-sparkline {
-  flex: 1;
-  min-width: 60px;
-  max-width: 90px;
+  flex: 0 0 90px;
+  width: 90px;
+  height: 40px;
+  min-width: 90px;
 }
 
 /* ── Watchlist action ── */
@@ -583,6 +584,8 @@
 
 .top-result-chart {
   width: 100%;
+  min-width: 280px;
+  min-height: 144px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 252, 0.95)),
     rgba(255, 255, 255, 0.94);
