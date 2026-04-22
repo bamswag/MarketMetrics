@@ -7,6 +7,8 @@ logging in development.
 from __future__ import annotations
 
 import logging
+import re
+from html import escape
 from typing import Optional
 
 import httpx
@@ -24,6 +26,10 @@ def _masked_api_key_suffix(value: str) -> str:
     if not value:
         return "missing"
     return value[-6:]
+
+
+def _compact_url(value: str) -> str:
+    return re.sub(r"[\r\n\t\f\v]+", "", value).strip()
 
 
 def _send_transactional_email(
@@ -121,20 +127,22 @@ def _build_alert_email_html(
 
 
 def _build_password_reset_email_html(display_name: str, action_url: str) -> str:
+    safe_display_name = escape(display_name.strip() or "there")
+    safe_action_url = escape(_compact_url(action_url), quote=True)
     return f"""
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
         <h2 style="margin: 0 0 10px;">Reset your MarketMetrics password</h2>
-        <p style="color: #555; margin: 0 0 20px;">Hi {display_name}, we received a request to reset your password.</p>
+        <p style="color: #555; margin: 0 0 20px;">Hi {safe_display_name}, we received a request to reset your password.</p>
         <p style="margin: 0 0 24px;">
-            <a href="{action_url}" style="display: inline-block; padding: 12px 18px; border-radius: 999px; background: #0f766e; color: #fff; text-decoration: none; font-weight: 700;">
+            <a href="{safe_action_url}" style="display: inline-block; padding: 12px 18px; border-radius: 999px; background: #0f766e; color: #fff; text-decoration: none; font-weight: 700;">
                 Reset password
             </a>
         </p>
         <p style="color: #666; margin: 0 0 8px;">If you did not request this, you can safely ignore this email.</p>
         <p style="color: #666; margin: 0 0 8px;">If the button does not open, copy and paste this full link into your browser:</p>
         <div style="padding: 14px 16px; border-radius: 18px; background: #f3f6f8; border: 1px solid rgba(15, 118, 110, 0.12);">
-            <a href="{action_url}" style="font-size: 13px; line-height: 1.7; color: #0f766e; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
-                {action_url}
+            <a href="{safe_action_url}" style="font-size: 13px; line-height: 1.7; color: #0f766e; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
+                {safe_action_url}
             </a>
         </div>
     </div>
@@ -142,20 +150,22 @@ def _build_password_reset_email_html(display_name: str, action_url: str) -> str:
 
 
 def _build_email_verification_html(display_name: str, action_url: str) -> str:
+    safe_display_name = escape(display_name.strip() or "there")
+    safe_action_url = escape(_compact_url(action_url), quote=True)
     return f"""
     <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
         <h2 style="margin: 0 0 10px;">Confirm your new email address</h2>
-        <p style="color: #555; margin: 0 0 20px;">Hi {display_name}, confirm this email to finish updating your MarketMetrics account.</p>
+        <p style="color: #555; margin: 0 0 20px;">Hi {safe_display_name}, confirm this email to finish updating your MarketMetrics account.</p>
         <p style="margin: 0 0 24px;">
-            <a href="{action_url}" style="display: inline-block; padding: 12px 18px; border-radius: 999px; background: #c96a45; color: #fff; text-decoration: none; font-weight: 700;">
+            <a href="{safe_action_url}" style="display: inline-block; padding: 12px 18px; border-radius: 999px; background: #c96a45; color: #fff; text-decoration: none; font-weight: 700;">
                 Verify email
             </a>
         </p>
         <p style="color: #666; margin: 0 0 8px;">Your current sign-in email will stay active until this change is verified.</p>
         <p style="color: #666; margin: 0 0 8px;">If the button does not open, copy and paste this full link into your browser:</p>
         <div style="padding: 14px 16px; border-radius: 18px; background: #f8f4f1; border: 1px solid rgba(201, 106, 69, 0.12);">
-            <a href="{action_url}" style="font-size: 13px; line-height: 1.7; color: #c96a45; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
-                {action_url}
+            <a href="{safe_action_url}" style="font-size: 13px; line-height: 1.7; color: #c96a45; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">
+                {safe_action_url}
             </a>
         </div>
     </div>

@@ -66,13 +66,13 @@ def _hash_one_time_token(token: str) -> str:
 
 
 def _password_reset_url(token: str) -> str:
-    token_path = quote(token, safe="")
-    return f"{settings.frontend_base_url.rstrip('/')}/reset-password/{token_path}"
+    token_path = quote(token.strip(), safe="")
+    return f"{settings.frontend_base_url}/reset-password/{token_path}"
 
 
 def _email_verification_url(token: str) -> str:
-    token_path = quote(token, safe="")
-    return f"{settings.frontend_base_url.rstrip('/')}/verify-email/{token_path}"
+    token_path = quote(token.strip(), safe="")
+    return f"{settings.frontend_base_url}/verify-email/{token_path}"
 
 
 def _next_session_version(user: UserDB) -> int:

@@ -349,6 +349,43 @@ class AuthTests(BaseAPITestCase):
             f"{settings.frontend_base_url.rstrip('/')}/reset-password/password-reset-token",
         )
 
+    @patch.dict(os.environ, {"FRONTEND_BASE_URL": "https://marketmetrics.dev\n"}, clear=False)
+    @patch("app.services.auth.send_password_reset_email", return_value=True)
+    @patch("app.services.auth._generate_one_time_token", return_value="token with/slash")
+    def test_forgot_password_sanitizes_and_encodes_reset_url(
+        self,
+        _mock_token,
+        mock_send_email,
+    ):
+        self.register_and_login(email="newline-base-url@example.com")
+
+        response = self.client.post(
+            "/auth/password/forgot",
+            json={"email": "newline-base-url@example.com"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_send_email.assert_called_once()
+        _, _, reset_url = mock_send_email.call_args.args
+        self.assertEqual(
+            reset_url,
+            "https://marketmetrics.dev/reset-password/token%20with%2Fslash",
+        )
+        self.assertNotIn("\n", reset_url)
+
+    def test_password_reset_email_html_keeps_action_links_continuous(self):
+        from app.services.email import _build_password_reset_email_html
+
+        html = _build_password_reset_email_html(
+            "Ayo <Admin>",
+            "https://marketmetrics.dev\n/reset-password/reset-token",
+        )
+
+        expected_href = 'href="https://marketmetrics.dev/reset-password/reset-token"'
+        self.assertEqual(html.count(expected_href), 2)
+        self.assertNotIn("https://marketmetrics.dev\n/reset-password", html)
+        self.assertIn("Ayo &lt;Admin&gt;", html)
+
     @patch("app.services.auth.send_password_reset_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="live-reset-token")
     def test_password_reset_consumes_token_and_allows_new_login(self, _mock_token, _mock_send_email):

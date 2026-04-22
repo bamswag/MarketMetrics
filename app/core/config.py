@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
@@ -10,7 +11,8 @@ load_dotenv(find_dotenv(), override=False)
 class Settings:
     @staticmethod
     def _normalize_origin(origin: str) -> str:
-        return origin.strip().rstrip("/")
+        without_control_whitespace = re.sub(r"[\r\n\t\f\v]+", "", origin)
+        return without_control_whitespace.strip().rstrip("/")
 
     @property
     def project_root(self) -> Path:
@@ -46,7 +48,7 @@ class Settings:
 
     @property
     def frontend_base_url(self) -> str:
-        return os.getenv("FRONTEND_BASE_URL", "http://127.0.0.1:5173")
+        return self._normalize_origin(os.getenv("FRONTEND_BASE_URL", "http://127.0.0.1:5173"))
 
     @property
     def additional_frontend_origins(self) -> list[str]:
