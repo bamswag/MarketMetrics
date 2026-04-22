@@ -8,6 +8,7 @@ import { MoverLogo } from './MoverLogo'
 
 type SimilarInstrumentsSectionProps = {
   assetCategory?: string | null
+  instrumentName?: string | null
   symbol: string
 }
 
@@ -58,21 +59,36 @@ function sectionTitle(category: string | null | undefined): string {
   return 'Similar instruments'
 }
 
-function sectionCopy(category: string | null | undefined, symbol: string): string {
+function friendlyInstrumentName(name: string | null | undefined, symbol: string): string {
+  const trimmedName = name?.trim()
+  if (!trimmedName) return symbol
+
+  return trimmedName
+    .replace(/,\s*Inc\.?$/i, '')
+    .replace(/\s+Inc\.?$/i, '')
+    .replace(/\s+Corporation$/i, '')
+    .replace(/\s+Company$/i, '')
+    .trim()
+}
+
+function sectionCopy(
+  category: string | null | undefined,
+  symbol: string,
+  instrumentName: string | null | undefined,
+): string {
+  const displayName = friendlyInstrumentName(instrumentName, symbol)
   if (category === 'crypto') {
-    return `Other crypto pairs with related market structure to ${symbol}.`
+    return `Other crypto pairs with related market structure to ${displayName}.`
   }
   if (category === 'etfs') {
-    return `Comparable funds and ETF exposures near ${symbol}.`
+    return `Comparable funds and ETF exposures near ${displayName}.`
   }
-  if (category === 'stocks') {
-    return `Other chartable stocks with catalog signals near ${symbol}.`
-  }
-  return `Other chartable instruments related to ${symbol}.`
+  return `Other chartable instruments related to ${displayName}.`
 }
 
 export function SimilarInstrumentsSection({
   assetCategory,
+  instrumentName,
   symbol,
 }: SimilarInstrumentsSectionProps) {
   const [items, setItems] = useState<SimilarInstrument[]>([])
@@ -122,7 +138,7 @@ export function SimilarInstrumentsSection({
             {sectionTitle(assetCategory)}
           </h2>
           <p className="similar-instruments-subtitle">
-            {sectionCopy(assetCategory, symbol)}
+            {sectionCopy(assetCategory, symbol, instrumentName)}
           </p>
         </div>
       </div>

@@ -505,6 +505,76 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertNotIn("AAPL", symbols)
         self.assertEqual(payload["results"][0]["similarityReason"], "Same crypto quote market")
 
+    @patch("app.services.search.get_symbol_metadata")
+    @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.load_training_universe_manifest")
+    @patch("app.services.instruments.load_symbol_catalog")
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_similar_instruments_avoids_same_exchange_only_stock_matches(
+        self,
+        mock_get_symbol_metadata,
+        mock_load_symbol_catalog,
+        mock_load_training_universe_manifest,
+        mock_get_public_quotes_cached,
+        mock_search_get_symbol_metadata,
+    ):
+        catalog = [
+            {
+                "symbol": "WMT",
+                "name": "Walmart Inc.",
+                "exchange": "NYSE",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "COST",
+                "name": "Costco Wholesale Corporation",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "TGT",
+                "name": "Target Corporation",
+                "exchange": "NYSE",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+            {
+                "symbol": "ZWS",
+                "name": "Zurn Elkay Water Solutions Corporation",
+                "exchange": "NYSE",
+                "asset_class": "us_equity",
+                "tradable": True,
+            },
+        ]
+        metadata_by_symbol = {item["symbol"]: item for item in catalog}
+        mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
+        mock_load_symbol_catalog.return_value = catalog
+        mock_load_training_universe_manifest.return_value = [
+            {"symbol": "WMT", "group": "consumer_staples"},
+            {"symbol": "COST", "group": "consumer_staples"},
+            {"symbol": "TGT", "group": "consumer_staples"},
+            {"symbol": "ZWS", "group": "industrials"},
+        ]
+        mock_get_public_quotes_cached.return_value = [
+            PublicQuoteOut(symbol="COST", price=910.0, changePercent="0.12%"),
+            PublicQuoteOut(symbol="TGT", price=105.0, changePercent="-0.40%"),
+        ]
+
+        response = self.client.get("/instruments/similar/WMT?limit=3")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        symbols = [item["symbol"] for item in payload["results"]]
+        self.assertIn("COST", symbols)
+        self.assertIn("TGT", symbols)
+        self.assertNotIn("ZWS", symbols)
+        self.assertTrue(
+            all(item["similarityReason"] != "Same exchange" for item in payload["results"])
+        )
+
 
 class InstrumentServiceTests(BaseAPITestCase):
     def test_range_window_selection_matches_expected_ranges(self):

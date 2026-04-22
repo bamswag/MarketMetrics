@@ -24,6 +24,7 @@ from app.services.search import (
     get_symbol_metadata,
     is_chartable_instrument,
     load_symbol_catalog,
+    load_training_universe_manifest,
     normalize_catalog_symbol,
     resolve_company_name,
 )
@@ -97,6 +98,38 @@ _ETF_FAMILY_TOKENS = {
     "vanguard",
     "wisdomtree",
 }
+_CURATED_STOCK_PEERS: dict[str, dict[str, str]] = {
+    "WMT": {
+        "COST": "Warehouse retail peer",
+        "TGT": "Big-box retail peer",
+        "KR": "Grocery retail peer",
+        "DG": "Discount retail peer",
+        "DLTR": "Discount retail peer",
+        "AMZN": "Retail and ecommerce peer",
+        "HD": "Large consumer retail peer",
+        "LOW": "Home improvement retail peer",
+    },
+    "COST": {
+        "WMT": "Warehouse retail peer",
+        "TGT": "Big-box retail peer",
+        "KR": "Grocery retail peer",
+    },
+    "TGT": {
+        "WMT": "Big-box retail peer",
+        "COST": "Big-box retail peer",
+        "KR": "Consumer staples retail peer",
+    },
+    "HD": {
+        "LOW": "Home improvement retail peer",
+        "WMT": "Large consumer retail peer",
+        "COST": "Large consumer retail peer",
+    },
+    "LOW": {
+        "HD": "Home improvement retail peer",
+        "WMT": "Large consumer retail peer",
+        "COST": "Large consumer retail peer",
+    },
+}
 
 
 def _quote_out(latest_quote: dict) -> InstrumentQuoteOut:
@@ -147,14 +180,46 @@ def _crypto_parts(symbol: str) -> tuple[str | None, str | None]:
     return base or None, quote or None
 
 
+def _training_universe_groups() -> dict[str, str]:
+    groups: dict[str, str] = {}
+    for item in load_training_universe_manifest():
+        symbol = normalize_catalog_symbol(item.get("symbol", ""), "us_equity")
+        group = str(item.get("group") or "").strip()
+        if symbol and group:
+            groups[symbol] = group
+    return groups
+
+
+def _curated_peer_reason(target_symbol: str, item_symbol: str) -> str | None:
+    direct_reason = _CURATED_STOCK_PEERS.get(target_symbol, {}).get(item_symbol)
+    if direct_reason:
+        return direct_reason
+    reverse_reason = _CURATED_STOCK_PEERS.get(item_symbol, {}).get(target_symbol)
+    if reverse_reason:
+        return reverse_reason
+    return None
+
+
+def _friendly_group_label(group: str | None) -> str | None:
+    if not group:
+        return None
+    return group.replace("_", " ").title()
+
+
 def _similarity_reason(
     *,
+    curated_reason: str | None,
     target_category: str,
+    same_training_group: bool,
+    training_group: str | None,
     same_exchange: bool,
     shared_tokens: set[str],
     shared_etf_family: set[str],
     same_crypto_quote: bool,
 ) -> str:
+    if curated_reason:
+        return curated_reason
+
     if target_category == "crypto":
         if same_crypto_quote:
             return "Same crypto quote market"
@@ -167,12 +232,13 @@ def _similarity_reason(
             return "Related fund exposure"
         return "Same ETF category"
 
+    if same_training_group:
+        group_label = _friendly_group_label(training_group)
+        return f"{group_label} peer" if group_label else "Same market group"
     if shared_tokens and same_exchange:
         return "Related stock on the same exchange"
     if shared_tokens:
         return "Related company profile"
-    if same_exchange:
-        return "Same exchange"
     return "Same market category"
 
 
@@ -184,6 +250,7 @@ def _score_similar_catalog_item(
     target_exchange: str,
     target_tokens: set[str],
     target_crypto_quote: str | None,
+    training_groups: dict[str, str],
     item: dict,
 ) -> tuple[int, str] | None:
     item_asset_class = str(item.get("asset_class") or "us_equity").strip().lower()
@@ -204,10 +271,30 @@ def _score_similar_catalog_item(
     same_exchange = bool(target_exchange and item_exchange == target_exchange)
     _, item_crypto_quote = _crypto_parts(item_symbol)
     same_crypto_quote = bool(target_crypto_quote and item_crypto_quote == target_crypto_quote)
+    curated_reason = _curated_peer_reason(target_symbol, item_symbol)
+    target_training_group = training_groups.get(target_symbol)
+    item_training_group = training_groups.get(item_symbol)
+    same_training_group = bool(
+        target_training_group
+        and item_training_group
+        and target_training_group == item_training_group
+    )
+
+    if (
+        target_category == "stocks"
+        and not curated_reason
+        and not same_training_group
+        and not shared_tokens
+    ):
+        return None
 
     score = 100
     if item_asset_class == target_asset_class:
         score += 20
+    if curated_reason:
+        score += 90
+    if same_training_group:
+        score += 55
     if same_exchange:
         score += 12
     if shared_tokens:
@@ -222,7 +309,10 @@ def _score_similar_catalog_item(
         score += 2
 
     reason = _similarity_reason(
+        curated_reason=curated_reason,
         target_category=target_category,
+        same_training_group=same_training_group,
+        training_group=target_training_group,
         same_exchange=same_exchange,
         shared_tokens=shared_tokens,
         shared_etf_family=shared_etf_family,
@@ -250,6 +340,7 @@ async def get_similar_instruments(
     target_exchange = str(metadata.get("exchange") or "").upper()
     target_tokens = _meaningful_name_tokens(metadata.get("name", ""))
     _, target_crypto_quote = _crypto_parts(canonical_symbol)
+    training_groups = _training_universe_groups()
     safe_limit = min(max(limit, 1), SIMILAR_INSTRUMENT_LIMIT_MAX)
 
     scored_items: list[tuple[int, str, dict]] = []
@@ -261,6 +352,7 @@ async def get_similar_instruments(
             target_exchange=target_exchange,
             target_tokens=target_tokens,
             target_crypto_quote=target_crypto_quote,
+            training_groups=training_groups,
             item=item,
         )
         if not scored:

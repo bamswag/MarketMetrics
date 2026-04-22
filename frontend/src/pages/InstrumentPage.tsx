@@ -687,6 +687,7 @@ export function InstrumentPage({
       {instrumentDetail ? (
         <SimilarInstrumentsSection
           assetCategory={instrumentDetail.assetCategory}
+          instrumentName={instrumentDetail.companyName}
           symbol={instrumentDetail.symbol}
         />
       ) : null}
