@@ -10,9 +10,12 @@ load_dotenv(find_dotenv(), override=False)
 
 class Settings:
     @staticmethod
-    def _normalize_origin(origin: str) -> str:
-        without_control_whitespace = re.sub(r"[\r\n\t\f\v]+", "", origin)
-        return without_control_whitespace.strip().rstrip("/")
+    def _compact_env_value(value: str) -> str:
+        return re.sub(r"[\r\n\t\f\v]+", "", value).strip()
+
+    @classmethod
+    def _normalize_origin(cls, origin: str) -> str:
+        return cls._compact_env_value(origin).rstrip("/")
 
     @property
     def project_root(self) -> Path:
@@ -77,26 +80,28 @@ class Settings:
 
     @property
     def google_client_id(self) -> str:
-        return os.getenv("GOOGLE_CLIENT_ID", "")
+        return self._compact_env_value(os.getenv("GOOGLE_CLIENT_ID", ""))
 
     @property
     def google_client_secret(self) -> str:
-        return os.getenv("GOOGLE_CLIENT_SECRET", "")
+        return self._compact_env_value(os.getenv("GOOGLE_CLIENT_SECRET", ""))
 
     @property
     def google_oauth_redirect_uri(self) -> str:
-        return os.getenv(
-            "GOOGLE_OAUTH_REDIRECT_URI",
-            "http://127.0.0.1:8000/auth/google/callback",
+        return self._compact_env_value(
+            os.getenv(
+                "GOOGLE_OAUTH_REDIRECT_URI",
+                "http://127.0.0.1:8000/auth/google/callback",
+            ),
         )
 
     @property
     def alpaca_api_key(self) -> str:
-        return os.getenv("ALPACA_API_KEY", "")
+        return self._compact_env_value(os.getenv("ALPACA_API_KEY", ""))
 
     @property
     def alpaca_secret_key(self) -> str:
-        return os.getenv("ALPACA_SECRET_KEY", "")
+        return self._compact_env_value(os.getenv("ALPACA_SECRET_KEY", ""))
 
     @property
     def alpaca_data_feed(self) -> str:
@@ -104,11 +109,11 @@ class Settings:
 
     @property
     def alpaca_data_base_url(self) -> str:
-        return os.getenv("ALPACA_DATA_BASE_URL", "https://data.alpaca.markets")
+        return self._normalize_origin(os.getenv("ALPACA_DATA_BASE_URL", "https://data.alpaca.markets"))
 
     @property
     def alpaca_trading_base_url(self) -> str:
-        return os.getenv("ALPACA_TRADING_BASE_URL", "https://paper-api.alpaca.markets")
+        return self._normalize_origin(os.getenv("ALPACA_TRADING_BASE_URL", "https://paper-api.alpaca.markets"))
 
     @property
     def symbol_catalog_path(self) -> Path:
@@ -134,11 +139,13 @@ class Settings:
 
     @property
     def brevo_api_key(self) -> str:
-        return os.getenv("BREVO_API_KEY", "")
+        return self._compact_env_value(os.getenv("BREVO_API_KEY", ""))
 
     @property
     def brevo_transactional_email_url(self) -> str:
-        return os.getenv("BREVO_TRANSACTIONAL_EMAIL_URL", "https://api.brevo.com/v3/smtp/email")
+        return self._compact_env_value(
+            os.getenv("BREVO_TRANSACTIONAL_EMAIL_URL", "https://api.brevo.com/v3/smtp/email"),
+        )
 
     @property
     def brevo_timeout_seconds(self) -> int:
@@ -146,11 +153,11 @@ class Settings:
 
     @property
     def email_from_name(self) -> str:
-        return os.getenv("EMAIL_FROM_NAME", "MarketMetrics")
+        return self._compact_env_value(os.getenv("EMAIL_FROM_NAME", "MarketMetrics"))
 
     @property
     def email_from_address(self) -> str:
-        return os.getenv("EMAIL_FROM_ADDRESS", "noreply@marketmetrics.app")
+        return self._compact_env_value(os.getenv("EMAIL_FROM_ADDRESS", "noreply@marketmetrics.app"))
 
     @property
     def app_log_level(self) -> str:

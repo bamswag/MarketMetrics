@@ -46,6 +46,8 @@ export function DailyMoverCard({
     etfs: categoryItems?.etfs.slice(0, itemLimit) ?? [],
   }
 
+  const activeCategories = visibleCategories.filter(({ key }) => itemsByCategory[key].length > 0)
+
   return (
     <article className={`daily-mover-card mover-group mover-group--${tone} ${className}`.trim()}>
       <div className="panel-header daily-mover-card-header">
@@ -63,9 +65,9 @@ export function DailyMoverCard({
 
       <div
         className="mover-category-columns"
-        style={{ gridTemplateColumns: `repeat(${visibleCategories.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${activeCategories.length}, minmax(0, 1fr))` }}
       >
-        {visibleCategories.map(({ key, label }) => {
+        {activeCategories.map(({ key, label }) => {
           const items = itemsByCategory[key]
 
           return (
@@ -78,18 +80,18 @@ export function DailyMoverCard({
               </div>
 
               <div className="mover-card-list">
-                {items.length > 0 ? (
-                  items.map((item) => (
-                    <MoverSparklineCard item={item} key={item.symbol} tone={tone} />
-                  ))
-                ) : (
-                  <p className="mover-category-empty">No movers are available right now.</p>
-                )}
+                {items.map((item) => (
+                  <MoverSparklineCard item={item} key={item.symbol} tone={tone} />
+                ))}
               </div>
             </div>
           )
         })}
       </div>
+
+      {activeCategories.length === 0 ? (
+        <p className="mover-category-empty">No movers are available right now.</p>
+      ) : null}
     </article>
   )
 }

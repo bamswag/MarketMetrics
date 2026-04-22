@@ -397,6 +397,20 @@ class AuthTests(BaseAPITestCase):
         self.assertNotIn("private-reset-token", redacted_url)
         self.assertNotIn("\n", redacted_url)
 
+    @patch.dict(
+        os.environ,
+        {
+            "BREVO_TRANSACTIONAL_EMAIL_URL": "https://api.brevo.com/v3/smtp/email\n",
+            "BREVO_API_KEY": "\tbrevo-key\n",
+            "EMAIL_FROM_ADDRESS": "noreply@marketmetrics.dev\n",
+        },
+        clear=False,
+    )
+    def test_email_provider_config_strips_hidden_control_whitespace(self):
+        self.assertEqual(settings.brevo_transactional_email_url, "https://api.brevo.com/v3/smtp/email")
+        self.assertEqual(settings.brevo_api_key, "brevo-key")
+        self.assertEqual(settings.email_from_address, "noreply@marketmetrics.dev")
+
     @patch("app.services.auth.send_password_reset_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="live-reset-token")
     def test_password_reset_consumes_token_and_allows_new_login(self, _mock_token, _mock_send_email):
