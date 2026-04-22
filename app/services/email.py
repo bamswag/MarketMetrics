@@ -10,6 +10,7 @@ import logging
 import re
 from html import escape
 from typing import Optional
+from urllib.parse import urlparse
 
 import httpx
 
@@ -32,6 +33,23 @@ def _compact_url(value: str) -> str:
     return re.sub(r"[\r\n\t\f\v]+", "", value).strip()
 
 
+def _redact_action_url(value: str) -> str:
+    compact_url = _compact_url(value)
+    parsed = urlparse(compact_url)
+    if not parsed.scheme or not parsed.netloc:
+        return "<invalid action url>"
+
+    path_parts = [part for part in parsed.path.split("/") if part]
+    if not path_parts:
+        redacted_path = "/"
+    elif len(path_parts) == 1:
+        redacted_path = f"/{path_parts[0]}"
+    else:
+        redacted_path = f"/{path_parts[0]}/<redacted>"
+
+    return f"{parsed.scheme}://{parsed.netloc}{redacted_path}"
+
+
 def _send_transactional_email(
     *,
     to_email: str,
@@ -41,7 +59,7 @@ def _send_transactional_email(
 ) -> bool:
     if not _brevo_is_configured():
         if debug_action_url:
-            logger.info("Email action link for %s: %s", to_email, debug_action_url)
+            logger.info("Email action link for %s: %s", to_email, _redact_action_url(debug_action_url))
         else:
             logger.debug("BREVO_API_KEY is missing — skipping transactional email to %s", to_email)
         return False
@@ -90,12 +108,12 @@ def _send_transactional_email(
             exc.response.text,
         )
         if debug_action_url:
-            logger.warning("Email action link for %s: %s", to_email, debug_action_url)
+            logger.warning("Email action link for %s: %s", to_email, _redact_action_url(debug_action_url))
         return False
     except Exception:
         logger.exception("Failed to send transactional email to %s via Brevo API", to_email)
         if debug_action_url:
-            logger.warning("Email action link for %s: %s", to_email, debug_action_url)
+            logger.warning("Email action link for %s: %s", to_email, _redact_action_url(debug_action_url))
         return False
 
 

@@ -386,6 +386,17 @@ class AuthTests(BaseAPITestCase):
         self.assertNotIn("https://marketmetrics.dev\n/reset-password", html)
         self.assertIn("Ayo &lt;Admin&gt;", html)
 
+    def test_email_action_url_redaction_keeps_tokens_out_of_logs(self):
+        from app.services.email import _redact_action_url
+
+        redacted_url = _redact_action_url(
+            "https://marketmetrics.dev\n/reset-password/private-reset-token",
+        )
+
+        self.assertEqual(redacted_url, "https://marketmetrics.dev/reset-password/<redacted>")
+        self.assertNotIn("private-reset-token", redacted_url)
+        self.assertNotIn("\n", redacted_url)
+
     @patch("app.services.auth.send_password_reset_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="live-reset-token")
     def test_password_reset_consumes_token_and_allows_new_login(self, _mock_token, _mock_send_email):
