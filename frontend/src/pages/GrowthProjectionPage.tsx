@@ -296,7 +296,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   }
 
   const runSimulation = useCallback(() => {
-    if (!token || !symbol) return
+    if (!symbol) return
 
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
@@ -641,17 +641,6 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
         </div>
       </div>
 
-      {/* ── No auth ── */}
-      {!token && (
-        <div className="forecast-error-card">
-          <span className="forecast-error-icon">🔒</span>
-          <h2 className="forecast-error-title">Sign in to run simulations</h2>
-          <p className="forecast-error-sub">
-            Investment simulations require an account. Sign in or create a free account to continue.
-          </p>
-          <Link className="primary-action" to="/login">Sign in</Link>
-        </div>
-      )}
 
       {/* ── Error ── */}
       {token && !isLoading && error && (

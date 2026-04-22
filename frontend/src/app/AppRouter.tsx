@@ -1608,31 +1608,23 @@ function AppContent() {
         />
         <Route
           element={
-            token ? (
-              <>
-                {authenticatedHeader}
-                <Suspense fallback={<RouteLoadingState />}>
-                  <ForecastPage token={token} />
-                </Suspense>
-              </>
-            ) : (
-              <Navigate replace to="/login" />
-            )
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <Suspense fallback={<RouteLoadingState />}>
+                <ForecastPage token={token || undefined} />
+              </Suspense>
+            </>
           }
           path="/forecast/:symbol"
         />
         <Route
           element={
-            token ? (
-              <>
-                {authenticatedHeader}
-                <Suspense fallback={<RouteLoadingState />}>
-                  <GrowthProjectionPage token={token} />
-                </Suspense>
-              </>
-            ) : (
-              <Navigate replace to="/login" />
-            )
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <Suspense fallback={<RouteLoadingState />}>
+                <GrowthProjectionPage token={token || undefined} />
+              </Suspense>
+            </>
           }
           path="/instrument/:symbol/project"
         />

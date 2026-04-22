@@ -703,7 +703,7 @@ export function InstrumentPage({
             </div>
             {token ? (
               <Link
-                className="primary-action instrument-cta-action"
+                className="primary-action primary-action--teal instrument-cta-action"
                 to={`/forecast/${encodeURIComponent(symbol)}`}
               >
                 <span>Run forecast</span>
@@ -722,7 +722,7 @@ export function InstrumentPage({
             </div>
             {token ? (
               <Link
-                className="primary-action primary-action--secondary instrument-cta-action"
+                className="primary-action primary-action--teal instrument-cta-action"
                 to={`/instrument/${encodeURIComponent(symbol)}/project`}
               >
                 <span>Simulate</span>

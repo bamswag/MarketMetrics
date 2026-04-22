@@ -459,7 +459,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
   // Auto-run forecast whenever horizon changes (or on first load)
   useEffect(() => {
-    if (!symbol || !token) return
+    if (!symbol) return
 
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
@@ -589,17 +589,6 @@ export function ForecastPage({ token }: ForecastPageProps) {
         </div>
       </div>
 
-      {/* ── No auth ── */}
-      {!token && (
-        <div className="forecast-error-card">
-          <span className="forecast-error-icon">🔒</span>
-          <h2 className="forecast-error-title">Sign in to use AI forecasts</h2>
-          <p className="forecast-error-sub">
-            Price forecasting requires an account. Sign in or create a free account to continue.
-          </p>
-          <Link className="primary-action" to="/login">Sign in</Link>
-        </div>
-      )}
 
       {/* ── Error ── */}
       {token && !isLoading && error && (
@@ -1000,7 +989,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
               </p>
             </div>
             <Link
-              className="primary-action"
+              className="primary-action primary-action--teal"
               to={`/instrument/${encodeURIComponent(symbol)}`}
             >
               View chart →

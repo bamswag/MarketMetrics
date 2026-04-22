@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from app.core.auth_dependencies import get_current_user
 from app.integrations.alpaca.client import AlpacaMarketDataError
 from app.schemas.forecasts import PredictionRequest, PredictionResponse
 
@@ -12,7 +11,6 @@ router = APIRouter(prefix="/predict", tags=["Prediction"])
 @router.post("/forecast", response_model=PredictionResponse)
 async def forecast_prices(
     payload: PredictionRequest,
-    user=Depends(get_current_user),
 ):
     # Import the ML stack lazily so normal web traffic does not load pandas,
     # sklearn, or serialized models into the 512 MB Render web process.
