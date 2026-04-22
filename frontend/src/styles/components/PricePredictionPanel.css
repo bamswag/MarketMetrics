@@ -133,6 +133,7 @@
 .prediction-chart-wrap {
   margin: 16px -4px 0;
   height: 220px;
+  min-width: 0;
 }
 
 /* ── Metrics row ── */

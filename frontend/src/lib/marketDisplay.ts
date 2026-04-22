@@ -19,14 +19,57 @@ function resolveLocale() {
   return 'en-US'
 }
 
+/**
+ * Custom compact formatter that prefers smaller units (k over M, M over B, etc.)
+ * instead of browser localization rules that produce 0.2M for 200k
+ */
+function formatCompactNumber(value: number, currency: string): string {
+  const absValue = Math.abs(value)
+
+  // Determine the appropriate scale
+  let divisor = 1
+  let suffix = ''
+
+  if (absValue >= 1_000_000_000) {
+    divisor = 1_000_000_000
+    suffix = 'B'
+  } else if (absValue >= 1_000_000) {
+    divisor = 1_000_000
+    suffix = 'M'
+  } else if (absValue >= 1_000) {
+    divisor = 1_000
+    suffix = 'K'
+  }
+
+  const scaledValue = value / divisor
+  const currencySymbol = currency === 'USD' ? '$' : '£'
+
+  // Format with 1 decimal place, then remove trailing zeros
+  const formatted = scaledValue.toLocaleString(resolveLocale(), {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  })
+
+  return `${value < 0 ? '-' : ''}${currencySymbol}${formatted}${suffix}`
+}
+
 function buildCurrencyFormatter(preferences: MarketPreferences) {
   const compact = preferences.numberFormat === 'compact'
+
+  // For compact mode, return a custom formatter function
+  if (compact) {
+    return {
+      format: (value: number) => formatCompactNumber(value, preferences.currency),
+    }
+  }
+
+  // For standard mode, use Intl.NumberFormat
   return new Intl.NumberFormat(resolveLocale(), {
     style: 'currency',
     currency: preferences.currency,
-    notation: compact ? 'compact' : 'standard',
-    maximumFractionDigits: compact ? 1 : 2,
-    minimumFractionDigits: compact ? 0 : 2,
+    notation: 'standard',
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
   })
 }
 

@@ -43,11 +43,19 @@
   box-shadow: var(--panel-shadow);
 }
 
-/* "Most likely outcome" primary card — teal accent */
+/* "Most likely outcome" primary card — teal accent (gain) */
 .projection-summary-card--main {
   border-color: rgba(29, 158, 117, 0.22);
   background:
     radial-gradient(circle at top right, rgba(29, 158, 117, 0.06), transparent 55%),
+    var(--panel-bg);
+}
+
+/* "Most likely outcome" primary card — red accent (loss) */
+.projection-summary-card--main-loss {
+  border-color: rgba(184, 74, 51, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(184, 74, 51, 0.06), transparent 55%),
     var(--panel-bg);
 }
 
@@ -69,6 +77,16 @@
 .projection-summary-value--positive { color: #1D9E75; }
 .projection-summary-value--negative { color: #b84a33; }
 
+/* Percentage change shown below card-1 value */
+.projection-summary-delta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.projection-summary-delta--positive { color: #1D9E75; }
+.projection-summary-delta--negative { color: #b84a33; }
+
 .projection-summary-sub {
   font-size: 0.72rem;
   color: var(--muted);
@@ -87,6 +105,12 @@
   border: 1px solid rgba(29, 158, 117, 0.14);
   margin: 0;
   transition: opacity 200ms ease;
+}
+
+/* Amber tint when the projected outcome is a loss */
+.projection-summary-sentence--decline {
+  background: rgba(180, 83, 9, 0.04);
+  border-color: rgba(180, 83, 9, 0.14);
 }
 
 .projection-summary-sentence--updating {
@@ -414,6 +438,7 @@
 
 .projection-chart-wrap {
   height: 380px;
+  min-width: 0; /* prevent flex container from giving Recharts a -1 width */
 }
 
 /* ── Tooltip ── */
@@ -432,8 +457,18 @@
 .projection-tooltip-row--main {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #6ee7b7;
+  color: #6ee7b7; /* teal — most likely outcome is a gain */
 }
+
+.projection-tooltip-row--main-loss {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fca5a5; /* soft red — most likely outcome is a loss */
+}
+
+/* P&L row colours */
+.projection-tooltip-row--gain { color: #6ee7b7; }
+.projection-tooltip-row--loss { color: #fca5a5; }
 
 .projection-tooltip-row--invested {
   color: rgba(255, 255, 255, 0.42);
@@ -497,6 +532,8 @@
 
 .positive-text { color: #1D9E75; }
 .negative-text { color: #b84a33; }
+/* neutral-text overrides .projection-scenario-col--baseline teal for zero values */
+.neutral-text  { color: var(--text-main); }
 
 /* ── Volatility note (shown when vol > 40%) ── */
 .projection-vol-note {
@@ -550,28 +587,54 @@
   justify-content: flex-end;
 }
 
-/* ── Volatility badges ── */
+/* ── Volatility badges — flat pill, no border, 12px, sentence case ── */
 .proj-vol-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 5px;
+  font-size: 0.75rem; /* ~12px */
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
   white-space: nowrap;
+  line-height: 1.5;
 }
 
 .proj-vol-badge--high {
-  color: #b84a33;
-  background: rgba(184, 74, 51, 0.09);
+  color: #92270e;
+  background: rgba(184, 74, 51, 0.12);
 }
 
 .proj-vol-badge--moderate {
-  color: #b45309;
-  background: rgba(180, 83, 9, 0.09);
+  color: #92400e;
+  background: rgba(180, 83, 9, 0.11);
 }
 
 .proj-vol-badge--low {
-  color: #1D9E75;
-  background: rgba(29, 158, 117, 0.09);
+  color: #166451;
+  background: rgba(29, 158, 117, 0.11);
+}
+
+/* ── Declining-trend warning banner ── */
+.proj-decline-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-left: 4px solid #d97706;
+  border-radius: 12px;
+  background: rgba(180, 83, 9, 0.06);
+  color: #92400e;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.proj-decline-warning p {
+  margin: 0;
+}
+
+.proj-decline-warning-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 /* ── Disclaimer callout ── */
@@ -580,10 +643,10 @@
   gap: 12px;
   align-items: flex-start;
   padding: 16px 20px;
-  border: 1px solid rgba(37, 99, 235, 0.12);
-  border-left: 3px solid #f59e0b;
+  border: 1px solid rgba(37, 99, 235, 0.08);
+  border-left: 4px solid #d97706;
   border-radius: 14px;
-  background: rgba(37, 99, 235, 0.025);
+  background: rgba(251, 191, 36, 0.04);
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.65;

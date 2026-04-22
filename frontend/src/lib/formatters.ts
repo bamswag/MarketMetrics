@@ -1,3 +1,5 @@
+import { readStoredMarketPreferences } from './marketPreferences'
+
 function resolveLocale() {
   if (typeof navigator !== 'undefined' && navigator.language) {
     return navigator.language
@@ -6,10 +8,60 @@ function resolveLocale() {
   return 'en-US'
 }
 
+function currencySymbol(currency: string): string {
+  return currency === 'GBP' ? '£' : '$'
+}
+
+/**
+ * Custom compact formatter that prefers smaller units (k over M, M over B, etc.)
+ * instead of browser localization rules that produce 0.2M for 200k
+ */
+function formatCompactCurrency(value: number, currency: string): string {
+  const absValue = Math.abs(value)
+  const sym = currencySymbol(currency)
+
+  // Determine the appropriate scale
+  let divisor = 1
+  let suffix = ''
+
+  if (absValue >= 1_000_000_000) {
+    divisor = 1_000_000_000
+    suffix = 'B'
+  } else if (absValue >= 1_000_000) {
+    divisor = 1_000_000
+    suffix = 'M'
+  } else if (absValue >= 1_000) {
+    divisor = 1_000
+    suffix = 'K'
+  }
+
+  const scaledValue = value / divisor
+
+  // Format with 1 decimal place, then remove trailing zeros
+  const formatted = scaledValue.toLocaleString(resolveLocale(), {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  })
+
+  return `${value < 0 ? '-' : ''}${sym}${formatted}${suffix}`
+}
+
 function buildCurrencyFormatter() {
+  const preferences = readStoredMarketPreferences()
+  const isCompact = preferences.numberFormat === 'compact'
+  const currency = preferences.currency
+
+  // For compact mode, use our custom formatter
+  if (isCompact) {
+    return {
+      format: (value: number) => formatCompactCurrency(value, currency),
+    }
+  }
+
+  // For standard mode, use Intl.NumberFormat with user's currency
   return new Intl.NumberFormat(resolveLocale(), {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
     maximumFractionDigits: 2,
   })
 }

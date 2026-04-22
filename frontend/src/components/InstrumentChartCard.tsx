@@ -10,7 +10,12 @@ import {
   YAxis,
 } from 'recharts'
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
-import { getMaxChartPoints, sampleChartSeries } from '../lib/chartUtils'
+import {
+  addSimpleMovingAverages,
+  getMaxChartPoints,
+  sampleChartSeries,
+  type ChartPointWithMovingAverages,
+} from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate, formatShortTime } from '../lib/formatters'
 
 type ChartType = 'price' | 'ma-overlay'
@@ -39,19 +44,56 @@ const RANGE_LABELS: Record<InstrumentRange, string> = {
 }
 const AXIS_TICK = { fill: '#8b95a3', fontSize: 11 } as const
 
+/**
+ * Format plain numbers (like volume) with compact notation when appropriate.
+ * This is separate from currency formatting and always uses compact for large numbers.
+ */
 function formatCompactNumber(value?: number | null): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return '--'
   }
 
-  return new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: value >= 1_000_000 ? 1 : 0,
-    notation: value >= 10_000 ? 'compact' : 'standard',
-  }).format(value)
+  const absValue = Math.abs(value)
+
+  // Determine the appropriate scale
+  let divisor = 1
+  let suffix = ''
+
+  if (absValue >= 1_000_000_000) {
+    divisor = 1_000_000_000
+    suffix = 'B'
+  } else if (absValue >= 1_000_000) {
+    divisor = 1_000_000
+    suffix = 'M'
+  } else if (absValue >= 1_000) {
+    divisor = 1_000
+    suffix = 'K'
+  }
+
+  const scaledValue = value / divisor
+  const formatted = scaledValue.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: divisor === 1 ? 0 : 1,
+  })
+
+  return `${value < 0 ? '-' : ''}${formatted}${suffix}`
 }
 
 function formatOptionalCurrency(value?: number | null): string {
   return value === null || value === undefined ? '--' : formatCurrency(value)
+}
+
+/**
+ * Format volume for the stat card in standard number format (no compact notation).
+ * e.g. 658,000 instead of 658K. Tooltip uses formatCompactNumber separately.
+ */
+function formatVolumeStandard(value?: number | null): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '--'
+  }
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 function formatPointLabel(value: string): string {
@@ -89,10 +131,10 @@ function ChartTooltipContent(props: any) {
         </div>
       ) : null}
       {ma30Entry?.value != null && (
-        <span className="instrument-tooltip-ma instrument-tooltip-ma--30">EMA30 {formatCurrency(Number(ma30Entry.value))}</span>
+        <span className="instrument-tooltip-ma instrument-tooltip-ma--30">30-day average {formatCurrency(Number(ma30Entry.value))}</span>
       )}
       {ma50Entry?.value != null && (
-        <span className="instrument-tooltip-ma instrument-tooltip-ma--50">EMA50 {formatCurrency(Number(ma50Entry.value))}</span>
+        <span className="instrument-tooltip-ma instrument-tooltip-ma--50">50-day average {formatCurrency(Number(ma50Entry.value))}</span>
       )}
     </div>
   )
@@ -178,34 +220,25 @@ export function InstrumentChartCard({
     [instrumentDetail.availableRanges],
   )
 
-  const chartSeries = useMemo(
-    () =>
-      sampleChartSeries(
-        instrumentDetail.historicalSeries,
-        getMaxChartPoints(selectedRange),
-      ).filter((p) => Number.isFinite(p.close)),
-    [instrumentDetail.historicalSeries, selectedRange],
+  const finiteHistoricalSeries = useMemo(
+    () => instrumentDetail.historicalSeries.filter((point) => Number.isFinite(point.close)),
+    [instrumentDetail.historicalSeries],
   )
 
-  // EMA (Exponential Moving Average) — different smoothing factors mean EMA30 and EMA50
-  // produce distinct values from point 1 onwards, so both lines are visible for the full chart.
   const chartData = useMemo(() => {
-    if (chartType === 'price') return chartSeries
-    const alpha30 = 2 / (30 + 1)
-    const alpha50 = 2 / (50 + 1)
-    let ema30 = 0
-    let ema50 = 0
-    return chartSeries.map((p, i) => {
-      if (i === 0) {
-        ema30 = p.close
-        ema50 = p.close
-      } else {
-        ema30 = p.close * alpha30 + ema30 * (1 - alpha30)
-        ema50 = p.close * alpha50 + ema50 * (1 - alpha50)
-      }
-      return { ...p, ma30: ema30, ma50: ema50 }
-    })
-  }, [chartSeries, chartType])
+    const maxPoints = getMaxChartPoints(selectedRange)
+    if (chartType !== 'ma-overlay') {
+      return sampleChartSeries(finiteHistoricalSeries, maxPoints)
+    }
+
+    const averagedSeries = addSimpleMovingAverages(finiteHistoricalSeries)
+    return sampleChartSeries(averagedSeries, maxPoints).filter((point) => (
+      Number.isFinite(point.close)
+      && Number.isFinite(point.ma30)
+      && Number.isFinite(point.ma50)
+    ))
+  }, [chartType, finiteHistoricalSeries, selectedRange])
+  const chartSeries = chartData
 
   const xTicks = useMemo(
     () => computeXTicks(chartSeries, selectedRange),
@@ -214,13 +247,20 @@ export function InstrumentChartCard({
 
   const yDomain = useMemo((): [number, number] => {
     if (chartSeries.length === 0) return [0, 1]
-    const prices = chartSeries.map((p) => p.close).filter((v) => Number.isFinite(v))
+    const prices = chartSeries.flatMap((point) => {
+      if (chartType !== 'ma-overlay') {
+        return [point.close]
+      }
+
+      const movingAveragePoint = point as ChartPointWithMovingAverages
+      return [point.close, movingAveragePoint.ma30, movingAveragePoint.ma50]
+    }).filter((v) => Number.isFinite(v))
     if (prices.length === 0) return [0, 1]
     const min = Math.min(...prices)
     const max = Math.max(...prices)
     const yPad = (max - min) * 0.07 || 1
     return [Math.max(0, min - yPad), max + yPad]
-  }, [chartSeries])
+  }, [chartSeries, chartType])
 
   const firstClose = chartSeries.length > 0 ? chartSeries[0].close : 0
   const lastClose = chartSeries.length > 0 ? chartSeries[chartSeries.length - 1].close : 0
@@ -242,7 +282,7 @@ export function InstrumentChartCard({
     },
     {
       label: 'Volume',
-      value: formatCompactNumber(quote.volume),
+      value: formatVolumeStandard(quote.volume),
       description: 'The amount traded during the latest trading day.',
     },
     {
@@ -273,7 +313,7 @@ export function InstrumentChartCard({
             value={chartType}
           >
             <option value="price">Regular</option>
-            <option value="ma-overlay">MA Overlay</option>
+            <option value="ma-overlay">Moving averages</option>
           </select>
 
           <div className="instrument-range-bar">
@@ -321,19 +361,24 @@ export function InstrumentChartCard({
       ) : null}
 
       {chartType === 'ma-overlay' && (
-        <div className="instrument-chart-legend">
-          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--price">
-            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--price" />
-            Price
-          </span>
-          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma30">
-            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma30" />
-            30-day EMA
-          </span>
-          <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma50">
-            <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma50" />
-            50-day EMA
-          </span>
+        <div className="instrument-chart-legend-group">
+          <div className="instrument-chart-legend">
+            <span className={`instrument-chart-legend-pill instrument-chart-legend-pill--price ${isRangePositive ? 'instrument-chart-legend-pill--price-up' : 'instrument-chart-legend-pill--price-down'}`}>
+              <span className={`instrument-chart-legend-swatch instrument-chart-legend-swatch--price ${isRangePositive ? 'instrument-chart-legend-swatch--price-up' : 'instrument-chart-legend-swatch--price-down'}`} />
+              Price
+            </span>
+            <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma30">
+              <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma30" />
+              30-day moving average
+            </span>
+            <span className="instrument-chart-legend-pill instrument-chart-legend-pill--ma50">
+              <span className="instrument-chart-legend-swatch instrument-chart-legend-swatch--ma50" />
+              50-day moving average
+            </span>
+          </div>
+          <p className="instrument-chart-legend-helper">
+            Moving averages smooth out daily price swings; early points use the history available so far.
+          </p>
         </div>
       )}
 
@@ -382,21 +427,45 @@ export function InstrumentChartCard({
               {chartType === 'ma-overlay' && (
                 <>
                   <Line
-                    connectNulls
-                    dataKey="ma30"
-                    dot={false}
-                    isAnimationActive={false}
-                    stroke="#f59e0b"
-                    strokeWidth={1.8}
-                    type="monotone"
-                  />
-                  <Line
-                    connectNulls
+                    activeDot={false}
                     dataKey="ma50"
                     dot={false}
                     isAnimationActive={false}
                     stroke="#3b82f6"
-                    strokeWidth={1.8}
+                    strokeLinecap="round"
+                    strokeOpacity={0.18}
+                    strokeWidth={7}
+                    type="monotone"
+                  />
+                  <Line
+                    activeDot={false}
+                    dataKey="ma30"
+                    dot={false}
+                    isAnimationActive={false}
+                    stroke="#f59e0b"
+                    strokeLinecap="round"
+                    strokeOpacity={0.2}
+                    strokeWidth={6}
+                    type="monotone"
+                  />
+                  <Line
+                    activeDot={{ fill: '#3b82f6', r: 4.5, stroke: '#ffffff', strokeWidth: 2 }}
+                    dataKey="ma50"
+                    dot={false}
+                    isAnimationActive={false}
+                    stroke="#3b82f6"
+                    strokeLinecap="round"
+                    strokeWidth={2.35}
+                    type="monotone"
+                  />
+                  <Line
+                    activeDot={{ fill: '#f59e0b', r: 4.5, stroke: '#ffffff', strokeWidth: 2 }}
+                    dataKey="ma30"
+                    dot={false}
+                    isAnimationActive={false}
+                    stroke="#f59e0b"
+                    strokeLinecap="round"
+                    strokeWidth={2.15}
                     type="monotone"
                   />
                 </>

@@ -19,6 +19,7 @@ import {
   type GrowthProjectionResponse,
   type InstrumentDetailResponse,
 } from '../lib/api'
+import { readStoredMarketPreferences } from '../lib/marketPreferences'
 import '../styles/pages/ForecastPage.css'
 import '../styles/pages/GrowthProjectionPage.css'
 
@@ -35,22 +36,113 @@ function sampleData<T>(arr: T[], maxPoints: number): T[] {
 }
 
 function formatYAxisValue(value: number): string {
-  if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(1)}T`
-  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
-  return `$${Math.round(value)}`
+  const sym = getCurrencySymbol()
+  if (value >= 1_000_000_000_000) return `${sym}${(value / 1_000_000_000_000).toFixed(1)}T`
+  if (value >= 1_000_000_000) return `${sym}${(value / 1_000_000_000).toFixed(1)}B`
+  if (value >= 1_000_000) return `${sym}${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${sym}${Math.round(value / 1_000)}K`
+  return `${sym}${Math.round(value)}`
 }
 
-/** Compact formatter — no cents, $K/$M/$B/$T for large numbers, handles negatives */
+function resolveLocale() {
+  return typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US'
+}
+
+function getProjPreferences() {
+  return readStoredMarketPreferences()
+}
+
+function isCompactMode(): boolean {
+  return getProjPreferences().numberFormat === 'compact'
+}
+
+function getCurrencyCode(): string {
+  return getProjPreferences().currency
+}
+
+function getCurrencySymbol(): string {
+  return getCurrencyCode() === 'GBP' ? '£' : '$'
+}
+
+/**
+ * Format a currency value — compact (K/M/B/T) or standard based on user preference.
+ * Standard mode uses Intl.NumberFormat with no decimals for whole values.
+ */
 function formatCompact(value: number): string {
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
-  if (abs >= 1_000_000_000_000) return `${sign}$${(abs / 1_000_000_000_000).toFixed(1)}T`
-  if (abs >= 1_000_000_000) return `${sign}$${(abs / 1_000_000_000).toFixed(1)}B`
-  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
-  if (abs >= 1_000) return `${sign}$${Math.round(abs / 1_000)}K`
-  return `${sign}$${Math.round(abs)}`
+  const sym = getCurrencySymbol()
+  if (isCompactMode()) {
+    if (abs >= 1_000_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000_000).toFixed(1)}T`
+    if (abs >= 1_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000).toFixed(1)}B`
+    if (abs >= 1_000_000) return `${sign}${sym}${(abs / 1_000_000).toFixed(1)}M`
+    if (abs >= 1_000) return `${sign}${sym}${Math.round(abs / 1_000)}K`
+    return `${sign}${sym}${Math.round(abs)}`
+  }
+  // Standard: full number with comma separators, no decimals for clean display
+  return new Intl.NumberFormat(resolveLocale(), {
+    style: 'currency',
+    currency: getCurrencyCode(),
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(value)
+}
+
+/**
+ * Format a pair of values using the same unit (determined by the larger of the two)
+ * so tooltip ranges like "£167 – £1K" never mix raw and K formats.
+ */
+function formatTooltipPair(a: number, b: number): string {
+  const max = Math.max(Math.abs(a), Math.abs(b))
+  const sym = getCurrencySymbol()
+  if (isCompactMode()) {
+    const fmt = (v: number): string => {
+      const sign = v < 0 ? '-' : ''
+      const abs = Math.abs(v)
+      if (max >= 1_000_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000_000).toFixed(1)}T`
+      if (max >= 1_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000).toFixed(1)}B`
+      if (max >= 1_000_000) return `${sign}${sym}${(abs / 1_000_000).toFixed(1)}M`
+      if (max >= 1_000) return `${sign}${sym}${Math.round(abs / 1_000)}K`
+      return `${sign}${sym}${Math.round(abs)}`
+    }
+    return `${fmt(a)} – ${fmt(b)}`
+  }
+  // Standard: both values formatted with commas, no decimals
+  const stdFmt = new Intl.NumberFormat(resolveLocale(), {
+    style: 'currency',
+    currency: getCurrencyCode(),
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  })
+  return `${stdFmt.format(a)} – ${stdFmt.format(b)}`
+}
+
+/**
+ * Format a set of values using a consistent unit (largest drives the choice)
+ * so scenario rows never show "£153" and "£3K" side by side.
+ */
+function formatRowValues(values: number[]): string[] {
+  const max = Math.max(...values.map(Math.abs))
+  const sym = getCurrencySymbol()
+  if (isCompactMode()) {
+    return values.map((v) => {
+      const sign = v < 0 ? '-' : ''
+      const abs = Math.abs(v)
+      if (max >= 1_000_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000_000).toFixed(1)}T`
+      if (max >= 1_000_000_000) return `${sign}${sym}${(abs / 1_000_000_000).toFixed(1)}B`
+      if (max >= 1_000_000) return `${sign}${sym}${(abs / 1_000_000).toFixed(1)}M`
+      if (max >= 1_000) return `${sign}${sym}${Math.round(abs / 1_000)}K`
+      return `${sign}${sym}${Math.round(abs)}`
+    })
+  }
+  // Standard: format all values with commas, no decimals
+  const stdFmt = new Intl.NumberFormat(resolveLocale(), {
+    style: 'currency',
+    currency: getCurrencyCode(),
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  })
+  return values.map((v) => stdFmt.format(v))
 }
 
 function formatHistoryDateRange(yearsUsed: number): string {
@@ -83,6 +175,13 @@ function VolatilityBadge({ value }: { value: number }) {
   return <span className="proj-vol-badge proj-vol-badge--low">Low — relatively stable</span>
 }
 
+/** Return a CSS class for a numeric value: green positive, red negative, plain zero */
+function signClass(value: number): string {
+  if (value > 0) return 'positive-text'
+  if (value < 0) return 'negative-text'
+  return 'neutral-text'
+}
+
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,17 +200,30 @@ function ProjectionTooltip(props: any) {
 
   const year = label ? new Date(label).getFullYear() : ''
 
+  // P&L relative to invested capital at this point in time
+  const pnl = p50 != null && invested != null ? p50 - invested : null
+  const pnlPct = pnl != null && invested != null && invested > 0
+    ? (pnl / invested) * 100
+    : null
+  const isGain = pnl != null ? pnl >= 0 : true
+
   return (
     <div className="instrument-tooltip projection-tooltip">
       <span className="instrument-tooltip-date">{year}</span>
       {p50 != null && (
-        <span className="projection-tooltip-row projection-tooltip-row--main">
+        <span className={`projection-tooltip-row ${isGain ? 'projection-tooltip-row--main' : 'projection-tooltip-row--main-loss'}`}>
           Most likely: {formatCompact(p50)}
+        </span>
+      )}
+      {pnl != null && (
+        <span className={`projection-tooltip-row ${isGain ? 'projection-tooltip-row--gain' : 'projection-tooltip-row--loss'}`}>
+          P&amp;L: {pnl >= 0 ? '+' : ''}{formatCompact(pnl)}
+          {pnlPct != null ? ` (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)` : ''}
         </span>
       )}
       {p10 != null && p90 != null && (
         <span className="projection-tooltip-row">
-          Range: {formatCompact(p10)} – {formatCompact(p90)}
+          Range: {formatTooltipPair(p10, p90)}
         </span>
       )}
       {baseline != null && (
@@ -140,9 +252,11 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const [monthlyContributionStr, setMonthlyContributionStr] = useState('0')
   const [inflationAdjust, setInflationAdjust] = useState(false)
 
-  // Derived numeric values — empty string treated as 0, no error state
-  const initialAmount = initialAmountStr === '' ? 0 : Math.max(0, parseInt(initialAmountStr, 10) || 0)
-  const monthlyContribution = monthlyContributionStr === '' ? 0 : Math.max(0, parseInt(monthlyContributionStr, 10) || 0)
+  // Committed numeric values — only updated 600 ms after the user stops typing
+  // (string state above controls the visible input; these drive the simulation)
+  const [initialAmount, setInitialAmount] = useState(1000)
+  const [monthlyContribution, setMonthlyContribution] = useState(0)
+  const inputCommitDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Async state
   const [result, setResult] = useState<GrowthProjectionResponse | null>(null)
@@ -163,11 +277,22 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   }, [symbol, token])
 
   function handleInitialAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setInitialAmountStr(sanitiseAmount(e.target.value))
+    const clean = sanitiseAmount(e.target.value)
+    setInitialAmountStr(clean)
+    // Debounce numeric commit so the simulation doesn't fire on every keystroke
+    if (inputCommitDebounceRef.current) clearTimeout(inputCommitDebounceRef.current)
+    inputCommitDebounceRef.current = setTimeout(() => {
+      setInitialAmount(clean === '' ? 0 : Math.max(0, parseInt(clean, 10) || 0))
+    }, 600)
   }
 
   function handleMonthlyContributionChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setMonthlyContributionStr(sanitiseAmount(e.target.value))
+    const clean = sanitiseAmount(e.target.value)
+    setMonthlyContributionStr(clean)
+    if (inputCommitDebounceRef.current) clearTimeout(inputCommitDebounceRef.current)
+    inputCommitDebounceRef.current = setTimeout(() => {
+      setMonthlyContribution(clean === '' ? 0 : Math.max(0, parseInt(clean, 10) || 0))
+    }, 600)
   }
 
   const runSimulation = useCallback(() => {
@@ -290,6 +415,13 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const scenarios = result?.deterministicScenarios ?? null
   const assumptions = result?.assumptionsUsed ?? null
 
+  // Outcome direction — used to colour cards and rewrite copy consistently
+  const isGain = result ? result.monteCarloSummary.p50EndValue >= result.totalInvested : true
+  const pctChange = result && result.totalInvested > 0
+    ? ((result.monteCarloSummary.p50EndValue - result.totalInvested) / result.totalInvested) * 100
+    : 0
+  const isDeclineTrend = assumptions ? assumptions.expectedAnnualReturn < 0 : false
+
   // Show results as long as we have data — even while a re-run is in progress
   const hasResults = Boolean(result && !error)
   // Distinguish between a fresh first load (no data yet) and a background update
@@ -302,7 +434,12 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
     const probPct = Math.round(result.monteCarloSummary.probabilityOfProfit * 100)
     const p50 = formatCompact(result.monteCarloSummary.p50EndValue)
     const invested = formatCompact(result.totalInvested)
-    return `Based on your inputs, there's a ${probPct}% chance your ${invested} investment grows to at least ${p50} over ${years} year${years !== 1 ? 's' : ''}.`
+    const yrs = `${years} year${years !== 1 ? 's' : ''}`
+    const gaining = result.monteCarloSummary.p50EndValue >= result.totalInvested
+    if (gaining) {
+      return `Based on your inputs, there's a ${probPct}% chance your ${invested} investment grows to at least ${p50} over ${yrs}.`
+    }
+    return `Based on your inputs, your ${invested} investment is most likely to decline to ${p50} over ${yrs}. There's only a ${probPct}% chance of ending with a profit.`
   }, [result, years])
 
   // CSS custom property for slider track fill
@@ -329,16 +466,29 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
         </div>
       </div>
 
+      {/* ── Declining-trend warning ── */}
+      {hasResults && isDeclineTrend && (
+        <div className="proj-decline-warning">
+          <span className="proj-decline-warning-icon" aria-hidden>⚠</span>
+          <p>
+            This asset has historically declined in value. Simulations based on past performance will project losses.
+          </p>
+        </div>
+      )}
+
       {/* ── Summary cards (above the fold once results arrive) ── */}
       {hasResults && result && (
         <>
           <div className={`projection-summary-grid${isUpdating ? ' projection-summary-grid--updating' : ''}`}>
 
-            {/* Card 1: Most likely outcome */}
-            <div className="projection-summary-card projection-summary-card--main">
+            {/* Card 1: Most likely outcome — colour reflects gain vs loss */}
+            <div className={`projection-summary-card ${isGain ? 'projection-summary-card--main' : 'projection-summary-card--main-loss'}`}>
               <span className="projection-summary-label">Most likely outcome</span>
-              <span className="projection-summary-value projection-summary-value--positive">
+              <span className={`projection-summary-value ${isGain ? 'projection-summary-value--positive' : 'projection-summary-value--negative'}`}>
                 {formatCompact(result.monteCarloSummary.p50EndValue)}
+              </span>
+              <span className={`projection-summary-delta ${isGain ? 'projection-summary-delta--positive' : 'projection-summary-delta--negative'}`}>
+                {pctChange >= 0 ? '+' : ''}{pctChange.toFixed(1)}% from invested
               </span>
               <span className="projection-summary-sub">
                 your most likely portfolio value after {years} year{years !== 1 ? 's' : ''}
@@ -403,7 +553,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
           {/* Auto-generated summary sentence */}
           {summaryLine && (
-            <p className={`projection-summary-sentence${isUpdating ? ' projection-summary-sentence--updating' : ''}`}>
+            <p className={`projection-summary-sentence${!isGain ? ' projection-summary-sentence--decline' : ''}${isUpdating ? ' projection-summary-sentence--updating' : ''}`}>
               {summaryLine}
             </p>
           )}
@@ -544,7 +694,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <span className="projection-legend-item">
                   <span
                     className="projection-legend-swatch projection-legend-swatch--dashed"
-                    style={{ borderTopColor: '#7c3aed' }}
+                    style={{ borderTopColor: '#1e293b' }}
                   />
                   Expected (fixed rate)
                 </span>
@@ -654,7 +804,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   type="monotone"
                 />
 
-                {/* Expected (baseline fixed rate) — indigo dashed, clearly distinct from the teal band */}
+                {/* Expected (baseline fixed rate) — dark navy dashed, clearly distinct from teal band */}
                 <Line
                   animationDuration={1000}
                   animationEasing="ease-out"
@@ -662,7 +812,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dataKey="baselineValue"
                   dot={false}
                   isAnimationActive
-                  stroke="#7c3aed"
+                  stroke="#1e293b"
                   strokeDasharray="6 4"
                   strokeWidth={2.5}
                   type="monotone"
@@ -695,60 +845,67 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             <div className="forecast-card-heading">
               <p className="forecast-card-title">Fixed-rate estimates</p>
               <p className="forecast-card-subtitle">
-                What you'd end up with if this stock grew at a slow, average, or strong fixed rate every year.
+                {isDeclineTrend
+                  ? 'Fixed-rate scenarios based on this asset\'s historical trend.'
+                  : "What you'd end up with if this stock grew at a slow, average, or strong fixed rate every year."}
               </p>
             </div>
 
-            <div className="projection-scenarios-grid">
-              <div className="projection-scenario-header">
-                <span />
-                <span>If growth is slow</span>
-                <span className="projection-scenario-col--baseline">If growth is average</span>
-                <span>If growth is strong</span>
-              </div>
+            {(() => {
+              const endVals = formatRowValues([
+                scenarios.pessimistic.projectedEndValue,
+                scenarios.baseline.projectedEndValue,
+                scenarios.optimistic.projectedEndValue,
+              ])
+              return (
+                <div className="projection-scenarios-grid">
+                  <div className="projection-scenario-header">
+                    <span />
+                    <span>{isDeclineTrend ? 'Worse than average' : 'If growth is slow'}</span>
+                    <span>
+                      {isDeclineTrend ? 'Average outcome' : 'If growth is average'}
+                    </span>
+                    <span>{isDeclineTrend ? 'Better than average' : 'If growth is strong'}</span>
+                  </div>
 
-              <div className="projection-scenario-row">
-                <span className="projection-scenario-key">Yearly return</span>
-                <span>{(scenarios.pessimistic.annualReturnUsed * 100).toFixed(1)}%</span>
-                <span className="projection-scenario-col--baseline">
-                  {(scenarios.baseline.annualReturnUsed * 100).toFixed(1)}%
-                </span>
-                <span>{(scenarios.optimistic.annualReturnUsed * 100).toFixed(1)}%</span>
-              </div>
+                  <div className="projection-scenario-row">
+                    <span className="projection-scenario-key">Yearly return</span>
+                    <span className={signClass(scenarios.pessimistic.annualReturnUsed)}>
+                      {(scenarios.pessimistic.annualReturnUsed * 100).toFixed(1)}%
+                    </span>
+                    <span className={`projection-scenario-col--baseline ${signClass(scenarios.baseline.annualReturnUsed)}`}>
+                      {(scenarios.baseline.annualReturnUsed * 100).toFixed(1)}%
+                    </span>
+                    <span className={signClass(scenarios.optimistic.annualReturnUsed)}>
+                      {(scenarios.optimistic.annualReturnUsed * 100).toFixed(1)}%
+                    </span>
+                  </div>
 
-              <div className="projection-scenario-row">
-                <span className="projection-scenario-key">End value</span>
-                <span>{formatCompact(scenarios.pessimistic.projectedEndValue)}</span>
-                <span className="projection-scenario-col--baseline">
-                  {formatCompact(scenarios.baseline.projectedEndValue)}
-                </span>
-                <span>{formatCompact(scenarios.optimistic.projectedEndValue)}</span>
-              </div>
+                  <div className="projection-scenario-row">
+                    <span className="projection-scenario-key">End value</span>
+                    <span className={signClass(scenarios.pessimistic.projectedGrowthPct)}>{endVals[0]}</span>
+                    <span className={`projection-scenario-col--baseline ${signClass(scenarios.baseline.projectedGrowthPct)}`}>{endVals[1]}</span>
+                    <span className={signClass(scenarios.optimistic.projectedGrowthPct)}>{endVals[2]}</span>
+                  </div>
 
-              <div className="projection-scenario-row">
-                <span className="projection-scenario-key">Total growth</span>
-                <span className="projection-scenario-pess-growth">
-                  {scenarios.pessimistic.projectedGrowthPct >= 0 ? '+' : ''}
-                  {scenarios.pessimistic.projectedGrowthPct.toFixed(1)}%
-                </span>
-                <span
-                  className={`projection-scenario-col--baseline ${
-                    scenarios.baseline.projectedGrowthPct >= 0 ? 'positive-text' : 'negative-text'
-                  }`}
-                >
-                  {scenarios.baseline.projectedGrowthPct >= 0 ? '+' : ''}
-                  {scenarios.baseline.projectedGrowthPct.toFixed(1)}%
-                </span>
-                <span
-                  className={
-                    scenarios.optimistic.projectedGrowthPct >= 0 ? 'positive-text' : 'negative-text'
-                  }
-                >
-                  {scenarios.optimistic.projectedGrowthPct >= 0 ? '+' : ''}
-                  {scenarios.optimistic.projectedGrowthPct.toFixed(1)}%
-                </span>
-              </div>
-            </div>
+                  <div className="projection-scenario-row">
+                    <span className="projection-scenario-key">Total growth</span>
+                    <span className={signClass(scenarios.pessimistic.projectedGrowthPct)}>
+                      {scenarios.pessimistic.projectedGrowthPct > 0 ? '+' : ''}
+                      {scenarios.pessimistic.projectedGrowthPct.toFixed(1)}%
+                    </span>
+                    <span className={`projection-scenario-col--baseline ${signClass(scenarios.baseline.projectedGrowthPct)}`}>
+                      {scenarios.baseline.projectedGrowthPct > 0 ? '+' : ''}
+                      {scenarios.baseline.projectedGrowthPct.toFixed(1)}%
+                    </span>
+                    <span className={signClass(scenarios.optimistic.projectedGrowthPct)}>
+                      {scenarios.optimistic.projectedGrowthPct > 0 ? '+' : ''}
+                      {scenarios.optimistic.projectedGrowthPct.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Only shown when volatility is high enough to warrant a warning */}
             {(assumptions.annualVolatility * 100) > 40 && (
@@ -819,7 +976,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
               </p>
             </div>
             <Link
-              className="primary-action"
+              className="primary-action primary-action--teal"
               to={`/forecast/${encodeURIComponent(symbol)}`}
             >
               Run forecast →

@@ -529,7 +529,14 @@ async function parseResponse<T>(response: Response): Promise<T> {
       }
     }
 
-    throw new ApiError(detail, response.status)
+    const apiError = new ApiError(detail, response.status)
+    // Notify the app shell so any 401 — including those from lazy-loaded pages
+    // that don't have their own 401 handler — triggers a global session-expired
+    // logout rather than silently failing.
+    if (response.status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('marketmetrics:session-expired'))
+    }
+    throw apiError
   }
 
   const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''

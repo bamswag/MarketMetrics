@@ -1,5 +1,12 @@
 import type { InstrumentDetailResponse, InstrumentRange } from './api'
 
+export type ChartSeriesPoint = InstrumentDetailResponse['historicalSeries'][number]
+
+export type ChartPointWithMovingAverages<T extends ChartSeriesPoint = ChartSeriesPoint> = T & {
+  ma30: number
+  ma50: number
+}
+
 export function getMaxChartPoints(selectedRange: InstrumentRange): number {
   if (selectedRange === 'MAX') {
     return 320
@@ -20,15 +27,15 @@ export function getMaxChartPoints(selectedRange: InstrumentRange): number {
   return 180
 }
 
-export function sampleChartSeries(
-  series: InstrumentDetailResponse['historicalSeries'],
+export function sampleChartSeries<T extends ChartSeriesPoint>(
+  series: T[],
   maxPoints: number,
-) {
+): T[] {
   if (series.length <= maxPoints) {
     return series
   }
 
-  const sampled: InstrumentDetailResponse['historicalSeries'] = []
+  const sampled: T[] = []
   const step = (series.length - 1) / (maxPoints - 1)
 
   for (let index = 0; index < maxPoints; index += 1) {
@@ -45,4 +52,25 @@ export function sampleChartSeries(
   }
 
   return sampled
+}
+
+export function simpleMovingAverage(
+  series: Array<{ close: number }>,
+  endIndex: number,
+  windowSize: number,
+): number {
+  const windowStart = Math.max(0, endIndex + 1 - windowSize)
+  const window = series.slice(windowStart, endIndex + 1)
+  const total = window.reduce((sum, point) => sum + point.close, 0)
+  return window.length > 0 ? total / window.length : 0
+}
+
+export function addSimpleMovingAverages<T extends ChartSeriesPoint>(
+  series: T[],
+): Array<ChartPointWithMovingAverages<T>> {
+  return series.map((point, index) => ({
+    ...point,
+    ma30: simpleMovingAverage(series, index, 30),
+    ma50: simpleMovingAverage(series, index, 50),
+  }))
 }

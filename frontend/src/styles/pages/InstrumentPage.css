@@ -491,11 +491,16 @@
   background: rgba(20, 32, 51, 0.09);
 }
 
+.instrument-chart-legend-group {
+  display: grid;
+  gap: 8px;
+  padding: 14px 28px 0;
+}
+
 .instrument-chart-legend {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 28px 0;
   flex-wrap: wrap;
 }
 
@@ -514,6 +519,18 @@
   color: #0a6560;
   border-color: rgba(15, 118, 110, 0.3);
   background: rgba(15, 118, 110, 0.08);
+}
+
+.instrument-chart-legend-pill--price-up {
+  color: #0a6560;
+  border-color: rgba(15, 118, 110, 0.3);
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.instrument-chart-legend-pill--price-down {
+  color: #a43f2a;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .instrument-chart-legend-pill--ma30 {
@@ -540,12 +557,29 @@
   background: #0f766e;
 }
 
+.instrument-chart-legend-swatch--price-up {
+  background: #0f766e;
+}
+
+.instrument-chart-legend-swatch--price-down {
+  background: #ef4444;
+}
+
 .instrument-chart-legend-swatch--ma30 {
   background: #f59e0b;
 }
 
 .instrument-chart-legend-swatch--ma50 {
   background: #3b82f6;
+}
+
+.instrument-chart-legend-helper {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 /* ── Live price row ── */

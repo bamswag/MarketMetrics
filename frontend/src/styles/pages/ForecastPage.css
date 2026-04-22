@@ -412,6 +412,7 @@
 
 .forecast-chart-wrap {
   height: 340px;
+  min-width: 0;
 }
 
 /* ── Bottom grid ── */

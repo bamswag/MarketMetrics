@@ -339,6 +339,18 @@ function AppContent() {
     navigate('/login')
   })
 
+  // Global 401 handler — fires whenever any API call (including those from
+  // lazy-loaded pages with no local 401 handling) receives an Unauthorized
+  // response.  The custom event is dispatched by parseResponse() in api.ts.
+  useEffect(() => {
+    function onSessionExpired() {
+      handleSessionExpired('Your session expired. Please log in again.')
+    }
+    window.addEventListener('marketmetrics:session-expired', onSessionExpired)
+    return () => window.removeEventListener('marketmetrics:session-expired', onSessionExpired)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // handleSessionExpired is a useEffectEvent — stable by design, excluded from deps
+
   useEffect(() => {
     if (
       !initialRedirectPayload.redirectedToken &&
