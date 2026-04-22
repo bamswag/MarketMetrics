@@ -35,15 +35,19 @@ function sampleData<T>(arr: T[], maxPoints: number): T[] {
 }
 
 function formatYAxisValue(value: number): string {
+  if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(1)}T`
+  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
   if (value >= 1_000) return `$${Math.round(value / 1_000)}K`
   return `$${Math.round(value)}`
 }
 
-/** Compact formatter — no cents, $K/$M for large numbers, handles negatives */
+/** Compact formatter — no cents, $K/$M/$B/$T for large numbers, handles negatives */
 function formatCompact(value: number): string {
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
+  if (abs >= 1_000_000_000_000) return `${sign}$${(abs / 1_000_000_000_000).toFixed(1)}T`
+  if (abs >= 1_000_000_000) return `${sign}$${(abs / 1_000_000_000).toFixed(1)}B`
   if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
   if (abs >= 1_000) return `${sign}$${Math.round(abs / 1_000)}K`
   return `${sign}$${Math.round(abs)}`
@@ -73,7 +77,7 @@ function sanitiseAmount(raw: string): string {
 function VolatilityBadge({ value }: { value: number }) {
   const pct = value * 100
   if (pct > 40)
-    return <span className="proj-vol-badge proj-vol-badge--high">High — this stock swings a lot</span>
+    return <span className="proj-vol-badge proj-vol-badge--high">High — this asset swings a lot</span>
   if (pct >= 20)
     return <span className="proj-vol-badge proj-vol-badge--moderate">Moderate</span>
   return <span className="proj-vol-badge proj-vol-badge--low">Low — relatively stable</span>

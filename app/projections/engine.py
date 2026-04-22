@@ -32,6 +32,11 @@ MONTE_CARLO_SEED = 42
 FIXED_SCENARIO_VOLATILITY_MULTIPLIER = 0.5
 FIXED_SCENARIO_FLOOR = 0.02
 FIXED_SCENARIO_CEILING = 0.15
+# Cap applied to derived volatility to prevent GBM median drift from going
+# deeply negative for high-volatility assets (e.g. crypto with 300%+ raw vol).
+# 75% is already well above any stock or mature crypto; this only fires for
+# extreme cases where the model would otherwise produce a median near $0.
+MAX_DERIVED_ANNUAL_VOLATILITY = 0.75
 
 
 class LongTermProjectionError(Exception):
@@ -122,6 +127,11 @@ def derive_historical_projection_assumptions(
     compounded_monthly_return = float((prices[-1] / prices[0]) ** (1 / len(monthly_returns)) - 1)
     annualized_return = float((1 + compounded_monthly_return) ** 12 - 1)
     annualized_volatility = float(monthly_returns.std(ddof=0) * math.sqrt(12))
+
+    # Hard cap: very high volatility (common in crypto) causes GBM median drift
+    # to become strongly negative — the model collapses to ~$0 even with a
+    # positive expected return.  Cap to a level where median drift stays usable.
+    annualized_volatility = min(annualized_volatility, MAX_DERIVED_ANNUAL_VOLATILITY)
 
     return {
         "expectedAnnualReturn": annualized_return,
