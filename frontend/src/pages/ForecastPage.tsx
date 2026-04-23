@@ -21,6 +21,8 @@ import {
   type InstrumentDetailResponse,
 } from '../lib/api'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
+import { readStoredMarketPreferences } from '../lib/marketPreferences'
+import '../styles/components/ChartTooltip.css'
 import '../styles/pages/ForecastPage.css'
 
 type ForecastPageProps = {
@@ -37,7 +39,6 @@ const HORIZON_OPTIONS = [
 
 const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
 const HISTORY_BARS = 60
-const Y_AXIS_TICK_STEP = 25
 
 type ConfidenceLevel = 'low' | 'medium' | 'high'
 
@@ -193,27 +194,62 @@ function getLastForecastReview(result: ForecastResponse): LastForecastReview | n
   }
 }
 
+/** Round rawStep up to the nearest "nice" number (1, 2, 2.5, 5, or 10 × a power of 10). */
+function niceNumber(rawStep: number): number {
+  if (rawStep <= 0) return 0.01
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const n = rawStep / magnitude
+  if (n <= 1) return magnitude
+  if (n <= 2) return 2 * magnitude
+  if (n <= 2.5) return 2.5 * magnitude
+  if (n <= 5) return 5 * magnitude
+  return 10 * magnitude
+}
+
+/**
+ * Format a Y-axis tick value with enough decimal places to be meaningful,
+ * especially for cheap assets (< $1) where 2 decimals would show $0.00.
+ */
+function formatPriceAxis(value: number): string {
+  const currency = readStoredMarketPreferences().currency
+  const sym = currency === 'GBP' ? '£' : '$'
+  if (value === 0) return `${sym}0`
+  const abs = Math.abs(value)
+  if (abs < 0.0001) return `${sym}${value.toFixed(6)}`
+  if (abs < 0.001) return `${sym}${value.toFixed(5)}`
+  if (abs < 0.01) return `${sym}${value.toFixed(4)}`
+  if (abs < 0.1) return `${sym}${value.toFixed(3)}`
+  if (abs < 1) return `${sym}${value.toFixed(2)}`
+  return formatCurrency(value)
+}
+
 function buildYAxisScale(prices: number[]): { domain: [number, number]; ticks: number[] } {
   if (!prices.length) {
-    return { domain: [0, Y_AXIS_TICK_STEP], ticks: [0, Y_AXIS_TICK_STEP] }
+    return { domain: [0, 1], ticks: [0, 0.5, 1] }
   }
 
   const yMin = Math.min(...prices)
   const yMax = Math.max(...prices)
-  const yPad = (yMax - yMin) * 0.1 || Y_AXIS_TICK_STEP
+  const range = yMax - yMin
+
+  // For flat / near-flat price series (cheap symbols), pad by 10 % of the price
+  // rather than falling back to a hardcoded dollar amount.
+  const yPad = range > 0 ? range * 0.15 : Math.max(yMax * 0.1, 0.0001)
   const paddedMin = Math.max(0, yMin - yPad)
   const paddedMax = yMax + yPad
-  const minTick = Math.max(0, Math.floor(paddedMin / Y_AXIS_TICK_STEP) * Y_AXIS_TICK_STEP)
-  const rawStep = (paddedMax - minTick) / 4
-  const step = Math.max(
-    Y_AXIS_TICK_STEP,
-    Math.ceil(rawStep / Y_AXIS_TICK_STEP) * Y_AXIS_TICK_STEP,
-  )
-  const maxTick = Math.max(minTick + step, Math.ceil(paddedMax / step) * step)
-  const ticks: number[] = []
 
-  for (let tick = minTick; tick <= maxTick; tick += step) {
-    ticks.push(tick)
+  const step = niceNumber((paddedMax - paddedMin) / 4)
+  const minTick = Math.max(0, Math.floor(paddedMin / step) * step)
+  const maxTick = Math.ceil(paddedMax / step) * step
+
+  const ticks: number[] = []
+  const epsilon = step * 0.001
+  for (
+    let tick = minTick;
+    tick <= maxTick + epsilon;
+    tick = parseFloat((tick + step).toPrecision(12))
+  ) {
+    ticks.push(parseFloat(tick.toPrecision(10)))
   }
 
   return { domain: [minTick, maxTick], ticks }
@@ -568,22 +604,6 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   Model updated {formatLongDate(modelUpdatedDate)}
                 </span>
               )}
-              <div className="forecast-horizon-group">
-                <span className="forecast-horizon-label">Forecast horizon</span>
-                <div className="forecast-horizon-row">
-                  {HORIZON_OPTIONS.map((opt) => (
-                    <button
-                      className={`forecast-horizon-btn${horizon === opt.value ? ' is-active' : ''}`}
-                      disabled={isLoading}
-                      key={opt.value}
-                      onClick={() => setHorizon(opt.value)}
-                      type="button"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -713,38 +733,51 @@ export function ForecastPage({ token }: ForecastPageProps) {
       {token && !isLoading && !error && result && chartData.length > 0 && (
         <div className="forecast-chart-card">
           <div className="forecast-chart-header">
-            <div>
-              <h2 className="forecast-chart-title">Recent price + {horizon}-day outlook</h2>
+            <div className="forecast-chart-header-top">
+              <div className="forecast-horizon-row">
+                {HORIZON_OPTIONS.map((opt) => (
+                  <button
+                    className={`forecast-horizon-btn${horizon === opt.value ? ' is-active' : ''}`}
+                    disabled={isLoading}
+                    key={opt.value}
+                    onClick={() => setHorizon(opt.value)}
+                    type="button"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="forecast-chart-legend">
+                <span className="forecast-legend-item">
+                  <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
+                    <line stroke="#0f766e" strokeWidth="2.5" x1="0" x2="28" y1="6" y2="6" />
+                  </svg>
+                  Actual
+                </span>
+                <span className="forecast-legend-item">
+                  <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
+                    <line
+                      opacity="0.9"
+                      stroke="#2563EB"
+                      strokeDasharray="3 4"
+                      strokeWidth="1.5"
+                      x1="0"
+                      x2="28"
+                      y1="6"
+                      y2="6"
+                    />
+                  </svg>
+                  Forecast
+                </span>
+                <span className="forecast-legend-item">
+                  <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
+                    <rect fill="rgba(147,197,253,0.35)" height="8" rx="2" width="28" x="0" y="2" />
+                  </svg>
+                  Uncertainty
+                </span>
+              </div>
             </div>
-            <div className="forecast-chart-legend">
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <line stroke="#0f766e" strokeWidth="2.5" x1="0" x2="28" y1="6" y2="6" />
-                </svg>
-                Actual
-              </span>
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <line
-                    opacity="0.9"
-                    stroke="#2563EB"
-                    strokeDasharray="3 4"
-                    strokeWidth="1.5"
-                    x1="0"
-                    x2="28"
-                    y1="6"
-                    y2="6"
-                  />
-                </svg>
-                Forecast
-              </span>
-              <span className="forecast-legend-item">
-                <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                  <rect fill="rgba(147,197,253,0.35)" height="8" rx="2" width="28" x="0" y="2" />
-                </svg>
-                Uncertainty
-              </span>
-            </div>
+            <h2 className="forecast-chart-title">Recent price + {horizon}-day outlook</h2>
           </div>
 
           <div className="forecast-chart-wrap">
@@ -781,7 +814,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   domain={yScale.domain}
                   orientation="left"
                   tick={AXIS_TICK}
-                  tickFormatter={(v: number) => formatCurrency(v)}
+                  tickFormatter={(v: number) => formatPriceAxis(v)}
                   tickLine={false}
                   ticks={yScale.ticks}
                   width={80}

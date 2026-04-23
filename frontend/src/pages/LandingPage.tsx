@@ -103,16 +103,19 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
       </section>
 
       <section className="landing-insight-mosaic page-section">
-        <InsightCard id="live-market-data" />
-
         <DailyMoversSection
+          betweenPanels={(
+            <>
+              <InsightCard id="live-market-data" />
+              <InsightCard id="forecast-vs-projection" />
+            </>
+          )}
           error={moversError}
           isLoading={isLoadingMovers}
           movers={movers}
           variant="landing"
         />
 
-        <InsightCard id="forecast-vs-projection" />
         <InsightCard id="not-financial-advice" />
       </section>
 

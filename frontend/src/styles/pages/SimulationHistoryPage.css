@@ -1,50 +1,72 @@
-/* ── Page shell ────────────────────────────────────────────────────────────── */
+/* ── Page shell ──────────────────────────────────────────────────────────────*/
 
 .sim-history-page {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+  display: grid;
+  gap: 20px;
+  padding-bottom: 64px;
 }
 
-/* ── Header ────────────────────────────────────────────────────────────────── */
+/* ── Hero panel ──────────────────────────────────────────────────────────────*/
 
-.sim-history-header {
+.sim-history-hero {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.75rem;
+  padding: 26px 30px;
+  border: 1px solid var(--panel-border);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top left, rgba(201, 106, 69, 0.06), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.05), transparent 40%),
+    var(--panel-bg);
+  box-shadow: var(--panel-shadow);
   flex-wrap: wrap;
 }
 
+.sim-history-hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sim-history-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .sim-history-title {
-  font-size: 1.6rem;
+  margin: 0;
+  font-size: 1.9rem;
   font-weight: 700;
-  margin: 0 0 0.2rem;
-  color: var(--color-text-primary, #f0f0f0);
+  color: var(--text-main);
+  line-height: 1.15;
 }
 
 .sim-history-subtitle {
   margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #8a8f98);
+  font-size: 0.88rem;
+  color: var(--muted);
 }
 
 .sim-history-clear-btn {
-  padding: 0.45rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border-danger, #5c2a2a);
-  background: transparent;
-  color: var(--color-danger, #e05c5c);
-  font-size: 0.8rem;
+  align-self: flex-start;
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(177, 79, 43, 0.3);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
 }
 
 .sim-history-clear-btn:hover:not(:disabled) {
-  background: var(--color-danger, #e05c5c);
-  color: #fff;
+  background: rgba(177, 79, 43, 0.18);
+  border-color: rgba(177, 79, 43, 0.5);
 }
 
 .sim-history-clear-btn:disabled {
@@ -52,436 +74,491 @@
   cursor: not-allowed;
 }
 
-/* ── Controls (filter + sort) ──────────────────────────────────────────────── */
+/* ── Controls ────────────────────────────────────────────────────────────────*/
 
 .sim-history-controls {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.sim-history-filter-input,
-.sim-history-sort-select {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border, #2e3240);
-  background: var(--color-surface, #1a1d27);
-  color: var(--color-text-primary, #f0f0f0);
-  font-size: 0.875rem;
-}
-
-.sim-history-filter-input {
+.sim-history-filter {
   flex: 1;
-  min-width: 180px;
+  min-width: 200px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  box-shadow: 0 1px 4px rgba(13, 27, 45, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.sim-history-sort-select {
-  min-width: 160px;
+.sim-history-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.sim-history-filter::placeholder {
+  color: var(--muted);
+}
+
+.sim-history-sort {
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font-size: 0.875rem;
   cursor: pointer;
+  min-width: 150px;
+  box-shadow: 0 1px 4px rgba(13, 27, 45, 0.04);
 }
 
-/* ── Cards list ────────────────────────────────────────────────────────────── */
+/* ── Card list ───────────────────────────────────────────────────────────────*/
 
 .sim-history-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 14px;
 }
 
-/* ── Card ──────────────────────────────────────────────────────────────────── */
+/* ── Card ────────────────────────────────────────────────────────────────────*/
 
-.sim-history-card {
-  background: var(--color-surface, #1a1d27);
-  border: 1px solid var(--color-border, #2e3240);
-  border-radius: 10px;
-  padding: 1.1rem 1.25rem;
+.sim-card {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
 }
 
-/* Card header — identity + date */
-.sim-history-card-header {
+.sim-card:hover {
+  box-shadow:
+    0 32px 80px rgba(13, 27, 45, 0.10),
+    0 10px 26px rgba(13, 27, 45, 0.07);
+}
+
+/* Top row: identity + date */
+.sim-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 18px 22px 14px;
 }
 
-.sim-history-card-identity {
+.sim-card-identity {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 12px;
 }
 
-.sim-history-card-symbol-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.sim-history-card-symbol {
+.sim-card-symbol {
+  display: block;
+  font-size: 1.05rem;
   font-weight: 700;
-  font-size: 1rem;
-  color: var(--color-text-primary, #f0f0f0);
+  color: var(--text-main);
+  line-height: 1.2;
 }
 
-.sim-history-card-name {
+.sim-card-name {
+  display: block;
   font-size: 0.78rem;
-  color: var(--color-text-muted, #8a8f98);
-  max-width: 200px;
+  color: var(--muted);
+  margin-top: 1px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.sim-history-card-date {
+.sim-card-date {
   font-size: 0.78rem;
-  color: var(--color-text-muted, #8a8f98);
+  color: var(--muted);
   white-space: nowrap;
 }
 
-/* Metrics row */
-.sim-history-card-metrics {
+/* Param chips */
+.sim-card-chips {
   display: flex;
-  gap: 1.25rem;
+  gap: 8px;
   flex-wrap: wrap;
+  padding: 0 22px 14px;
 }
 
-.sim-history-metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+.sim-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+  border: 1px solid transparent;
 }
 
-.sim-history-metric-label {
+.sim-chip--accent {
+  background: var(--accent-soft);
+}
+
+.sim-chip-label {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted, #8a8f98);
-}
-
-.sim-history-metric-value {
-  font-size: 0.95rem;
+  color: var(--muted);
   font-weight: 600;
-  color: var(--color-text-primary, #f0f0f0);
 }
 
-/* Result block */
-.sim-history-card-result {
+.sim-chip-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Result band */
+.sim-card-result {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
-  padding: 0.75rem 1rem;
-  background: var(--color-surface-raised, #21253a);
-  border-radius: 7px;
+  margin: 0 16px 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--soft-bg);
+  border: 1px solid var(--panel-border);
 }
 
-.sim-history-result-arrow {
-  font-size: 1.1rem;
-  color: var(--color-text-muted, #8a8f98);
-  flex-shrink: 0;
-}
-
-.sim-history-result-values {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.sim-history-result-baseline {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-text-primary, #f0f0f0);
-}
-
-.sim-history-result-growth {
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-.sim-history-result-range {
+.sim-result-main {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.82rem;
-  color: var(--color-text-secondary, #b0b5c0);
+  gap: 10px;
 }
 
-.sim-history-result-range-label {
-  font-size: 0.72rem;
-  color: var(--color-text-muted, #8a8f98);
-  margin-right: 0.15rem;
+.sim-result-arrow {
+  font-size: 1rem;
+  color: var(--muted);
 }
 
-.sim-history-result-pessimistic {
-  color: var(--color-danger-muted, #cc7070);
+.sim-result-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
 }
 
-.sim-history-result-sep {
-  color: var(--color-text-muted, #8a8f98);
+.sim-result-growth {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
-.sim-history-result-optimistic {
-  color: var(--color-success-muted, #70cc90);
+.sim-result-growth--up {
+  color: var(--success);
+  background: var(--success-soft);
 }
 
-.sim-history-result-prob {
+.sim-result-growth--down {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.sim-result-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  margin-left: auto;
+  gap: 1px;
 }
 
-.sim-history-result-prob-label {
+.sim-result-range {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.sim-result-range-label {
   font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted, #8a8f98);
+  color: var(--muted);
 }
 
-.sim-history-result-prob-value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text-primary, #f0f0f0);
-}
-
-/* Notes section */
-.sim-history-card-note {
-  border-top: 1px solid var(--color-border, #2e3240);
-  padding-top: 0.75rem;
-}
-
-.sim-history-note-display {
+.sim-result-prob {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: auto;
+  text-align: right;
 }
 
-.sim-history-note-text {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-secondary, #b0b5c0);
+.sim-result-prob-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.sim-result-prob-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* Note section */
+.sim-card-note {
+  padding: 0 22px 14px;
+}
+
+.sim-note-trigger {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px dashed transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sim-note-trigger:hover {
+  border-color: var(--panel-border);
+  background: var(--soft-bg);
+}
+
+.sim-note-value {
+  font-size: 0.85rem;
+  color: var(--text-main);
   line-height: 1.5;
-  flex: 1;
 }
 
-.sim-history-note-placeholder {
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #8a8f98);
+.sim-note-placeholder {
+  font-size: 0.82rem;
+  color: var(--muted);
   font-style: italic;
 }
 
-.sim-history-note-edit-btn {
-  background: none;
-  border: none;
-  color: var(--color-accent, #5b8af0);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-  white-space: nowrap;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.sim-history-note-editor {
+.sim-note-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.sim-history-note-textarea {
+.sim-note-textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 0.65rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border, #2e3240);
-  background: var(--color-surface-raised, #21253a);
-  color: var(--color-text-primary, #f0f0f0);
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--bg-elevated);
+  color: var(--text-main);
   font-size: 0.875rem;
+  font-family: var(--sans);
   resize: vertical;
   line-height: 1.5;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.sim-history-note-actions {
+.sim-note-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.sim-note-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.sim-history-note-save {
-  padding: 0.35rem 0.85rem;
-  border-radius: 5px;
+.sim-note-save-btn {
+  padding: 0.3rem 0.85rem;
+  border-radius: 7px;
   border: none;
-  background: var(--color-accent, #5b8af0);
+  background: var(--accent);
   color: #fff;
   font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
-.sim-history-note-save:disabled {
+.sim-note-save-btn:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.sim-note-save-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.sim-history-note-cancel {
-  padding: 0.35rem 0.85rem;
-  border-radius: 5px;
-  border: 1px solid var(--color-border, #2e3240);
+.sim-note-cancel-btn {
+  padding: 0.3rem 0.85rem;
+  border-radius: 7px;
+  border: 1px solid var(--panel-border);
   background: transparent;
-  color: var(--color-text-secondary, #b0b5c0);
+  color: var(--muted);
   font-size: 0.8rem;
   cursor: pointer;
 }
 
-.sim-history-note-error {
+.sim-note-error {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-danger, #e05c5c);
+  font-size: 0.78rem;
+  color: var(--danger);
 }
 
-/* Card footer — re-run + delete */
-.sim-history-card-footer {
+/* Footer */
+.sim-card-footer {
   display: flex;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 8px;
   justify-content: flex-end;
-  border-top: 1px solid var(--color-border, #2e3240);
-  padding-top: 0.75rem;
+  padding: 12px 22px;
+  border-top: 1px solid var(--panel-border);
+  background: var(--soft-bg);
 }
 
-.sim-history-btn-rerun {
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-accent, #5b8af0);
+.sim-btn-rerun {
+  padding: 0.42rem 1.1rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--accent);
   background: transparent;
-  color: var(--color-accent, #5b8af0);
+  color: var(--accent);
   font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
-.sim-history-btn-rerun:hover {
-  background: var(--color-accent, #5b8af0);
+.sim-btn-rerun:hover {
+  background: var(--accent);
   color: #fff;
 }
 
-.sim-history-btn-delete {
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border, #2e3240);
+.sim-btn-delete {
+  padding: 0.42rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
   background: transparent;
-  color: var(--color-text-muted, #8a8f98);
+  color: var(--muted);
   font-size: 0.82rem;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
 
-.sim-history-btn-delete:hover:not(:disabled) {
-  border-color: var(--color-danger, #e05c5c);
-  color: var(--color-danger, #e05c5c);
+.sim-btn-delete:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
-.sim-history-btn-delete:disabled {
-  opacity: 0.5;
+.sim-btn-delete:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* ── States ────────────────────────────────────────────────────────────────── */
+/* ── State boxes (loading / empty / error) ───────────────────────────────────*/
 
-.sim-history-loading,
-.sim-history-no-results {
-  color: var(--color-text-muted, #8a8f98);
-  padding: 2rem 0;
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.sim-history-empty {
-  text-align: center;
-  padding: 3.5rem 0;
-}
-
-.sim-history-empty-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, #b0b5c0);
-  margin: 0 0 0.4rem;
-}
-
-.sim-history-empty-sub {
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #8a8f98);
-  margin: 0;
-}
-
-.sim-history-error-block {
+.sim-history-state-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 2.5rem 0;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 3.5rem 2rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: var(--panel-bg);
+  box-shadow: var(--panel-shadow);
+  text-align: center;
 }
 
-.sim-history-error {
-  color: var(--color-danger, #e05c5c);
-  font-size: 0.875rem;
+.sim-history-state-box--empty {
+  padding: 4rem 2rem;
+}
+
+.sim-history-empty-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.sim-history-empty-heading {
   margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sim-history-empty-sub {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+  max-width: 360px;
+}
+
+.sim-history-state-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.sim-history-state-text--error {
+  color: var(--danger);
 }
 
 .sim-history-retry-btn {
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border, #2e3240);
+  padding: 0.38rem 1rem;
+  border-radius: 7px;
+  border: 1px solid var(--panel-border);
   background: transparent;
-  color: var(--color-text-secondary, #b0b5c0);
+  color: var(--muted);
   font-size: 0.82rem;
   cursor: pointer;
 }
 
-/* ── Pagination ────────────────────────────────────────────────────────────── */
+.sim-history-inline-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--danger);
+}
+
+/* ── Pagination ───────────────────────────────────────────────────────────────*/
 
 .sim-history-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
-  margin-top: 1.75rem;
+  gap: 1rem;
+  padding-top: 4px;
 }
 
-.sim-history-page-btn {
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid var(--color-border, #2e3240);
-  background: transparent;
-  color: var(--color-text-secondary, #b0b5c0);
+.sim-page-btn {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--muted);
   font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(13, 27, 45, 0.04);
   transition: border-color 0.15s, color 0.15s;
 }
 
-.sim-history-page-btn:hover:not(:disabled) {
-  border-color: var(--color-accent, #5b8af0);
-  color: var(--color-accent, #5b8af0);
+.sim-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
-.sim-history-page-btn:disabled {
-  opacity: 0.4;
+.sim-page-btn:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-.sim-history-page-indicator {
+.sim-page-label {
   font-size: 0.82rem;
-  color: var(--color-text-muted, #8a8f98);
-}
-
-/* ── Positive / negative helpers ───────────────────────────────────────────── */
-
-.positive-text {
-  color: var(--color-success, #4caf7d);
-}
-
-.negative-text {
-  color: var(--color-danger, #e05c5c);
+  color: var(--muted);
+  min-width: 56px;
+  text-align: center;
 }

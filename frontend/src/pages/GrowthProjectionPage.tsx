@@ -20,6 +20,7 @@ import {
   type InstrumentDetailResponse,
 } from '../lib/api'
 import { readStoredMarketPreferences } from '../lib/marketPreferences'
+import '../styles/components/ChartTooltip.css'
 import '../styles/pages/ForecastPage.css'
 import '../styles/pages/GrowthProjectionPage.css'
 

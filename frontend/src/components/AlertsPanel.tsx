@@ -200,9 +200,10 @@ export function AlertsPanel({
   }
 
   const hasSelection = selectedIds.size > 0
+  const showBulkSelector = Boolean(onBulkAction && alerts && alerts.totalCount > 0)
 
   return (
-    <article className="panel panel-wide">
+    <article className="panel panel-wide alerts-panel">
       <div className="panel-header">
         <div className="panel-header-copy">
           <p className="section-label">Alerts and activity</p>
@@ -214,34 +215,44 @@ export function AlertsPanel({
       </div>
 
       <div className="alerts-summary-grid">
-        <div className="metric-card">
+        <div className="metric-card alerts-summary-card">
           <span className="metric-label">Active rules</span>
           <strong className="metric-value">{alerts?.activeCount ?? '--'}</strong>
-          <p>Rules currently waiting for a live threshold to hit.</p>
+          <p>Watching live thresholds.</p>
         </div>
-        <div className="metric-card">
+        <div className="metric-card alerts-summary-card">
           <span className="metric-label">Paused</span>
           <strong className="metric-value">{alerts?.pausedCount ?? '--'}</strong>
-          <p>Alerts temporarily silenced.</p>
+          <p>Temporarily silenced.</p>
         </div>
-        <div className="metric-card">
+        <div className="metric-card alerts-summary-card">
           <span className="metric-label">Triggered events</span>
           <strong className="metric-value">{alerts?.triggeredCount ?? '--'}</strong>
-          <p>Alerts that have fired and are ready to reset or review.</p>
+          <p>Ready to reset or review.</p>
         </div>
       </div>
 
       <div className="alerts-notification-banner">
-        <div className="panel-header-copy">
+        <div className="alerts-notification-copy">
           <p className="section-label">Notifications</p>
-          <h3 className="subsection-title">Realtime alert delivery</h3>
+          <div className="alerts-notification-main">
+            <h3 className="subsection-title">Realtime alert delivery</h3>
+            {notificationPermission === 'default' ? (
+              <p className="panel-note">
+                Enable browser notifications to surface alerts the moment they trigger.
+              </p>
+            ) : notificationPermission === 'granted' ? (
+              <p className="panel-note">Browser notifications are live for new alert events.</p>
+            ) : notificationPermission === 'denied' ? (
+              <p className="panel-note">Browser notifications are blocked in this browser.</p>
+            ) : (
+              <p className="panel-note">Browser notifications are unavailable on this device.</p>
+            )}
+          </div>
         </div>
 
         {notificationPermission === 'default' ? (
           <div className="alerts-notification-actions">
-            <p className="panel-note">
-              Enable browser notifications to surface alerts the moment they trigger.
-            </p>
             <button className="primary-action alerts-inline-action" onClick={() => void onEnableNotifications()} type="button">
               Enable notifications
             </button>
@@ -260,16 +271,16 @@ export function AlertsPanel({
 
       {/* Bulk action bar */}
       {hasSelection && onBulkAction ? (
-        <div className="alerts-bulk-bar">
+        <div className="alerts-bulk-bar alerts-bulk-bar--selection">
           <span className="alerts-bulk-count">{selectedIds.size} selected</span>
           <button className="ghost-action alert-inline-button" disabled={isBulkPending} onClick={() => void handleBulk('pause')} type="button">Pause</button>
           <button className="ghost-action alert-inline-button" disabled={isBulkPending} onClick={() => void handleBulk('resume')} type="button">Resume</button>
           <button className="ghost-action alert-inline-button" disabled={isBulkPending} onClick={() => void handleBulk('reset')} type="button">Reset</button>
           <button className="ghost-action alert-inline-button" disabled={isBulkPending} onClick={() => void handleBulk('delete')} type="button">Delete</button>
-          <button className="ghost-action alert-inline-button" onClick={clearSelection} type="button">Clear</button>
+          <button className="ghost-action alert-inline-button" onClick={clearSelection} type="button">Unselect</button>
         </div>
-      ) : onBulkAction && alerts && alerts.totalCount > 0 ? (
-        <div className="alerts-bulk-bar">
+      ) : showBulkSelector ? (
+        <div className="alerts-bulk-bar alerts-bulk-bar--idle">
           <button className="ghost-action alert-inline-button" onClick={selectAll} type="button">Select all</button>
         </div>
       ) : null}
@@ -279,7 +290,7 @@ export function AlertsPanel({
       ) : (
         <div className="alerts-columns">
           <div className="alerts-column">
-            <div className="panel-header-copy">
+            <div className="panel-header-copy alerts-group-header">
               <p className="section-label">Active</p>
               <h3 className="subsection-title">Armed rules</h3>
             </div>
@@ -365,47 +376,10 @@ export function AlertsPanel({
               <p className="empty-state">No active alerts yet.</p>
             )}
 
-            {pausedAlerts.length > 0 ? (
-              <>
-                <div className="panel-header-copy alerts-paused-header">
-                  <p className="section-label">Paused</p>
-                  <h3 className="subsection-title">Silenced rules</h3>
-                </div>
-                {pausedAlerts.map((alert) => {
-                  const isDeleting = pendingActionId === alert.id && pendingAction === 'delete'
-                  const isResuming = pendingActionId === alert.id && pendingAction === 'resume'
-
-                  return (
-                    <article
-                      className={`alert-row alert-row--uniform alert-row--paused ${onBulkAction ? 'alert-row--selectable' : ''}`.trim()}
-                      key={alert.id}
-                    >
-                      {onBulkAction ? (
-                        <label className="alert-row-checkbox">
-                          <input checked={selectedIds.has(alert.id)} onChange={() => toggleSelection(alert.id)} type="checkbox" />
-                        </label>
-                      ) : null}
-                      <div className="alert-row-head">
-                        <div className="alert-row-meta">
-                          <strong>{alert.symbol} · {formatCondition(alert.condition)}</strong>
-                          <p>{formatAlertTarget(alert)}</p>
-                          <p className="alert-row-time">Alert paused — not being evaluated.</p>
-                        </div>
-                        <span className="warning-pill">Paused</span>
-                      </div>
-                      <div className="alert-row-actions">
-                        <button className="primary-action alert-inline-button" disabled={isResuming || isDeleting} onClick={() => void onResumeAlert(alert.id)} type="button">{isResuming ? 'Resuming...' : 'Resume'}</button>
-                        <button className="ghost-action alert-inline-button" disabled={isDeleting || isResuming} onClick={() => void onDeleteAlert(alert.id)} type="button">{isDeleting ? 'Deleting...' : 'Delete'}</button>
-                      </div>
-                    </article>
-                  )
-                })}
-              </>
-            ) : null}
           </div>
 
           <div className="alerts-column">
-            <div className="panel-header-copy">
+            <div className="panel-header-copy alerts-group-header">
               <p className="section-label">Triggered</p>
               <h3 className="subsection-title">Recent signals</h3>
             </div>
@@ -470,6 +444,47 @@ export function AlertsPanel({
               })
             ) : (
               <p className="empty-state">Triggered alerts will appear here once they fire.</p>
+            )}
+          </div>
+
+          <div className="alerts-column">
+            <div className="panel-header-copy alerts-group-header alerts-paused-header">
+              <p className="section-label">Paused</p>
+              <h3 className="subsection-title">Silenced rules</h3>
+            </div>
+
+            {pausedAlerts.length > 0 ? (
+              pausedAlerts.map((alert) => {
+                const isDeleting = pendingActionId === alert.id && pendingAction === 'delete'
+                const isResuming = pendingActionId === alert.id && pendingAction === 'resume'
+
+                return (
+                  <article
+                    className={`alert-row alert-row--uniform alert-row--paused ${onBulkAction ? 'alert-row--selectable' : ''}`.trim()}
+                    key={alert.id}
+                  >
+                    {onBulkAction ? (
+                      <label className="alert-row-checkbox">
+                        <input checked={selectedIds.has(alert.id)} onChange={() => toggleSelection(alert.id)} type="checkbox" />
+                      </label>
+                    ) : null}
+                    <div className="alert-row-head">
+                      <div className="alert-row-meta">
+                        <strong>{alert.symbol} · {formatCondition(alert.condition)}</strong>
+                        <p>{formatAlertTarget(alert)}</p>
+                        <p className="alert-row-time">Alert paused — not being evaluated.</p>
+                      </div>
+                      <span className="warning-pill">Paused</span>
+                    </div>
+                    <div className="alert-row-actions">
+                      <button className="primary-action alert-inline-button" disabled={isResuming || isDeleting} onClick={() => void onResumeAlert(alert.id)} type="button">{isResuming ? 'Resuming...' : 'Resume'}</button>
+                      <button className="ghost-action alert-inline-button" disabled={isDeleting || isResuming} onClick={() => void onDeleteAlert(alert.id)} type="button">{isDeleting ? 'Deleting...' : 'Delete'}</button>
+                    </div>
+                  </article>
+                )
+              })
+            ) : (
+              <p className="empty-state">Paused alerts will stay here until you resume them.</p>
             )}
           </div>
         </div>

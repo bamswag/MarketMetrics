@@ -62,20 +62,15 @@ export function DashboardPage({
   token,
   watchlist,
 }: DashboardPageProps) {
-  const activeAlerts = alerts?.activeCount ?? 0
-  const triggeredAlerts = alerts?.triggeredCount ?? 0
   const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
 
   return (
     <div className="dashboard-shell">
       <DashboardHero
-        activeAlerts={activeAlerts}
         displayName={currentUser?.displayName}
         onRetakeRiskQuiz={onRetakeRiskQuiz}
         onStartRiskQuiz={onStartRiskQuiz}
         riskProfile={riskProfile}
-        trackedSymbols={watchlist}
-        triggeredAlerts={triggeredAlerts}
       />
 
       <section className="dashboard-hero-followup page-section">
@@ -91,11 +86,22 @@ export function DashboardPage({
 
       <section className="dashboard-main-stack page-section">
         <DailyMoversSection
+          betweenPanels={(
+            <>
+              <InsightCard id="live-market-data" />
+              <InsightCard id="forecast-vs-projection" />
+            </>
+          )}
           error={dashboardError && !movers && !isLoadingDashboard ? dashboardError : ''}
           isLoading={isLoadingDashboard}
           movers={movers}
           variant="dashboard"
         />
+
+        <div className="dashboard-insight-row">
+          <InsightCard id="mae" />
+          <InsightCard id="monte-carlo" />
+        </div>
 
         <AlertsPanel
           alerts={alerts}
@@ -114,11 +120,7 @@ export function DashboardPage({
           token={token}
         />
 
-        <div className="dashboard-insight-library">
-          <InsightCard id="live-market-data" />
-          <InsightCard id="mae" />
-          <InsightCard id="forecast-vs-projection" />
-          <InsightCard id="monte-carlo" />
+        <div className="dashboard-bottom-insight">
           <InsightCard id="not-financial-advice" />
         </div>
       </section>

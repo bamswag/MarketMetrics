@@ -17,6 +17,7 @@ import {
   type ChartPointWithMovingAverages,
 } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate, formatShortTime } from '../lib/formatters'
+import '../styles/components/ChartTooltip.css'
 
 type ChartType = 'price' | 'ma-overlay'
 

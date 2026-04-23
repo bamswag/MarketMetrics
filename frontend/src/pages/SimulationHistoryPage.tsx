@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { MoverLogo } from '../components/MoverLogo'
 import {
@@ -35,8 +35,22 @@ function formatCompact(value: number): string {
 }
 
 function formatRunDate(createdAt: string): string {
-  const d = new Date(createdAt)
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(createdAt).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function deduplicateBySymbol(items: SimulationHistoryItem[]): SimulationHistoryItem[] {
+  const map = new Map<string, SimulationHistoryItem>()
+  for (const item of items) {
+    const existing = map.get(item.assetSymbol)
+    if (!existing || new Date(item.createdAt) > new Date(existing.createdAt)) {
+      map.set(item.assetSymbol, item)
+    }
+  }
+  return Array.from(map.values())
 }
 
 function sortItems(items: SimulationHistoryItem[], sort: SortKey): SimulationHistoryItem[] {
@@ -53,7 +67,7 @@ function sortItems(items: SimulationHistoryItem[], sort: SortKey): SimulationHis
   }
 }
 
-// ── Note editor sub-component ─────────────────────────────────────────────────
+// ── Note editor ───────────────────────────────────────────────────────────────
 
 type NoteEditorProps = {
   simulationId: string
@@ -101,28 +115,28 @@ function NoteEditor({ simulationId, initialNote, token, onSaved, onUnauthorized 
 
   if (isEditing) {
     return (
-      <div className="sim-history-note-editor">
+      <div className="sim-note-editor">
         <textarea
-          className="sim-history-note-textarea"
+          className="sim-note-textarea"
           maxLength={500}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Add a note about this simulation…"
           ref={textareaRef}
-          rows={3}
+          rows={2}
           value={value}
         />
-        {error ? <p className="sim-history-note-error">{error}</p> : null}
-        <div className="sim-history-note-actions">
+        {error ? <p className="sim-note-error">{error}</p> : null}
+        <div className="sim-note-actions">
           <button
-            className="sim-history-note-save"
+            className="sim-note-save-btn"
             disabled={isSaving}
             onClick={handleSave}
             type="button"
           >
-            {isSaving ? 'Saving…' : 'Save note'}
+            {isSaving ? 'Saving…' : 'Save'}
           </button>
           <button
-            className="sim-history-note-cancel"
+            className="sim-note-cancel-btn"
             disabled={isSaving}
             onClick={handleCancel}
             type="button"
@@ -135,16 +149,11 @@ function NoteEditor({ simulationId, initialNote, token, onSaved, onUnauthorized 
   }
 
   return (
-    <div className="sim-history-note-display">
-      {initialNote ? (
-        <p className="sim-history-note-text">{initialNote}</p>
-      ) : (
-        <span className="sim-history-note-placeholder">No note</span>
-      )}
-      <button className="sim-history-note-edit-btn" onClick={handleStartEdit} type="button">
-        {initialNote ? 'Edit' : 'Add note'}
-      </button>
-    </div>
+    <button className="sim-note-trigger" onClick={handleStartEdit} type="button">
+      {initialNote
+        ? <span className="sim-note-value">{initialNote}</span>
+        : <span className="sim-note-placeholder">Add a note…</span>}
+    </button>
   )
 }
 
@@ -172,66 +181,70 @@ function HistoryCard({
   const isGain = item.baselineGrowthPct >= 0
 
   return (
-    <div className="sim-history-card">
-      <div className="sim-history-card-header">
-        <div className="sim-history-card-identity">
+    <article className="sim-card">
+      {/* Identity row */}
+      <div className="sim-card-top">
+        <div className="sim-card-identity">
           <MoverLogo name={item.assetName ?? item.assetSymbol} symbol={item.assetSymbol} />
-          <div className="sim-history-card-symbol-block">
-            <span className="sim-history-card-symbol">{item.assetSymbol}</span>
+          <div>
+            <span className="sim-card-symbol">{item.assetSymbol}</span>
             {item.assetName ? (
-              <span className="sim-history-card-name">{item.assetName}</span>
+              <span className="sim-card-name">{item.assetName}</span>
             ) : null}
           </div>
         </div>
-        <span className="sim-history-card-date">{formatRunDate(item.createdAt)}</span>
+        <span className="sim-card-date">{formatRunDate(item.createdAt)}</span>
       </div>
 
-      <div className="sim-history-card-metrics">
-        <div className="sim-history-metric">
-          <span className="sim-history-metric-label">Horizon</span>
-          <span className="sim-history-metric-value">{item.projectionYears}yr</span>
-        </div>
-        <div className="sim-history-metric">
-          <span className="sim-history-metric-label">Initial</span>
-          <span className="sim-history-metric-value">{formatCompact(item.initialAmount)}</span>
-        </div>
-        {item.monthlyContribution > 0 ? (
-          <div className="sim-history-metric">
-            <span className="sim-history-metric-label">Monthly</span>
-            <span className="sim-history-metric-value">{formatCompact(item.monthlyContribution)}</span>
-          </div>
-        ) : null}
-        {item.inflationRate > 0 ? (
-          <div className="sim-history-metric">
-            <span className="sim-history-metric-label">Inflation</span>
-            <span className="sim-history-metric-value">{(item.inflationRate * 100).toFixed(1)}%</span>
-          </div>
-        ) : null}
+      {/* Params chips */}
+      <div className="sim-card-chips">
+        <span className="sim-chip">
+          <span className="sim-chip-label">Horizon</span>
+          <span className="sim-chip-value">{item.projectionYears}yr</span>
+        </span>
+        <span className="sim-chip">
+          <span className="sim-chip-label">Start</span>
+          <span className="sim-chip-value">{formatCompact(item.initialAmount)}</span>
+        </span>
+        {item.monthlyContribution > 0 && (
+          <span className="sim-chip">
+            <span className="sim-chip-label">Monthly</span>
+            <span className="sim-chip-value">{formatCompact(item.monthlyContribution)}</span>
+          </span>
+        )}
+        {item.inflationRate > 0 && (
+          <span className="sim-chip sim-chip--accent">
+            <span className="sim-chip-label">Inflation</span>
+            <span className="sim-chip-value">{(item.inflationRate * 100).toFixed(1)}%</span>
+          </span>
+        )}
       </div>
 
-      <div className="sim-history-card-result">
-        <div className="sim-history-result-arrow">→</div>
-        <div className="sim-history-result-values">
-          <span className="sim-history-result-baseline">{formatCompact(item.baselineEndValue)}</span>
-          <span className={`sim-history-result-growth ${isGain ? 'positive-text' : 'negative-text'}`}>
-            {formatPct(item.baselineGrowthPct)} baseline
+      {/* Result band */}
+      <div className="sim-card-result">
+        <div className="sim-result-main">
+          <span className="sim-result-arrow">→</span>
+          <span className="sim-result-value">{formatCompact(item.baselineEndValue)}</span>
+          <span className={`sim-result-growth ${isGain ? 'sim-result-growth--up' : 'sim-result-growth--down'}`}>
+            {formatPct(item.baselineGrowthPct)}
           </span>
         </div>
-        <div className="sim-history-result-range">
-          <span className="sim-history-result-range-label">Range</span>
-          <span className="sim-history-result-pessimistic">{formatCompact(item.pessimisticEndValue)}</span>
-          <span className="sim-history-result-sep">–</span>
-          <span className="sim-history-result-optimistic">{formatCompact(item.optimisticEndValue)}</span>
+        <div className="sim-result-meta">
+          <span className="sim-result-range">
+            {formatCompact(item.pessimisticEndValue)} – {formatCompact(item.optimisticEndValue)}
+          </span>
+          <span className="sim-result-range-label">scenario range</span>
         </div>
-        <div className="sim-history-result-prob">
-          <span className="sim-history-result-prob-label">Probability of profit</span>
-          <span className="sim-history-result-prob-value">
+        <div className="sim-result-prob">
+          <span className="sim-result-prob-value">
             {(item.probabilityOfProfit * 100).toFixed(0)}%
           </span>
+          <span className="sim-result-prob-label">profit probability</span>
         </div>
       </div>
 
-      <div className="sim-history-card-note">
+      {/* Note */}
+      <div className="sim-card-note">
         <NoteEditor
           initialNote={item.notes}
           onSaved={onNoteSaved}
@@ -241,16 +254,17 @@ function HistoryCard({
         />
       </div>
 
-      <div className="sim-history-card-footer">
+      {/* Footer actions */}
+      <div className="sim-card-footer">
         <button
-          className="sim-history-btn-rerun"
+          className="sim-btn-rerun"
           onClick={() => onRerun(item)}
           type="button"
         >
-          Re-run
+          Re-run simulation
         </button>
         <button
-          className="sim-history-btn-delete"
+          className="sim-btn-delete"
           disabled={isDeleting}
           onClick={() => onDelete(item.simulationId)}
           type="button"
@@ -258,11 +272,11 @@ function HistoryCard({
           {isDeleting ? 'Removing…' : 'Delete'}
         </button>
       </div>
-    </div>
+    </article>
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHistoryPageProps) {
   const navigate = useNavigate()
@@ -306,7 +320,6 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
     return () => abortRef.current?.abort()
   }, [loadHistory])
 
-  // Reset to page 0 whenever filter or sort changes
   useEffect(() => {
     setPage(0)
   }, [symbolFilter, sortKey])
@@ -319,7 +332,6 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         onUnauthorized('Your session expired. Log in again.')
-        return
       }
     } finally {
       setDeletingId(null)
@@ -366,10 +378,14 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
     )
   }
 
-  const filtered = history.filter((item) =>
-    symbolFilter.trim() === '' ||
-    item.assetSymbol.toUpperCase().includes(symbolFilter.toUpperCase()) ||
-    (item.assetName ?? '').toLowerCase().includes(symbolFilter.toLowerCase()),
+  // Show only the most recent run per symbol
+  const deduplicated = deduplicateBySymbol(history)
+
+  const filtered = deduplicated.filter(
+    (item) =>
+      symbolFilter.trim() === '' ||
+      item.assetSymbol.toUpperCase().includes(symbolFilter.toUpperCase()) ||
+      (item.assetName ?? '').toLowerCase().includes(symbolFilter.toLowerCase()),
   )
   const sorted = sortItems(filtered, sortKey)
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
@@ -377,55 +393,67 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
   const pageItems = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
 
   return (
-    <main className="sim-history-page">
-      <div className="sim-history-header">
-        <div className="sim-history-title-block">
-          <h1 className="sim-history-title">Simulation History</h1>
-          <p className="sim-history-subtitle">Past growth projections you have run</p>
+    <section className="sim-history-page page-section">
+
+      {/* Hero header */}
+      <div className="sim-history-hero">
+        <div className="sim-history-hero-left">
+          <Link className="forecast-back-link" to="/dashboard">← Dashboard</Link>
+          <div className="sim-history-hero-text">
+            <h1 className="sim-history-title">Simulation History</h1>
+            <p className="sim-history-subtitle">
+              Most recent growth projection per symbol
+              {deduplicated.length > 0 ? ` · ${deduplicated.length} saved` : ''}
+            </p>
+          </div>
         </div>
-        {history.length > 0 ? (
+        {history.length > 0 && (
           <button
             className="sim-history-clear-btn"
             disabled={isClearing}
             onClick={handleClearAll}
             type="button"
           >
-            {isClearing ? 'Clearing…' : 'Clear all history'}
+            {isClearing ? 'Clearing…' : 'Clear all'}
           </button>
-        ) : null}
+        )}
       </div>
 
-      {clearError ? <p className="sim-history-error">{clearError}</p> : null}
+      {clearError ? <p className="sim-history-inline-error">{clearError}</p> : null}
 
       {isLoading ? (
-        <p className="sim-history-loading">Loading history…</p>
+        <div className="sim-history-state-box">
+          <p className="sim-history-state-text">Loading history…</p>
+        </div>
       ) : error ? (
-        <div className="sim-history-error-block">
-          <p className="sim-history-error">{error}</p>
+        <div className="sim-history-state-box">
+          <p className="sim-history-state-text sim-history-state-text--error">{error}</p>
           <button className="sim-history-retry-btn" onClick={loadHistory} type="button">
-            Retry
+            Try again
           </button>
         </div>
       ) : history.length === 0 ? (
-        <div className="sim-history-empty">
-          <p className="sim-history-empty-text">No simulations saved yet.</p>
+        <div className="sim-history-state-box sim-history-state-box--empty">
+          <div className="sim-history-empty-icon">📊</div>
+          <p className="sim-history-empty-heading">No simulations yet</p>
           <p className="sim-history-empty-sub">
-            Run a projection on any instrument page and it will appear here.
+            Run a growth projection on any instrument and it will appear here automatically.
           </p>
         </div>
       ) : (
         <>
+          {/* Controls */}
           <div className="sim-history-controls">
             <input
-              className="sim-history-filter-input"
-              onChange={(e) => setSymbolFilter(e.target.value)}
-              placeholder="Filter by symbol or name"
+              className="sim-history-filter"
+              onChange={(e) => { setSymbolFilter(e.target.value); setPage(0) }}
+              placeholder="Filter by symbol or company name"
               type="text"
               value={symbolFilter}
             />
             <select
-              className="sim-history-sort-select"
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="sim-history-sort"
+              onChange={(e) => { setSortKey(e.target.value as SortKey); setPage(0) }}
               value={sortKey}
             >
               <option value="date_desc">Newest first</option>
@@ -436,7 +464,9 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
           </div>
 
           {pageItems.length === 0 ? (
-            <p className="sim-history-no-results">No results match your filter.</p>
+            <div className="sim-history-state-box">
+              <p className="sim-history-state-text">No results match your filter.</p>
+            </div>
           ) : (
             <div className="sim-history-list">
               {pageItems.map((item) => (
@@ -454,21 +484,21 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
             </div>
           )}
 
-          {totalPages > 1 ? (
+          {totalPages > 1 && (
             <div className="sim-history-pagination">
               <button
-                className="sim-history-page-btn"
+                className="sim-page-btn"
                 disabled={safePage === 0}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 type="button"
               >
-                ← Previous
+                ← Prev
               </button>
-              <span className="sim-history-page-indicator">
-                Page {safePage + 1} of {totalPages}
+              <span className="sim-page-label">
+                {safePage + 1} / {totalPages}
               </span>
               <button
-                className="sim-history-page-btn"
+                className="sim-page-btn"
                 disabled={safePage >= totalPages - 1}
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 type="button"
@@ -476,9 +506,9 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
                 Next →
               </button>
             </div>
-          ) : null}
+          )}
         </>
       )}
-    </main>
+    </section>
   )
 }

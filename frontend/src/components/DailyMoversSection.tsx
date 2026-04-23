@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useMarketPreferences } from '../app/MarketPreferencesContext'
@@ -6,6 +7,7 @@ import { assetCategoryLabel, isAssetCategoryEnabled } from '../lib/marketPrefere
 import { DailyMoverCard, DEFAULT_MOVER_CATEGORIES } from './DailyMoverCard'
 
 type DailyMoversSectionProps = {
+  betweenPanels?: ReactNode
   error?: string
   isLoading: boolean
   movers: MoversResponse | null
@@ -69,6 +71,7 @@ function sortMoversByCategory(
 }
 
 export function DailyMoversSection({
+  betweenPanels,
   error = '',
   isLoading,
   movers,
@@ -155,6 +158,12 @@ export function DailyMoversSection({
                 tone="positive"
               />
             </section>
+
+            {betweenPanels ? (
+              <div className="daily-movers-between">
+                {betweenPanels}
+              </div>
+            ) : null}
 
             <section className="daily-mover-panel daily-mover-panel--negative">
               <div className="daily-mover-panel-header">

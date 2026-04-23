@@ -15,6 +15,7 @@ import { fetchInstrumentDetail } from '../lib/api'
 import { sampleChartSeries } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
 import { assetCategoryLabel } from '../lib/marketPreferences'
+import '../styles/components/ChartTooltip.css'
 import { MoverLogo } from './MoverLogo'
 
 type TopResultCardProps = {

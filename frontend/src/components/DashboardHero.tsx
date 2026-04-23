@@ -1,12 +1,9 @@
 import { RiskProfileBadge } from './RiskProfileQuiz'
 import { FeaturedMoverCard } from './FeaturedMoverCard'
-import type { RiskProfile, WatchlistItemDetailedOut } from '../lib/api'
+import type { RiskProfile } from '../lib/api'
 
 type DashboardHeroProps = {
   displayName?: string
-  trackedSymbols: WatchlistItemDetailedOut[]
-  activeAlerts: number
-  triggeredAlerts: number
   riskProfile?: RiskProfile | null
   onStartRiskQuiz?: () => void
   onRetakeRiskQuiz?: () => void
@@ -14,9 +11,6 @@ type DashboardHeroProps = {
 
 export function DashboardHero({
   displayName,
-  trackedSymbols,
-  activeAlerts,
-  triggeredAlerts,
   riskProfile,
   onStartRiskQuiz,
   onRetakeRiskQuiz,
@@ -25,32 +19,12 @@ export function DashboardHero({
     <section className="dashboard-hero page-section">
       <article className="dashboard-hero-card">
         <div className="dashboard-hero-copy">
-          <div className="dashboard-greeting-row">
-            <span className="dashboard-greeting-badge">Dashboard</span>
-          </div>
           <h1 className="dashboard-heading">
             {displayName ? `Welcome back, ${displayName}.` : 'Your market overview'}
           </h1>
-          <p className="hero-text">
-            Track your instruments, monitor alerts, and stay on top of the market — all in one place.
+          <p className="dashboard-hero-intro">
+            MarketMetrics brings forecasts, projections, alerts, movers, and live market context into one workspace so you can scan the market faster and make sharper decisions with less friction.
           </p>
-
-          <div className="dashboard-quick-stats">
-            <div className="dashboard-quick-stat">
-              <strong className="dashboard-quick-stat-value">{trackedSymbols.length}</strong>
-              <span className="dashboard-quick-stat-label">Tracked</span>
-            </div>
-            <div className="dashboard-quick-stat-divider" />
-            <div className="dashboard-quick-stat">
-              <strong className="dashboard-quick-stat-value">{activeAlerts}</strong>
-              <span className="dashboard-quick-stat-label">Active alerts</span>
-            </div>
-            <div className="dashboard-quick-stat-divider" />
-            <div className="dashboard-quick-stat">
-              <strong className="dashboard-quick-stat-value">{triggeredAlerts}</strong>
-              <span className="dashboard-quick-stat-label">Triggered</span>
-            </div>
-          </div>
 
           {riskProfile ? (
             <div className="dashboard-risk-strip">

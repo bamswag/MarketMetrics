@@ -16,6 +16,7 @@ type InsightCardContent = {
   ctaLabel: string
   ctaTo: string
   eyebrow: string
+  secondaryBody?: string
   title: string
   tone: 'teal' | 'blue' | 'amber' | 'rose' | 'indigo' | 'slate'
 }
@@ -59,6 +60,8 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     title: 'Why forecasts are not financial advice',
     body:
       'Forecasts and projections are designed to support market research, not to tell you what to buy or sell. They combine historical data, assumptions, and model output into context you can question.',
+    secondaryBody:
+      'They are most useful when you treat them as one input among several, alongside fundamentals, market conditions, and your own time horizon. That keeps the app helpful without pretending any single model can remove uncertainty.',
     caveat:
       'Always treat outputs as educational signals and compare them with your own research, risk tolerance, and goals.',
     ctaLabel: 'Read the terms',
@@ -102,6 +105,7 @@ export function InsightCard({ id }: InsightCardProps) {
         <p className="section-label">{card.eyebrow}</p>
         <h2 className="insight-card-title">{card.title}</h2>
         <p className="insight-card-body">{card.body}</p>
+        {card.secondaryBody ? <p className="insight-card-body">{card.secondaryBody}</p> : null}
         <p className="insight-card-caveat">{card.caveat}</p>
       </div>
       <Link className="insight-card-link" to={card.ctaTo}>
