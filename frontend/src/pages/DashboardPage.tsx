@@ -1,6 +1,7 @@
 import { AlertsPanel } from '../components/AlertsPanel'
 import { DashboardHero } from '../components/DashboardHero'
 import { DailyMoversSection } from '../components/DailyMoversSection'
+import { InsightCard } from '../components/InsightCard'
 import { TrackedSymbolsPreview } from '../components/TrackedSymbolsPreview'
 import type {
   AlertListResponse,
@@ -77,18 +78,25 @@ export function DashboardPage({
         triggeredAlerts={triggeredAlerts}
       />
 
+      <section className="dashboard-hero-followup page-section">
+        <TrackedSymbolsPreview
+          isLoading={isLoadingDashboard}
+          trackedSymbols={watchlist}
+          variant="panel"
+        />
+        <InsightCard id="random-forest" />
+      </section>
+
       {dashboardError ? <p className="error-text">{dashboardError}</p> : null}
 
-      <section className="workspace-grid page-section">
+      <section className="dashboard-main-stack page-section">
         <DailyMoversSection
           error={dashboardError && !movers && !isLoadingDashboard ? dashboardError : ''}
           isLoading={isLoadingDashboard}
           movers={movers}
           variant="dashboard"
         />
-      </section>
 
-      <section className="dashboard-bottom-row page-section">
         <AlertsPanel
           alerts={alerts}
           errorMessage={alertActionError}
@@ -105,11 +113,14 @@ export function DashboardPage({
           pendingActionId={pendingAlertActionId}
           token={token}
         />
-        <TrackedSymbolsPreview
-          isLoading={isLoadingDashboard}
-          trackedSymbols={watchlist}
-          variant="panel"
-        />
+
+        <div className="dashboard-insight-library">
+          <InsightCard id="live-market-data" />
+          <InsightCard id="mae" />
+          <InsightCard id="forecast-vs-projection" />
+          <InsightCard id="monte-carlo" />
+          <InsightCard id="not-financial-advice" />
+        </div>
       </section>
     </div>
   )

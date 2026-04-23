@@ -20,7 +20,7 @@ export function TrackedSymbolsPreview({
   const visibleTrackedSymbols = trackedSymbols.filter((item) =>
     isAssetCategoryEnabled(item.assetCategory, preferences.preferredAssetClasses),
   )
-  const previewSymbols = visibleTrackedSymbols.slice(0, 3)
+  const previewSymbols = visibleTrackedSymbols.slice(0, 4)
   const hasTrackedSymbols = visibleTrackedSymbols.length > 0
   const hiddenTrackedCount = trackedSymbols.length - visibleTrackedSymbols.length
   const isEmpty = !isLoading && previewSymbols.length === 0

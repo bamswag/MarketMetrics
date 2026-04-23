@@ -128,17 +128,74 @@ Some current limitations are:
 
 - the forecasting system is still experimental
 - the project depends heavily on external market data
-- deployment is still being finished
+- deployed environments need careful environment-variable coordination
 - the system is not meant for real financial advice or live trading use
 
 ## What would I improve next?
 
 The next areas I would improve are:
 
-- deployment
 - more frontend polish
 - better reporting around forecasts
 - clearer presentation of model limitations
+- stronger abuse controls for any public forecast or projection endpoints
+
+## Where is MarketMetrics deployed?
+
+The live website is:
+
+> `https://marketmetrics.dev`
+
+The deployed test backend is:
+
+> `https://marketmetrics.onrender.com`
+
+The local frontend/full-stack test origin currently used for CORS testing is:
+
+> `http://127.0.0.1:8000`
+
+The Vite dev server normally runs at:
+
+> `http://127.0.0.1:5173`
+
+## What Render environment values matter most?
+
+The most important production values are:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `FRONTEND_BASE_URL`
+- `ADDITIONAL_FRONTEND_ORIGINS`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI`
+- `BREVO_API_KEY`
+- `EMAIL_FROM_ADDRESS`
+- `ALPACA_API_KEY`
+- `ALPACA_SECRET_KEY`
+- `PREDICTION_MODEL_DIR`
+
+For live links and Google redirects, `FRONTEND_BASE_URL` should be:
+
+> `https://marketmetrics.dev`
+
+It must include `https://`.
+
+## Why does `ADDITIONAL_FRONTEND_ORIGINS` matter?
+
+The backend uses CORS and Google OAuth frontend-origin validation. If a local frontend talks to the deployed backend, that local origin must be allowed.
+
+For example:
+
+> `http://127.0.0.1:8000,http://127.0.0.1:5173,http://localhost:5173`
+
+## Where should the Google OAuth callback point?
+
+For the deployed test backend, Google should call back to the backend:
+
+> `https://marketmetrics.onrender.com/auth/google/callback`
+
+That same URL must be registered in Google Cloud Console as an authorized redirect URI.
 
 ## What is the simplest way to describe the project?
 

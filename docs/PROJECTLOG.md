@@ -125,8 +125,20 @@ At this point, the project has grown into a fairly broad market analysis system 
 - live market data
 - chart-oriented frontend pages
 - forecasting and projection tools
+- Render deployment with PostgreSQL, Brevo email, Alpaca market data, and Google OAuth
 
 It is still not a production trading platform, but it is much more complete than the original idea.
+
+## Deployment State
+
+The current deployment setup uses Render.
+
+- The live website is `https://marketmetrics.dev`.
+- The deployed test backend is `https://marketmetrics.onrender.com`.
+- The local frontend/full-stack test origin is `http://127.0.0.1:8000`.
+- The Vite dev server normally runs at `http://127.0.0.1:5173`.
+
+The backend environment needs `FRONTEND_BASE_URL=https://marketmetrics.dev` so password reset links, email verification links, CORS, and Google OAuth redirects resolve to the live frontend. Local frontend origins such as `http://127.0.0.1:8000` belong in `ADDITIONAL_FRONTEND_ORIGINS` when they need to call the deployed backend.
 
 ## Limitations
 
@@ -135,14 +147,14 @@ Some limitations are still clear:
 - the forecasting model is still experimental
 - the project still depends heavily on one market-data provider
 - the frontend can still be polished further
-- deployment is not fully finished yet
+- public forecast or projection access needs rate limits and careful cost control
 
 ## Next Steps
 
 The next useful steps are:
 
 - keep refining the frontend
-- improve deployment
+- keep tightening deployment checks and monitoring
 - tidy documentation for submission
 - keep tightening the explanation of the analytical parts
 

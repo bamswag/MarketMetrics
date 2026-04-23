@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { DailyMoversSection } from '../components/DailyMoversSection'
 import { FeaturedMoverCard } from '../components/FeaturedMoverCard'
+import { InsightCard } from '../components/InsightCard'
 import type { MoversResponse } from '../lib/api'
 import '../styles/pages/LandingPage.css'
 
@@ -101,12 +102,19 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
         </div>
       </section>
 
-      <DailyMoversSection
-        error={moversError}
-        isLoading={isLoadingMovers}
-        movers={movers}
-        variant="landing"
-      />
+      <section className="landing-insight-mosaic page-section">
+        <InsightCard id="live-market-data" />
+
+        <DailyMoversSection
+          error={moversError}
+          isLoading={isLoadingMovers}
+          movers={movers}
+          variant="landing"
+        />
+
+        <InsightCard id="forecast-vs-projection" />
+        <InsightCard id="not-financial-advice" />
+      </section>
 
       <section className="landing-feature-section page-section">
         <div className="landing-feature-header">

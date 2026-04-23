@@ -28,7 +28,9 @@ The project started as a backend-first build, so a lot of the structure is focus
 - Alembic
 - Pydantic
 - SQLite for local development
+- PostgreSQL on Render
 - Alpaca market data
+- Brevo transactional email
 - pandas, numpy, scikit-learn, joblib
 
 ### Frontend
@@ -102,6 +104,84 @@ npm run dev
 
 The frontend normally runs at:
 [http://127.0.0.1:5173](http://127.0.0.1:5173)
+
+The current local full-stack/browser origin used for backend CORS testing is:
+[http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+## Deployment
+
+MarketMetrics is deployed on Render with separate live and test entry points.
+
+- Live website: [https://marketmetrics.dev](https://marketmetrics.dev)
+- Test backend: [https://marketmetrics.onrender.com](https://marketmetrics.onrender.com)
+- Local frontend/full-stack test origin: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+The backend uses PostgreSQL on Render, Alpaca for market data, Brevo for transactional email, and Google OAuth for social login.
+
+More deployment detail lives in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+### Backend Environment
+
+Important backend environment variables:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `JWT_ALGORITHM`
+- `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `FRONTEND_BASE_URL`
+- `ADDITIONAL_FRONTEND_ORIGINS`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI`
+- `BREVO_API_KEY`
+- `BREVO_TRANSACTIONAL_EMAIL_URL`
+- `BREVO_TIMEOUT_SECONDS`
+- `EMAIL_FROM_NAME`
+- `EMAIL_FROM_ADDRESS`
+- `ALPACA_API_KEY`
+- `ALPACA_SECRET_KEY`
+- `ALPACA_DATA_FEED`
+- `ALPACA_DATA_BASE_URL`
+- `ALPACA_TRADING_BASE_URL`
+- `SYMBOL_CATALOG_PATH`
+- `PREDICTION_MODEL_DIR`
+- `PREDICTION_TRAINING_LOOKBACK_DAYS`
+- `PREDICTION_FETCH_CONCURRENCY`
+- `PREDICTION_TRAINING_UNIVERSE_PATH`
+- `MARKET_DATA_DEFAULT_HISTORY_DAYS`
+
+For the live deployment, `FRONTEND_BASE_URL` must include the scheme:
+
+```text
+FRONTEND_BASE_URL=https://marketmetrics.dev
+```
+
+If the deployed backend is used from a local frontend origin, include that origin in `ADDITIONAL_FRONTEND_ORIGINS`:
+
+```text
+ADDITIONAL_FRONTEND_ORIGINS=http://127.0.0.1:8000,http://127.0.0.1:5173,http://localhost:5173
+```
+
+For the deployed backend, the Google callback should point at the backend callback route:
+
+```text
+GOOGLE_OAUTH_REDIRECT_URI=https://marketmetrics.onrender.com/auth/google/callback
+```
+
+Google Cloud Console must include the same redirect URI.
+
+### Frontend Environment
+
+The frontend API base URL is controlled by `VITE_API_BASE_URL`.
+
+For local frontend testing against the deployed test backend:
+
+```text
+VITE_API_BASE_URL=https://marketmetrics.onrender.com
+VITE_ALLOW_REMOTE_API_IN_DEV=true
+```
+
+Do not put backend secrets, database URLs, Alpaca keys, Brevo keys, Google client secrets, or JWT secrets in frontend env files.
 
 ## Forecasting Model
 

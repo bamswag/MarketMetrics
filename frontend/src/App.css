@@ -1233,6 +1233,28 @@
   grid-template-columns: 1fr;
 }
 
+.tracked-symbols-preview--panel .tracked-symbols-preview-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tracked-symbols-preview--panel .tracked-symbol-card {
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.tracked-symbols-preview--panel .tracked-symbol-card-link {
+  gap: 10px;
+}
+
+.tracked-symbols-preview--panel .tracked-symbol-card-head {
+  gap: 10px;
+}
+
+.tracked-symbols-preview--panel .tracked-symbol-card-price {
+  font-size: 1.28rem;
+}
+
 .tracked-symbols-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1827,6 +1849,10 @@
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tracked-symbols-preview--panel .tracked-symbols-preview-list {
+    grid-template-columns: 1fr;
   }
 
   .user-menu-dropdown {

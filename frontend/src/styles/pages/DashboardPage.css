@@ -143,8 +143,120 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
+.dashboard-hero-followup {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(60px, 0.92fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-hero-followup > * {
+  min-width: 0;
+  height: auto;
+  align-self: start;
+}
+
+.dashboard-hero-followup .tracked-symbols-preview {
+  grid-column: auto;
+  align-self: start;
+  gap: 14px;
+  padding: 20px;
+}
+
+.dashboard-hero-followup .tracked-symbols-preview,
+.dashboard-hero-followup .insight-card {
+  min-height: 0;
+  border-radius: 28px;
+}
+
+.dashboard-hero-followup .panel-title,
+.dashboard-hero-followup .panel-note {
+  margin: 0;
+}
+
+.dashboard-hero-followup .tracked-symbol-card {
+  border-radius: 18px;
+  padding: 12px 14px;
+}
+
+.dashboard-hero-followup .tracked-symbol-card-link {
+  gap: 8px;
+}
+
+.dashboard-hero-followup .tracked-symbol-card-price {
+  font-size: 1.15rem;
+}
+
+.dashboard-hero-followup .insight-card {
+  align-content: start;
+  gap: 16px;
+  padding: 20px;
+}
+
+.dashboard-hero-followup .insight-card-copy {
+  gap: 10px;
+}
+
+.dashboard-hero-followup .insight-card-title {
+  font-size: clamp(1.28rem, 1.8vw, 1.65rem);
+  max-width: 22ch;
+}
+
+.dashboard-hero-followup .insight-card-body,
+.dashboard-hero-followup .insight-card-caveat {
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.dashboard-main-stack {
+  display: grid;
+  gap: 24px;
+}
+
+.dashboard-main-stack .daily-movers-section--dashboard,
+.dashboard-main-stack .panel-wide {
+  grid-column: auto;
+}
+
+.dashboard-insight-library {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-insight-library > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-insight-library .insight-card {
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  padding: 20px;
+}
+
+.dashboard-insight-library .insight-card-copy {
+  gap: 10px;
+}
+
+.dashboard-insight-library .insight-card-title {
+  max-width: 22ch;
+}
+
+.dashboard-insight-library .insight-card-body,
+.dashboard-insight-library .insight-card-caveat {
+  line-height: 1.58;
+}
+
 @media (max-width: 1180px) {
-  .dashboard-hero {
+  .dashboard-hero,
+  .dashboard-hero-followup {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-insight-library {
     grid-template-columns: 1fr;
   }
 }

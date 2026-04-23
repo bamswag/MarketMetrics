@@ -42,8 +42,22 @@ npm run build
 
 - During development, the frontend defaults to `http://127.0.0.1:8000`.
 - In production, the frontend falls back to the current site origin so a full-stack Render deployment can talk to its co-hosted API without an extra env override.
-- `frontend/.env.development` keeps local dev pinned to `http://127.0.0.1:8000`.
+- `frontend/.env.development` currently points local frontend development at the deployed test backend, `https://marketmetrics.onrender.com`.
 - If you intentionally want localhost to talk to a remote backend, set `VITE_API_BASE_URL` and also set `VITE_ALLOW_REMOTE_API_IN_DEV=true`.
+- The live site is `https://marketmetrics.dev`.
+- The local frontend/full-stack test origin used for backend CORS is `http://127.0.0.1:8000`.
+- Never put backend secrets in frontend env files. Vite only exposes `VITE_*` values, and those should be treated as public client configuration.
+
+## Environment
+
+Local development against the deployed test backend:
+
+```text
+VITE_API_BASE_URL=https://marketmetrics.onrender.com
+VITE_ALLOW_REMOTE_API_IN_DEV=true
+```
+
+If a different backend is needed, change `VITE_API_BASE_URL` to that backend origin. When using the deployed backend from a local frontend origin, make sure the backend has the local origin listed in `ADDITIONAL_FRONTEND_ORIGINS`.
 
 ## Main folders
 
