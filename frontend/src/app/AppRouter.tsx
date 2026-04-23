@@ -62,6 +62,7 @@ import type {
 import { formatCurrency } from '../lib/formatters'
 import { AccountPage } from '../pages/AccountPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { SimulationHistoryPage } from '../pages/SimulationHistoryPage'
 import { RiskProfileQuiz } from '../components/RiskProfileQuiz'
 
 const InstrumentPage = lazy(() =>
@@ -1560,6 +1561,22 @@ function AppContent() {
             )
           }
           path="/settings"
+        />
+        <Route
+          element={
+            token ? (
+              <>
+                {authenticatedHeader}
+                <SimulationHistoryPage
+                  onUnauthorized={handleSessionExpired}
+                  token={token}
+                />
+              </>
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
+          path="/simulation-history"
         />
         <Route
           element={

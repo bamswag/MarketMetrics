@@ -1,38 +1,36 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
 from app.orm_models.simulation_history import SimulationHistoryDB
-from app.schemas.simulations import SimulationRequest, SimulationResult
+from app.schemas.growth_projections import LongTermProjectionRequest, LongTermProjectionResponse
 
 
-def save_simulation_history(
+def save_growth_projection_history(
     db: Session,
     user_id: str,
-    request: SimulationRequest,
-    result: SimulationResult,
+    request: LongTermProjectionRequest,
+    result: LongTermProjectionResponse,
 ) -> SimulationHistoryDB:
     record = SimulationHistoryDB(
         simulationId=str(uuid4()),
         userID=user_id,
-        assetSymbol=result.assetSymbol,
+        assetSymbol=result.symbol,
         assetName=result.companyName,
-        strategy=result.selectedStrategy.value,
-        startDate=request.startDate.isoformat(),
-        endDate=request.endDate.isoformat(),
+        projectionYears=request.years,
         initialAmount=request.initialAmount,
-        recurringContribution=request.recurringContribution,
-        contributionFrequency=request.contributionFrequency.value,
-        investedAmount=result.investedAmount,
-        finalValue=result.finalValue,
-        totalReturnPct=result.totalReturnPct,
-        annualizedReturnPct=result.annualizedReturnPct,
-        volatilityPct=result.volatilityPct,
-        maxDrawdownPct=result.maxDrawdownPct,
+        monthlyContribution=request.recurringContribution,
+        inflationRate=request.inflationRate,
+        totalInvested=result.totalInvested,
+        baselineEndValue=result.nominalEndValues.baseline,
+        pessimisticEndValue=result.nominalEndValues.pessimistic,
+        optimisticEndValue=result.nominalEndValues.optimistic,
+        baselineGrowthPct=result.nominalGrowthPct.baseline,
+        probabilityOfProfit=result.monteCarloSummary.probabilityOfProfit,
         notes=None,
         createdAt=datetime.utcnow(),
     )
@@ -49,3 +47,50 @@ def list_simulation_history(db: Session, user_id: str) -> List[SimulationHistory
         .order_by(SimulationHistoryDB.createdAt.desc())
         .all()
     )
+
+
+def delete_simulation_history_item(
+    db: Session, simulation_id: str, user_id: str
+) -> bool:
+    deleted_count = (
+        db.query(SimulationHistoryDB)
+        .filter(
+            SimulationHistoryDB.simulationId == simulation_id,
+            SimulationHistoryDB.userID == user_id,
+        )
+        .delete()
+    )
+    db.commit()
+    return deleted_count > 0
+
+
+def clear_simulation_history(db: Session, user_id: str) -> int:
+    deleted_count = (
+        db.query(SimulationHistoryDB)
+        .filter(SimulationHistoryDB.userID == user_id)
+        .delete()
+    )
+    db.commit()
+    return deleted_count
+
+
+def update_simulation_history_notes(
+    db: Session,
+    simulation_id: str,
+    user_id: str,
+    notes: Optional[str],
+) -> Optional[SimulationHistoryDB]:
+    record = (
+        db.query(SimulationHistoryDB)
+        .filter(
+            SimulationHistoryDB.simulationId == simulation_id,
+            SimulationHistoryDB.userID == user_id,
+        )
+        .first()
+    )
+    if record is None:
+        return None
+    record.notes = notes
+    db.commit()
+    db.refresh(record)
+    return record

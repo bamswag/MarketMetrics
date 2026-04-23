@@ -10,6 +10,7 @@ const AUTH_LINKS = [
   { to: '/movers/gainers', label: 'Gainers' },
   { to: '/movers/losers', label: 'Losers' },
   { to: '/tracked-symbols', label: 'Tracked Symbols' },
+  { to: '/simulation-history', label: 'Simulation History' },
   { to: '/account', label: 'Account' },
   { to: '/settings', label: 'Settings' },
 ]

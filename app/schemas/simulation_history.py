@@ -9,19 +9,24 @@ class SimulationHistoryOut(BaseModel):
     userID: str
     assetSymbol: str
     assetName: Optional[str] = None
-    strategy: str
-    startDate: str
-    endDate: str
+
+    projectionYears: int
     initialAmount: float
-    recurringContribution: float
-    contributionFrequency: Optional[str] = None
-    investedAmount: float
-    finalValue: float
-    totalReturnPct: float
-    annualizedReturnPct: Optional[float] = None
-    volatilityPct: Optional[float] = None
-    maxDrawdownPct: Optional[float] = None
+    monthlyContribution: float
+    inflationRate: float
+
+    totalInvested: float
+    baselineEndValue: float
+    pessimisticEndValue: float
+    optimisticEndValue: float
+    baselineGrowthPct: float
+    probabilityOfProfit: float
+
     notes: Optional[str] = None
     createdAt: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SimulationHistoryNoteUpdate(BaseModel):
+    notes: Optional[str] = None

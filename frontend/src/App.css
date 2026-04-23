@@ -955,6 +955,33 @@
   grid-template-columns: 1fr;
 }
 
+.daily-mover-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.daily-mover-panel-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.daily-mover-panel-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: none;
+}
+
+.daily-mover-panel-copy .daily-mover-card-description {
+  max-width: none;
+}
+
+.daily-mover-panel-header .daily-mover-card-tag {
+  justify-self: end;
+}
+
 .daily-mover-card {
   box-shadow: var(--panel-shadow);
 }
@@ -963,11 +990,27 @@
   align-items: center;
 }
 
+.daily-mover-card-header--detailed {
+  align-items: flex-start;
+}
+
 .daily-mover-card-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.daily-mover-card-description {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.daily-mover-card-tag {
+  white-space: nowrap;
 }
 
 .daily-mover-card-link {
@@ -983,7 +1026,7 @@
 }
 
 .mover-group .panel-header-copy {
-  gap: 2px;
+  gap: 6px;
 }
 
 .movers-guest-cta {
@@ -1808,6 +1851,19 @@
   .daily-mover-card-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .daily-mover-card-tag,
+  .daily-mover-card-link {
+    width: fit-content;
+  }
+
+  .daily-mover-panel-header {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-mover-panel-header .daily-mover-card-tag {
+    justify-self: start;
   }
 
   .daily-movers-section--landing {

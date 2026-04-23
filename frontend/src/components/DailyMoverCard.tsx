@@ -19,10 +19,12 @@ type DailyMoverCardProps = {
   categoryItems?: MoversByCategory
   className?: string
   countTarget?: number
+  description?: string
+  eyebrow?: string
   fallbackItems: Mover[]
   itemLimit?: number
-  subtitle: string
-  title: string
+  tagLabel?: string
+  title?: string
   tone: 'positive' | 'negative'
   visibleCategories: ReadonlyArray<VisibleMoverCategory>
 }
@@ -32,14 +34,18 @@ export function DailyMoverCard({
   categoryItems,
   className = '',
   countTarget,
+  description,
+  eyebrow,
   fallbackItems,
   itemLimit = 3,
-  subtitle,
+  tagLabel,
   title,
   tone,
   visibleCategories,
 }: DailyMoverCardProps) {
   const maxCount = countTarget ?? itemLimit
+  const hasCardHeader = Boolean(eyebrow || title || description || action || tagLabel)
+  const isDetailedHeader = Boolean(eyebrow || description || tagLabel)
   const itemsByCategory: MoversByCategory = {
     stocks: categoryItems?.stocks.slice(0, itemLimit) ?? fallbackItems.slice(0, itemLimit),
     crypto: categoryItems?.crypto.slice(0, itemLimit) ?? [],
@@ -50,18 +56,26 @@ export function DailyMoverCard({
 
   return (
     <article className={`daily-mover-card mover-group mover-group--${tone} ${className}`.trim()}>
-      <div className="panel-header daily-mover-card-header">
-        <div className="panel-header-copy">
-          <p className="section-label">{subtitle}</p>
-          <h3 className="subsection-title">{title}</h3>
-        </div>
-
-        {action ? (
-          <div className="daily-mover-card-actions">
-            {action}
+      {hasCardHeader ? (
+        <div
+          className={`panel-header daily-mover-card-header${
+            isDetailedHeader ? ' daily-mover-card-header--detailed' : ''
+          }`}
+        >
+          <div className="panel-header-copy">
+            {eyebrow ? <p className="section-label">{eyebrow}</p> : null}
+            {title ? <h3 className="subsection-title">{title}</h3> : null}
+            {description ? <p className="daily-mover-card-description">{description}</p> : null}
           </div>
-        ) : null}
-      </div>
+
+          {action || tagLabel ? (
+            <div className="daily-mover-card-actions">
+              {tagLabel ? <span className="panel-tag daily-mover-card-tag">{tagLabel}</span> : null}
+              {action}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div
         className="mover-category-columns"

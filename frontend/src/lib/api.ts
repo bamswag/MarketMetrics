@@ -1296,3 +1296,74 @@ export async function fetchGrowthProjection(
   })
   return parseResponse<GrowthProjectionResponse>(response)
 }
+
+// ── Simulation History ────────────────────────────────────────────────────────
+
+export type SimulationHistoryItem = {
+  simulationId: string
+  userID: string
+  assetSymbol: string
+  assetName: string | null
+  projectionYears: number
+  initialAmount: number
+  monthlyContribution: number
+  inflationRate: number
+  totalInvested: number
+  baselineEndValue: number
+  pessimisticEndValue: number
+  optimisticEndValue: number
+  baselineGrowthPct: number
+  probabilityOfProfit: number
+  notes: string | null
+  createdAt: string
+}
+
+export async function fetchSimulationHistory(
+  token: string,
+  signal?: AbortSignal,
+): Promise<SimulationHistoryItem[]> {
+  const response = await safeFetch(`${getApiUrl()}/simulate/history`, {
+    headers: authHeaders(token),
+    signal,
+  })
+  return parseResponse<SimulationHistoryItem[]>(response)
+}
+
+export async function deleteSimulationHistoryItem(
+  token: string,
+  simulationId: string,
+): Promise<void> {
+  const response = await safeFetch(
+    `${getApiUrl()}/simulate/history/${encodeURIComponent(simulationId)}`,
+    { method: 'DELETE', headers: authHeaders(token) },
+  )
+  if (!response.ok && response.status !== 204) {
+    await parseResponse<void>(response)
+  }
+}
+
+export async function clearSimulationHistory(token: string): Promise<void> {
+  const response = await safeFetch(`${getApiUrl()}/simulate/history`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+  if (!response.ok && response.status !== 204) {
+    await parseResponse<void>(response)
+  }
+}
+
+export async function updateSimulationHistoryNotes(
+  token: string,
+  simulationId: string,
+  notes: string | null,
+): Promise<SimulationHistoryItem> {
+  const response = await safeFetch(
+    `${getApiUrl()}/simulate/history/${encodeURIComponent(simulationId)}`,
+    {
+      method: 'PATCH',
+      headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes }),
+    },
+  )
+  return parseResponse<SimulationHistoryItem>(response)
+}

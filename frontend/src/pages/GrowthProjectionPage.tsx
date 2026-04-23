@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import {
   Area,
   CartesianGrid,
@@ -242,20 +242,29 @@ function ProjectionTooltip(props: any) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+type HistoryPrefill = {
+  years?: number
+  initialAmount?: number
+  monthlyContribution?: number
+  inflationRate?: number
+}
+
 export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const { symbol: rawSymbol } = useParams<{ symbol: string }>()
   const symbol = rawSymbol?.toUpperCase() ?? ''
+  const location = useLocation()
+  const prefill = (location.state as { prefill?: HistoryPrefill } | null)?.prefill ?? null
 
   // Form state — string values for display, derived numbers for calculations
-  const [years, setYears] = useState(10)
-  const [initialAmountStr, setInitialAmountStr] = useState('1000')
-  const [monthlyContributionStr, setMonthlyContributionStr] = useState('0')
-  const [inflationAdjust, setInflationAdjust] = useState(false)
+  const [years, setYears] = useState(prefill?.years ?? 10)
+  const [initialAmountStr, setInitialAmountStr] = useState(String(prefill?.initialAmount ?? 1000))
+  const [monthlyContributionStr, setMonthlyContributionStr] = useState(String(prefill?.monthlyContribution ?? 0))
+  const [inflationAdjust, setInflationAdjust] = useState(prefill ? (prefill.inflationRate ?? 0) > 0 : false)
 
   // Committed numeric values — only updated 600 ms after the user stops typing
   // (string state above controls the visible input; these drive the simulation)
-  const [initialAmount, setInitialAmount] = useState(1000)
-  const [monthlyContribution, setMonthlyContribution] = useState(0)
+  const [initialAmount, setInitialAmount] = useState(prefill?.initialAmount ?? 1000)
+  const [monthlyContribution, setMonthlyContribution] = useState(prefill?.monthlyContribution ?? 0)
   const inputCommitDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Async state
@@ -450,9 +459,16 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Hero ── */}
       <div className="projection-hero">
-        <Link className="forecast-back-link" to={`/instrument/${encodeURIComponent(symbol)}`}>
-          ← Back to {symbol}
-        </Link>
+        <div className="projection-hero-nav">
+          <Link className="forecast-back-link" to={`/instrument/${encodeURIComponent(symbol)}`}>
+            ← Back to {symbol}
+          </Link>
+          {token ? (
+            <Link className="forecast-back-link" to="/simulation-history">
+              View history →
+            </Link>
+          ) : null}
+        </div>
         <div className="forecast-hero-row">
           <div className="forecast-hero-identity">
             <MoverLogo name={companyName} symbol={symbol} />

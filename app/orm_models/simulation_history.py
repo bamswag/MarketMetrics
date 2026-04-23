@@ -1,5 +1,7 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Float, DateTime
+
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String
+
 from app.core.database import Base
 
 
@@ -11,20 +13,20 @@ class SimulationHistoryDB(Base):
 
     assetSymbol = Column(String, nullable=False)
     assetName = Column(String, nullable=True)
-    strategy = Column(String, nullable=False)
 
-    startDate = Column(String, nullable=False)  # keep as ISO string for simplicity now
-    endDate = Column(String, nullable=False)
-
+    # Growth-projection request params (stored for re-run)
+    projectionYears = Column(Integer, nullable=False)
     initialAmount = Column(Float, nullable=False)
-    recurringContribution = Column(Float, nullable=False, default=0.0)
-    contributionFrequency = Column(String, nullable=True)
-    investedAmount = Column(Float, nullable=False)
-    finalValue = Column(Float, nullable=False)
-    totalReturnPct = Column(Float, nullable=False)
-    annualizedReturnPct = Column(Float, nullable=True)
-    volatilityPct = Column(Float, nullable=True)
-    maxDrawdownPct = Column(Float, nullable=True)
+    monthlyContribution = Column(Float, nullable=False, default=0.0)
+    inflationRate = Column(Float, nullable=False, default=0.0)
+
+    # Key result metrics (stored for display)
+    totalInvested = Column(Float, nullable=False)
+    baselineEndValue = Column(Float, nullable=False)
+    pessimisticEndValue = Column(Float, nullable=False)
+    optimisticEndValue = Column(Float, nullable=False)
+    baselineGrowthPct = Column(Float, nullable=False)
+    probabilityOfProfit = Column(Float, nullable=False)
 
     notes = Column(String, nullable=True)
     createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)

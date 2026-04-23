@@ -207,6 +207,10 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
 
   const totalLoadedItems = loadedItems.length
   const categoryCount = categoriesWithData.length || visibleCategories.length
+  const categoryTag =
+    visibleCategories.length > 0
+      ? visibleCategories.map(({ key }) => assetCategoryLabel(key)).join(' + ')
+      : undefined
   const updatedLabel = lastUpdatedAt
     ? lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : null
@@ -323,9 +327,11 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
             categoryItems={categoryItems}
             className="movers-direction-card"
             countTarget={limit}
+            description={config.copy}
+            eyebrow={config.cardSubtitle}
             fallbackItems={fallbackItems}
             itemLimit={limit}
-            subtitle={config.cardSubtitle}
+            tagLabel={categoryTag}
             title={config.cardTitle}
             tone={config.tone}
             visibleCategories={visibleCategories}
