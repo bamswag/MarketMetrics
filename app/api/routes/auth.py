@@ -34,7 +34,7 @@ from app.services.auth import (
     request_password_reset,
     reset_password_with_token,
     update_user_profile,
-    verify_pending_email_change,
+    verify_email_token,
 )
 
 
@@ -181,7 +181,7 @@ def reset_password(payload: PasswordResetRequest, db: Session = Depends(get_db))
 @router.post("/email/verify", response_model=AuthMessage)
 def verify_email(payload: EmailVerificationRequest, db: Session = Depends(get_db)):
     try:
-        verify_pending_email_change(db, payload.token)
+        verify_email_token(db, payload.token)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -234,7 +234,7 @@ async def google_callback(
         )
         fallback_path = "/signup" if google_state["intent"] == "signup" else "/login"
         fallback_frontend_origin = google_state.get("frontendOrigin") or None
-        user = get_or_create_google_user(
+        user, created = get_or_create_google_user(
             db,
             google_subject=google_userinfo["sub"],
             email=google_userinfo["email"],
@@ -263,6 +263,11 @@ async def google_callback(
         url=build_frontend_auth_redirect(
             str(google_state["returnTo"]),
             access_token=token,
+            success_message=(
+                "Account created and signed in. Check your email to verify your account."
+                if created
+                else None
+            ),
             frontend_origin=google_state.get("frontendOrigin") or None,
         ),
         status_code=status.HTTP_307_TEMPORARY_REDIRECT,

@@ -21,6 +21,8 @@ class UserDB(Base):
     sessionVersion = Column(Integer, default=1, nullable=False)
     passwordResetTokenHash = Column(String, nullable=True)
     passwordResetTokenExpiresAt = Column(DateTime, nullable=True)
+    signupVerificationTokenHash = Column(String, nullable=True)
+    signupVerificationTokenExpiresAt = Column(DateTime, nullable=True)
     pendingEmailTokenHash = Column(String, nullable=True)
     pendingEmailTokenExpiresAt = Column(DateTime, nullable=True)
     riskProfile = Column(String, nullable=True)

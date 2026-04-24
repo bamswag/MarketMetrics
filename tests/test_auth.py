@@ -1,8 +1,9 @@
 import os
 import tempfile
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import AsyncMock, patch
+from urllib.parse import parse_qs, urlparse
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -12,6 +13,7 @@ import app.core.websocket_auth as ws_auth_module
 import app.orm_models  # noqa: F401
 from app.api.routes import websocket_quotes as ws_quotes_router
 from app.core.config import settings
+from app.core.auth import hash_password
 from app.core.database import Base
 from app.core.db_dependencies import get_db
 from app.main import app
@@ -29,6 +31,15 @@ try:
     ML_DEPENDENCIES_AVAILABLE = True
 except Exception:
     ML_DEPENDENCIES_AVAILABLE = False
+
+
+TEST_PASSWORD = "Password123!"
+NEW_TEST_PASSWORD = "Newpassword123!"
+ANOTHER_TEST_PASSWORD = "Anotherpassword123!"
+BRAND_NEW_PASSWORD = "Brandnewpass123!"
+PASSWORD_POLICY_MESSAGE = (
+    "Choose a password with at least 8 characters, including one number and one special character."
+)
 
 
 class BaseAPITestCase(unittest.TestCase):
@@ -80,8 +91,8 @@ class BaseAPITestCase(unittest.TestCase):
         market_overview_service._featured_mover_cache.clear()
         market_overview_service._featured_mover_cache_locks.clear()
 
-    def register_and_login(self, email="tester@example.com", password="password123", display_name="Tester"):
-        with patch("app.services.auth.send_welcome_email", return_value=True):
+    def register_and_login(self, email="tester@example.com", password=TEST_PASSWORD, display_name="Tester"):
+        with patch("app.services.auth.send_signup_verification_email", return_value=True):
             register_response = self.client.post(
                 "/auth/register",
                 json={
@@ -129,13 +140,18 @@ def _generate_synthetic_rows(start_day: date, count: int, start_price: float, sl
 
 
 class AuthTests(BaseAPITestCase):
-    @patch("app.services.auth.send_welcome_email", return_value=True)
-    def test_register_and_login_returns_bearer_token(self, mock_send_welcome_email):
+    @patch("app.services.auth.send_signup_verification_email", return_value=True)
+    @patch("app.services.auth._generate_one_time_token", return_value="signup-verification-token")
+    def test_register_creates_unverified_user_sends_signup_verification_email_and_allows_login(
+        self,
+        _mock_token,
+        mock_send_signup_verification_email,
+    ):
         response = self.client.post(
             "/auth/register",
             json={
                 "email": "auth@example.com",
-                "password": "password123",
+                "password": TEST_PASSWORD,
                 "displayName": "Auth User",
                 "acceptedTerms": True,
             },
@@ -145,24 +161,91 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(response.json()["primaryAuthProvider"], "password")
         self.assertEqual(response.json()["planName"], "Free")
         self.assertEqual(response.json()["accountStatus"], "Active")
-        mock_send_welcome_email.assert_called_once_with("auth@example.com", "Auth User")
+        self.assertIsNone(response.json()["emailVerifiedAt"])
+        mock_send_signup_verification_email.assert_called_once_with(
+            "auth@example.com",
+            "Auth User",
+            f"{settings.frontend_base_url.rstrip('/')}/verify-email/signup-verification-token",
+        )
+
+        with self.TestingSessionLocal() as db:
+            user = db.query(UserDB).filter_by(email="auth@example.com").first()
+            self.assertIsNotNone(user)
+            self.assertIsNone(user.emailVerifiedAt)
+            self.assertIsNotNone(user.signupVerificationTokenHash)
+            self.assertIsNotNone(user.signupVerificationTokenExpiresAt)
 
         login_response = self.client.post(
             "/auth/login",
-            data={"username": "auth@example.com", "password": "password123"},
+            data={"username": "auth@example.com", "password": TEST_PASSWORD},
         )
         self.assertEqual(login_response.status_code, 200)
         payload = login_response.json()
         self.assertIn("access_token", payload)
         self.assertEqual(payload["token_type"], "bearer")
 
-    @patch("app.services.auth.send_welcome_email", return_value=False)
-    def test_register_succeeds_when_welcome_email_delivery_fails(self, mock_send_welcome_email):
+    def test_register_rejects_password_without_number(self):
+        response = self.client.post(
+            "/auth/register",
+            json={
+                "email": "missing-number@example.com",
+                "password": "Password!",
+                "displayName": "Missing Number",
+                "acceptedTerms": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn(PASSWORD_POLICY_MESSAGE, response.text)
+
+    def test_register_rejects_password_without_special_character(self):
+        response = self.client.post(
+            "/auth/register",
+            json={
+                "email": "missing-special@example.com",
+                "password": "Password123",
+                "displayName": "Missing Special",
+                "acceptedTerms": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn(PASSWORD_POLICY_MESSAGE, response.text)
+
+    def test_login_still_accepts_existing_weak_password_hash(self):
+        with self.TestingSessionLocal() as db:
+            db.add(
+                UserDB(
+                    userID="legacy-weak-password-user",
+                    email="legacy-password@example.com",
+                    passwordHash=hash_password("password123"),
+                    displayName="Legacy Password",
+                    primaryAuthProvider="password",
+                    passwordAuthEnabled=True,
+                    emailVerifiedAt=datetime.utcnow(),
+                    sessionVersion=1,
+                    createdAt=datetime.utcnow(),
+                )
+            )
+            db.commit()
+
+        response = self.client.post(
+            "/auth/login",
+            data={"username": "legacy-password@example.com", "password": "password123"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    @patch("app.services.auth.send_signup_verification_email", return_value=False)
+    def test_register_succeeds_when_signup_verification_email_delivery_fails(
+        self,
+        mock_send_signup_verification_email,
+    ):
         response = self.client.post(
             "/auth/register",
             json={
                 "email": "welcome-failure@example.com",
-                "password": "password123",
+                "password": TEST_PASSWORD,
                 "displayName": "Welcome Failure",
                 "acceptedTerms": True,
             },
@@ -170,15 +253,13 @@ class AuthTests(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["email"], "welcome-failure@example.com")
-        mock_send_welcome_email.assert_called_once_with(
-            "welcome-failure@example.com",
-            "Welcome Failure",
-        )
+        self.assertIsNone(response.json()["emailVerifiedAt"])
+        mock_send_signup_verification_email.assert_called_once()
 
     def test_authenticated_user_profile_returns_display_name(self):
         token = self.register_and_login(
             email="profile@example.com",
-            password="password123",
+            password=TEST_PASSWORD,
             display_name="Profile User",
         )
 
@@ -208,12 +289,14 @@ class AuthTests(BaseAPITestCase):
             request_origin="http://testserver",
         )
 
-    @patch("app.services.auth.send_welcome_email", return_value=True)
+    @patch("app.services.auth.send_signup_verification_email", return_value=True)
+    @patch("app.services.auth._generate_one_time_token", return_value="google-signup-token")
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
-    def test_google_callback_creates_user_and_redirects_with_token(
+    def test_google_callback_creates_unverified_user_and_redirects_with_token(
         self,
         mock_exchange_google_code,
-        mock_send_welcome_email,
+        _mock_token,
+        mock_send_signup_verification_email,
     ):
         mock_exchange_google_code.return_value = (
             {
@@ -230,8 +313,16 @@ class AuthTests(BaseAPITestCase):
             follow_redirects=False,
         )
         self.assertEqual(response.status_code, 307)
-        self.assertTrue(
-            response.headers["location"].startswith(f"{settings.frontend_base_url.rstrip('/')}/#token=")
+        parsed_redirect = urlparse(response.headers["location"])
+        self.assertEqual(
+            f"{parsed_redirect.scheme}://{parsed_redirect.netloc}{parsed_redirect.path}",
+            f"{settings.frontend_base_url.rstrip('/')}/",
+        )
+        fragment_params = parse_qs(parsed_redirect.fragment)
+        self.assertTrue(fragment_params.get("token"))
+        self.assertEqual(
+            fragment_params.get("authSuccess"),
+            ["Account created and signed in. Check your email to verify your account."],
         )
         mock_exchange_google_code.assert_awaited_once_with(
             "google-code",
@@ -246,15 +337,21 @@ class AuthTests(BaseAPITestCase):
             self.assertEqual(user.primaryAuthProvider, "google")
             self.assertFalse(user.passwordAuthEnabled)
             self.assertEqual(user.googleSubject, "google-sub-1")
-            self.assertIsNotNone(user.emailVerifiedAt)
-        mock_send_welcome_email.assert_called_once_with("googleuser@example.com", "Google User")
+            self.assertIsNone(user.emailVerifiedAt)
+            self.assertIsNotNone(user.signupVerificationTokenHash)
+            self.assertIsNotNone(user.signupVerificationTokenExpiresAt)
+        mock_send_signup_verification_email.assert_called_once_with(
+            "googleuser@example.com",
+            "Google User",
+            f"{settings.frontend_base_url.rstrip('/')}/verify-email/google-signup-token",
+        )
 
-    @patch("app.services.auth.send_welcome_email", return_value=True)
+    @patch("app.services.auth.send_signup_verification_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
-    def test_google_callback_existing_google_user_does_not_send_welcome_email(
+    def test_google_callback_existing_google_user_does_not_send_signup_verification_email(
         self,
         mock_exchange_google_code,
-        mock_send_welcome_email,
+        mock_send_signup_verification_email,
     ):
         mock_exchange_google_code.return_value = (
             {
@@ -271,12 +368,14 @@ class AuthTests(BaseAPITestCase):
             follow_redirects=False,
         )
         self.assertEqual(first_response.status_code, 307)
-        mock_send_welcome_email.assert_called_once_with(
-            "returning-google@example.com",
-            "Returning Google",
-        )
+        mock_send_signup_verification_email.assert_called_once()
+        mock_send_signup_verification_email.reset_mock()
 
-        mock_send_welcome_email.reset_mock()
+        with self.TestingSessionLocal() as db:
+            first_user = db.query(UserDB).filter_by(email="returning-google@example.com").first()
+            self.assertIsNotNone(first_user)
+            self.assertIsNone(first_user.emailVerifiedAt)
+
         mock_exchange_google_code.return_value = (
             {
                 "email": "returning-google@example.com",
@@ -293,17 +392,22 @@ class AuthTests(BaseAPITestCase):
         )
 
         self.assertEqual(second_response.status_code, 307)
-        mock_send_welcome_email.assert_not_called()
+        mock_send_signup_verification_email.assert_not_called()
 
-    @patch("app.services.auth.send_welcome_email", return_value=True)
+        with self.TestingSessionLocal() as db:
+            returning_user = db.query(UserDB).filter_by(email="returning-google@example.com").first()
+            self.assertIsNotNone(returning_user)
+            self.assertIsNone(returning_user.emailVerifiedAt)
+
+    @patch("app.services.auth.send_signup_verification_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
     def test_google_callback_links_existing_password_account_without_weakening_password_rules(
         self,
         mock_exchange_google_code,
-        mock_send_welcome_email,
+        mock_send_signup_verification_email,
     ):
-        token = self.register_and_login(email="hybrid@example.com", password="password123")
-        mock_send_welcome_email.reset_mock()
+        token = self.register_and_login(email="hybrid@example.com", password=TEST_PASSWORD)
+        mock_send_signup_verification_email.reset_mock()
         mock_exchange_google_code.return_value = (
             {
                 "email": "hybrid@example.com",
@@ -326,11 +430,12 @@ class AuthTests(BaseAPITestCase):
             self.assertEqual(user.primaryAuthProvider, "password")
             self.assertTrue(user.passwordAuthEnabled)
             self.assertEqual(user.googleSubject, "google-sub-hybrid")
-        mock_send_welcome_email.assert_not_called()
+            self.assertIsNone(user.emailVerifiedAt)
+        mock_send_signup_verification_email.assert_not_called()
 
         missing_current_password_response = self.client.post(
             "/auth/me/password",
-            json={"newPassword": "newpassword123"},
+            json={"newPassword": NEW_TEST_PASSWORD},
             headers=self.auth_headers(token),
         )
         self.assertEqual(missing_current_password_response.status_code, 400)
@@ -338,7 +443,7 @@ class AuthTests(BaseAPITestCase):
 
         change_response = self.client.post(
             "/auth/me/password",
-            json={"currentPassword": "password123", "newPassword": "newpassword123"},
+            json={"currentPassword": TEST_PASSWORD, "newPassword": NEW_TEST_PASSWORD},
             headers=self.auth_headers(token),
         )
         self.assertEqual(change_response.status_code, 200)
@@ -354,7 +459,7 @@ class AuthTests(BaseAPITestCase):
             "/auth/register",
             json={
                 "email": "missingterms@example.com",
-                "password": "password123",
+                "password": TEST_PASSWORD,
                 "displayName": "Missing Terms",
                 "acceptedTerms": False,
             },
@@ -366,7 +471,7 @@ class AuthTests(BaseAPITestCase):
     def test_update_profile_changes_display_name(self):
         token = self.register_and_login(
             email="rename@example.com",
-            password="password123",
+            password=TEST_PASSWORD,
             display_name="Original Name",
         )
 
@@ -399,7 +504,7 @@ class AuthTests(BaseAPITestCase):
         payload = response.json()
         self.assertEqual(payload["email"], "profilechange@example.com")
         self.assertEqual(payload["pendingEmail"], "newprofile@example.com")
-        self.assertIsNotNone(payload["emailVerifiedAt"])
+        self.assertIsNone(payload["emailVerifiedAt"])
         mock_send_email.assert_called_once()
         _, _, verification_url = mock_send_email.call_args.args
         self.assertEqual(
@@ -413,6 +518,42 @@ class AuthTests(BaseAPITestCase):
             self.assertEqual(user.pendingEmail, "newprofile@example.com")
             self.assertIsNotNone(user.pendingEmailTokenHash)
             self.assertIsNotNone(user.pendingEmailTokenExpiresAt)
+
+    @patch("app.services.auth.send_signup_verification_email", return_value=True)
+    @patch("app.services.auth._generate_one_time_token", return_value="signup-verify-token")
+    def test_verify_email_marks_signup_verified_and_clears_signup_token(
+        self,
+        _mock_token,
+        _mock_send_signup_verification_email,
+    ):
+        register_response = self.client.post(
+            "/auth/register",
+            json={
+                "email": "verifyme@example.com",
+                "password": TEST_PASSWORD,
+                "displayName": "Verify Me",
+                "acceptedTerms": True,
+            },
+        )
+
+        self.assertEqual(register_response.status_code, 201)
+        self.assertIsNone(register_response.json()["emailVerifiedAt"])
+
+        verify_response = self.client.post(
+            "/auth/email/verify",
+            json={"token": "signup-verify-token"},
+        )
+
+        self.assertEqual(verify_response.status_code, 200)
+        self.assertEqual(verify_response.json()["message"], "Email verified successfully.")
+
+        with self.TestingSessionLocal() as db:
+            user = db.query(UserDB).filter_by(email="verifyme@example.com").first()
+            self.assertIsNotNone(user)
+            self.assertEqual(user.email, "verifyme@example.com")
+            self.assertIsNotNone(user.emailVerifiedAt)
+            self.assertIsNone(user.signupVerificationTokenHash)
+            self.assertIsNone(user.signupVerificationTokenExpiresAt)
 
     @patch("app.services.auth.send_email_change_verification_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="verify-email-token")
@@ -436,15 +577,22 @@ class AuthTests(BaseAPITestCase):
 
         old_login_response = self.client.post(
             "/auth/login",
-            data={"username": "beforeverify@example.com", "password": "password123"},
+            data={"username": "beforeverify@example.com", "password": TEST_PASSWORD},
         )
         self.assertEqual(old_login_response.status_code, 401)
 
         new_login_response = self.client.post(
             "/auth/login",
-            data={"username": "afterverify@example.com", "password": "password123"},
+            data={"username": "afterverify@example.com", "password": TEST_PASSWORD},
         )
         self.assertEqual(new_login_response.status_code, 200)
+
+        with self.TestingSessionLocal() as db:
+            user = db.query(UserDB).filter_by(email="afterverify@example.com").first()
+            self.assertIsNotNone(user)
+            self.assertIsNotNone(user.emailVerifiedAt)
+            self.assertIsNone(user.signupVerificationTokenHash)
+            self.assertIsNone(user.signupVerificationTokenExpiresAt)
 
     @patch("app.services.auth.send_password_reset_email", return_value=True)
     @patch("app.services.auth._generate_one_time_token", return_value="password-reset-token")
@@ -511,19 +659,20 @@ class AuthTests(BaseAPITestCase):
         self.assertNotIn("https://marketmetrics.dev\n/reset-password", html)
         self.assertIn("Ayo &lt;Admin&gt;", html)
 
-    def test_welcome_email_html_escapes_display_name(self):
-        from app.services.email import _build_welcome_email_html
+    def test_signup_verification_email_html_escapes_display_name_and_links(self):
+        from app.services.email import _build_signup_verification_email_html
 
-        html = _build_welcome_email_html(
+        html = _build_signup_verification_email_html(
             "Ayo <Admin>",
-            "https://marketmetrics.dev\n/account",
+            "https://marketmetrics.dev\n/verify-email/signup-token",
         )
 
-        self.assertIn("Welcome to MarketMetrics", html)
+        self.assertIn("Verify your MarketMetrics account", html)
+        self.assertIn("Verify your account", html)
         self.assertIn("Ayo &lt;Admin&gt;", html)
         self.assertNotIn("Ayo <Admin>", html)
-        self.assertEqual(html.count('href="https://marketmetrics.dev/account"'), 2)
-        self.assertNotIn("https://marketmetrics.dev\n/account", html)
+        self.assertEqual(html.count('href="https://marketmetrics.dev/verify-email/signup-token"'), 2)
+        self.assertNotIn("https://marketmetrics.dev\n/verify-email", html)
 
     def test_email_action_url_redaction_keeps_tokens_out_of_logs(self):
         from app.services.email import _redact_action_url
@@ -555,7 +704,7 @@ class AuthTests(BaseAPITestCase):
     def test_password_reset_consumes_token_and_allows_new_login(self, _mock_token, _mock_send_email):
         self.register_and_login(
             email="resetme@example.com",
-            password="password123",
+            password=TEST_PASSWORD,
             display_name="Reset Me",
         )
 
@@ -567,41 +716,64 @@ class AuthTests(BaseAPITestCase):
 
         reset_response = self.client.post(
             "/auth/password/reset",
-            json={"token": "live-reset-token", "newPassword": "newpassword123"},
+            json={"token": "live-reset-token", "newPassword": NEW_TEST_PASSWORD},
         )
         self.assertEqual(reset_response.status_code, 200)
 
         reused_response = self.client.post(
             "/auth/password/reset",
-            json={"token": "live-reset-token", "newPassword": "anotherpassword123"},
+            json={"token": "live-reset-token", "newPassword": ANOTHER_TEST_PASSWORD},
         )
         self.assertEqual(reused_response.status_code, 400)
 
         old_login_response = self.client.post(
             "/auth/login",
-            data={"username": "resetme@example.com", "password": "password123"},
+            data={"username": "resetme@example.com", "password": TEST_PASSWORD},
         )
         self.assertEqual(old_login_response.status_code, 401)
 
         new_login_response = self.client.post(
             "/auth/login",
-            data={"username": "resetme@example.com", "password": "newpassword123"},
+            data={"username": "resetme@example.com", "password": NEW_TEST_PASSWORD},
         )
         self.assertEqual(new_login_response.status_code, 200)
 
+    @patch("app.services.auth.send_password_reset_email", return_value=True)
+    @patch("app.services.auth._generate_one_time_token", return_value="weak-reset-token")
+    def test_password_reset_rejects_weak_new_password(self, _mock_token, _mock_send_email):
+        self.register_and_login(
+            email="weakreset@example.com",
+            password=TEST_PASSWORD,
+            display_name="Weak Reset",
+        )
+
+        forgot_response = self.client.post(
+            "/auth/password/forgot",
+            json={"email": "weakreset@example.com"},
+        )
+        self.assertEqual(forgot_response.status_code, 200)
+
+        reset_response = self.client.post(
+            "/auth/password/reset",
+            json={"token": "weak-reset-token", "newPassword": "weakpass"},
+        )
+
+        self.assertEqual(reset_response.status_code, 422)
+        self.assertIn(PASSWORD_POLICY_MESSAGE, reset_response.text)
+
     def test_change_password_requires_current_password_and_invalidates_token(self):
-        token = self.register_and_login(email="changepw@example.com", password="password123")
+        token = self.register_and_login(email="changepw@example.com", password=TEST_PASSWORD)
 
         missing_current_response = self.client.post(
             "/auth/me/password",
-            json={"newPassword": "brandnewpass123"},
+            json={"newPassword": BRAND_NEW_PASSWORD},
             headers=self.auth_headers(token),
         )
         self.assertEqual(missing_current_response.status_code, 400)
 
         update_response = self.client.post(
             "/auth/me/password",
-            json={"currentPassword": "password123", "newPassword": "brandnewpass123"},
+            json={"currentPassword": TEST_PASSWORD, "newPassword": BRAND_NEW_PASSWORD},
             headers=self.auth_headers(token),
         )
         self.assertEqual(update_response.status_code, 200)
@@ -611,9 +783,21 @@ class AuthTests(BaseAPITestCase):
 
         new_login_response = self.client.post(
             "/auth/login",
-            data={"username": "changepw@example.com", "password": "brandnewpass123"},
+            data={"username": "changepw@example.com", "password": BRAND_NEW_PASSWORD},
         )
         self.assertEqual(new_login_response.status_code, 200)
+
+    def test_change_password_rejects_weak_new_password(self):
+        token = self.register_and_login(email="weakchange@example.com", password=TEST_PASSWORD)
+
+        response = self.client.post(
+            "/auth/me/password",
+            json={"currentPassword": TEST_PASSWORD, "newPassword": "weakpass"},
+            headers=self.auth_headers(token),
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertIn(PASSWORD_POLICY_MESSAGE, response.text)
 
     def test_logout_all_invalidates_existing_token(self):
         token = self.register_and_login(email="logoutall@example.com")

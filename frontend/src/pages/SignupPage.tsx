@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 import { GoogleLogoIcon } from './shared/GoogleLogoIcon'
+import { PASSWORD_POLICY_MESSAGE, isPasswordPolicyValid } from '../lib/passwordPolicy'
 import '../styles/pages/AuthPages.css'
 
 type SignupPageProps = {
@@ -35,7 +36,7 @@ export function SignupPage({
   const normalizedEmail = email.trim()
   const emailHasContent = normalizedEmail.length > 0
   const isEmailValid = !emailHasContent || /\S+@\S+\.\S+/.test(normalizedEmail)
-  const isPasswordValid = password.length === 0 || password.length >= 8
+  const isPasswordValid = password.length === 0 || isPasswordPolicyValid(password)
 
   const emailInputClassName =
     emailHasContent && !isEmailValid ? 'search-input is-invalid' : 'search-input'
@@ -61,7 +62,7 @@ export function SignupPage({
     }
 
     if (!isPasswordValid) {
-      setLocalError('Choose a password with at least 8 characters.')
+      setLocalError(PASSWORD_POLICY_MESSAGE)
       return
     }
 
@@ -177,7 +178,9 @@ export function SignupPage({
                   <label className="field">
                     <div className="field-row">
                       <span className="field-label">Password</span>
-                      <span className="field-hint">Choose at least 8 characters.</span>
+                      <span className="field-hint">
+                        Use at least 8 characters, including one number and one special character.
+                      </span>
                     </div>
                     <div className="password-input-shell">
                       <input
@@ -188,7 +191,7 @@ export function SignupPage({
                           setLocalError('')
                           onClearAuthError()
                         }}
-                        placeholder="Minimum 8 characters"
+                        placeholder="8+ characters, 1 number, 1 special character"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                       />

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { RiskProfileBadge, RiskProfileQuiz } from '../components/RiskProfileQuiz'
 import type { RiskProfile, UserOut } from '../lib/api'
 import { formatDateTime } from '../lib/formatters'
+import { PASSWORD_POLICY_MESSAGE, isPasswordPolicyValid } from '../lib/passwordPolicy'
 import '../styles/pages/ProfilePages.css'
 import '../styles/pages/AccountPage.css'
 import '../styles/components/RiskProfileQuiz.css'
@@ -60,6 +61,10 @@ export function AccountPage({
   const riskProfile = currentUser?.riskProfile as RiskProfile | null | undefined
   const passwordAuthEnabled = currentUser?.passwordAuthEnabled !== false
   const googleLinked = currentUser?.googleLinked === true || currentUser?.primaryAuthProvider === 'google'
+  const newPasswordInputClassName =
+    newPassword.length > 0 && !isPasswordPolicyValid(newPassword)
+      ? 'search-input search-input--with-action is-invalid'
+      : 'search-input search-input--with-action'
 
   useEffect(() => {
     setDisplayName(currentUser?.displayName ?? '')
@@ -129,8 +134,8 @@ export function AccountPage({
       return
     }
 
-    if (newPassword.length < 8) {
-      setPasswordError('Choose a password with at least 8 characters.')
+    if (!isPasswordPolicyValid(newPassword)) {
+      setPasswordError(PASSWORD_POLICY_MESSAGE)
       return
     }
 
@@ -372,19 +377,24 @@ export function AccountPage({
               ) : null}
 
               <label className="field">
-                <span className="field-label">
-                  {passwordAuthEnabled ? 'New password' : 'Set a password'}
-                </span>
+                <div className="field-row">
+                  <span className="field-label">
+                    {passwordAuthEnabled ? 'New password' : 'Set a password'}
+                  </span>
+                  <span className="field-hint">
+                    Use at least 8 characters, including one number and one special character.
+                  </span>
+                </div>
                 <div className="password-input-shell">
                   <input
                     autoComplete="new-password"
-                    className="search-input search-input--with-action"
+                    className={newPasswordInputClassName}
                     onChange={(event) => {
                       setNewPassword(event.target.value)
                       setPasswordError('')
                       setPasswordSuccess('')
                     }}
-                    placeholder="Use at least 8 characters"
+                    placeholder="8+ characters, 1 number, 1 special character"
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                   />

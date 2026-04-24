@@ -4,10 +4,11 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import '../styles/pages/AuthPages.css'
 
 type VerifyEmailPageProps = {
+  isAuthenticated?: boolean
   onVerify: (token: string) => Promise<string>
 }
 
-export function VerifyEmailPage({ onVerify }: VerifyEmailPageProps) {
+export function VerifyEmailPage({ isAuthenticated = false, onVerify }: VerifyEmailPageProps) {
   const { token: tokenParam } = useParams<{ token?: string }>()
   const [searchParams] = useSearchParams()
   const verificationToken = tokenParam ?? searchParams.get('token') ?? ''
@@ -61,11 +62,12 @@ export function VerifyEmailPage({ onVerify }: VerifyEmailPageProps) {
           <div className="login-auth-card login-auth-card--narrow">
             <div className="login-panel-top">
               <div className="panel-header-copy">
-                <p className="section-label">Email verification</p>
-                <h1 className="auth-panel-title">Confirming your new email address</h1>
+                <p className="section-label">Account verification</p>
+                <h1 className="auth-panel-title">Verifying your MarketMetrics email</h1>
               </div>
               <p className="auth-panel-intro">
-                We&apos;re checking the verification link attached to your MarketMetrics account change.
+                This secure link can confirm a new account or complete an email change for your
+                MarketMetrics profile.
               </p>
             </div>
 
@@ -76,12 +78,14 @@ export function VerifyEmailPage({ onVerify }: VerifyEmailPageProps) {
             {status === 'error' ? <p className="error-text auth-message">{message}</p> : null}
 
             <div className="auth-page-actions">
-              <Link className="ghost-action" to="/account">
-                Back to account
-              </Link>
               <Link className="search-button auth-secondary-action" to="/login">
                 Go to login
               </Link>
+              {isAuthenticated ? (
+                <Link className="ghost-action" to="/account">
+                  Back to account
+                </Link>
+              ) : null}
             </div>
           </div>
         </article>

@@ -26,7 +26,7 @@ from app.orm_models.user import UserDB
 from app.services.email import (
     send_email_change_verification_email,
     send_password_reset_email,
-    send_welcome_email,
+    send_signup_verification_email,
 )
 
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -71,7 +71,7 @@ def _password_reset_url(token: str) -> str:
     return f"{settings.frontend_base_url}/reset-password/{token_path}"
 
 
-def _email_verification_url(token: str) -> str:
+def _verification_url(token: str) -> str:
     token_path = quote(token.strip(), safe="")
     return f"{settings.frontend_base_url}/verify-email/{token_path}"
 
@@ -88,6 +88,13 @@ def _email_verification_expiry() -> datetime:
     return datetime.utcnow() + timedelta(
         minutes=settings.email_verification_token_expire_minutes,
     )
+
+
+def _assign_signup_verification_token(user: UserDB) -> str:
+    token = _generate_one_time_token()
+    user.signupVerificationTokenHash = _hash_one_time_token(token)
+    user.signupVerificationTokenExpiresAt = _email_verification_expiry()
+    return token
 
 
 def _resolve_frontend_origin(frontend_origin: Optional[str]) -> str:
@@ -133,15 +140,20 @@ def register_user(db: Session, email: str, password: str, display_name: str) -> 
         displayName=display_name.strip(),
         primaryAuthProvider="password",
         passwordAuthEnabled=True,
-        emailVerifiedAt=now,
+        emailVerifiedAt=None,
         sessionVersion=1,
         createdAt=now,
         lastLoginAt=None,
     )
+    verification_token = _assign_signup_verification_token(user)
     db.add(user)
     db.commit()
     db.refresh(user)
-    send_welcome_email(user.email, user.displayName)
+    send_signup_verification_email(
+        user.email,
+        user.displayName,
+        _verification_url(verification_token),
+    )
     return user
 
 
@@ -215,7 +227,7 @@ def update_user_profile(
             current_user.pendingEmailTokenHash = _hash_one_time_token(token)
             current_user.pendingEmailTokenExpiresAt = _email_verification_expiry()
             pending_verification_email = normalized_email
-            verification_url = _email_verification_url(token)
+            verification_url = _verification_url(token)
             updated = True
 
     if not updated:
@@ -326,11 +338,28 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Non
     db.commit()
 
 
-def verify_pending_email_change(db: Session, token: str) -> UserDB:
+def verify_email_token(db: Session, token: str) -> UserDB:
     ensure_user_schema(db.get_bind())
 
     token_hash = _hash_one_time_token(token)
     now = datetime.utcnow()
+    signup_user = (
+        db.query(UserDB)
+        .filter(
+            UserDB.signupVerificationTokenHash == token_hash,
+            UserDB.signupVerificationTokenExpiresAt.is_not(None),
+            UserDB.signupVerificationTokenExpiresAt >= now,
+        )
+        .first()
+    )
+    if signup_user:
+        signup_user.emailVerifiedAt = now
+        signup_user.signupVerificationTokenHash = None
+        signup_user.signupVerificationTokenExpiresAt = None
+        db.commit()
+        db.refresh(signup_user)
+        return signup_user
+
     user = (
         db.query(UserDB)
         .filter(
@@ -360,6 +389,8 @@ def verify_pending_email_change(db: Session, token: str) -> UserDB:
     user.pendingEmail = None
     user.pendingEmailTokenHash = None
     user.pendingEmailTokenExpiresAt = None
+    user.signupVerificationTokenHash = None
+    user.signupVerificationTokenExpiresAt = None
     db.commit()
     db.refresh(user)
     return user
@@ -432,6 +463,7 @@ def build_frontend_auth_redirect(
     return_to: Optional[str] = "/",
     *,
     access_token: Optional[str] = None,
+    success_message: Optional[str] = None,
     error: Optional[str] = None,
     frontend_origin: Optional[str] = None,
 ) -> str:
@@ -441,6 +473,8 @@ def build_frontend_auth_redirect(
 
     if access_token:
         fragment_params["token"] = access_token
+    if success_message:
+        fragment_params["authSuccess"] = success_message
     if error:
         fragment_params["authError"] = error
 
@@ -530,7 +564,7 @@ def get_or_create_google_user(
     display_name: Optional[str],
     intent: str = "login",
     accepted_terms: bool = False,
-) -> UserDB:
+) -> tuple[UserDB, bool]:
     ensure_user_schema(db.get_bind())
 
     normalized_google_subject = google_subject.strip()
@@ -543,12 +577,11 @@ def get_or_create_google_user(
     user = db.query(UserDB).filter(UserDB.googleSubject == normalized_google_subject).first()
     if user:
         user.lastLoginAt = now
-        user.emailVerifiedAt = user.emailVerifiedAt or now
         if display_name and not user.displayName:
             user.displayName = display_name
         db.commit()
         db.refresh(user)
-        return user
+        return user, False
 
     user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
     if user:
@@ -556,14 +589,13 @@ def get_or_create_google_user(
             raise GoogleAuthError("This MarketMetrics account is already linked to a different Google account.")
         user.googleSubject = normalized_google_subject
         user.lastLoginAt = now
-        user.emailVerifiedAt = user.emailVerifiedAt or now
         if not user.passwordAuthEnabled:
             user.primaryAuthProvider = "google"
         if display_name and not user.displayName:
             user.displayName = display_name
         db.commit()
         db.refresh(user)
-        return user
+        return user, False
 
     if intent != "signup":
         raise GoogleAuthError("No MarketMetrics account is linked to this Google login. Start from Sign up.")
@@ -579,13 +611,18 @@ def get_or_create_google_user(
         primaryAuthProvider="google",
         passwordAuthEnabled=False,
         googleSubject=normalized_google_subject,
-        emailVerifiedAt=now,
+        emailVerifiedAt=None,
         sessionVersion=1,
         createdAt=now,
         lastLoginAt=now,
     )
+    verification_token = _assign_signup_verification_token(user)
     db.add(user)
     db.commit()
     db.refresh(user)
-    send_welcome_email(user.email, user.displayName)
-    return user
+    send_signup_verification_email(
+        user.email,
+        user.displayName,
+        _verification_url(verification_token),
+    )
+    return user, True

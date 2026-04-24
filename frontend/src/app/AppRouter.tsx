@@ -47,7 +47,7 @@ import {
   updateAccountProfile,
   updateAlert,
   updateUserPreferences,
-  verifyPendingEmail,
+  verifyEmail,
 } from '../lib/api'
 import type {
   AlertWebSocketMessage,
@@ -90,6 +90,7 @@ type DashboardData = {
 
 type AuthRedirectPayload = {
   redirectedAuthError: string | null
+  redirectedSuccessMessage: string | null
   redirectedToken: string | null
 }
 
@@ -176,6 +177,7 @@ function readAuthRedirectPayload(): AuthRedirectPayload {
   if (typeof window === 'undefined') {
     return {
       redirectedAuthError: null,
+      redirectedSuccessMessage: null,
       redirectedToken: null,
     }
   }
@@ -187,6 +189,7 @@ function readAuthRedirectPayload(): AuthRedirectPayload {
   if (!rawHash) {
     return {
       redirectedAuthError: null,
+      redirectedSuccessMessage: null,
       redirectedToken: null,
     }
   }
@@ -194,6 +197,7 @@ function readAuthRedirectPayload(): AuthRedirectPayload {
   const hashParams = new URLSearchParams(rawHash)
   return {
     redirectedAuthError: hashParams.get('authError'),
+    redirectedSuccessMessage: hashParams.get('authSuccess'),
     redirectedToken: hashParams.get('token'),
   }
 }
@@ -275,7 +279,10 @@ function AppContent() {
   )
   const [currentUser, setCurrentUser] = useState<UserOut | null>(null)
   const [flashMessage, setFlashMessage] = useState(
-    () => (initialRedirectPayload.redirectedToken ? 'Signed in successfully.' : ''),
+    () => (
+      initialRedirectPayload.redirectedSuccessMessage
+      ?? (initialRedirectPayload.redirectedToken ? 'Signed in successfully.' : '')
+    ),
   )
   const [authRedirectError, setAuthRedirectError] = useState(
     () => initialRedirectPayload.redirectedAuthError ?? '',
@@ -372,7 +379,8 @@ function AppContent() {
   useEffect(() => {
     if (
       !initialRedirectPayload.redirectedToken &&
-      !initialRedirectPayload.redirectedAuthError
+      !initialRedirectPayload.redirectedAuthError &&
+      !initialRedirectPayload.redirectedSuccessMessage
     ) {
       return
     }
@@ -384,6 +392,7 @@ function AppContent() {
     window.history.replaceState(null, '', window.location.pathname + window.location.search)
   }, [
     initialRedirectPayload.redirectedAuthError,
+    initialRedirectPayload.redirectedSuccessMessage,
     initialRedirectPayload.redirectedToken,
   ])
 
@@ -607,7 +616,10 @@ function AppContent() {
   }) {
     await register(payload)
     const response = await login(payload.email, payload.password)
-    await completeAuthentication(response.access_token, 'Account created and signed in.')
+    await completeAuthentication(
+      response.access_token,
+      'Account created and signed in. Check your email to verify your account.',
+    )
   }
 
   function handleLogout() {
@@ -1292,8 +1304,8 @@ function AppContent() {
     return response.message
   }
 
-  async function handleVerifyPendingEmailToken(verificationToken: string) {
-    const response = await verifyPendingEmail(verificationToken)
+  async function handleVerifyEmailToken(verificationToken: string) {
+    const response = await verifyEmail(verificationToken)
 
     if (token) {
       try {
@@ -1427,7 +1439,7 @@ function AppContent() {
           element={
             <>
               {token ? authenticatedHeader : guestHeader}
-              <VerifyEmailPage onVerify={handleVerifyPendingEmailToken} />
+              <VerifyEmailPage isAuthenticated={Boolean(token)} onVerify={handleVerifyEmailToken} />
             </>
           }
           path="/verify-email"
@@ -1436,7 +1448,7 @@ function AppContent() {
           element={
             <>
               {token ? authenticatedHeader : guestHeader}
-              <VerifyEmailPage onVerify={handleVerifyPendingEmailToken} />
+              <VerifyEmailPage isAuthenticated={Boolean(token)} onVerify={handleVerifyEmailToken} />
             </>
           }
           path="/verify-email/:token"

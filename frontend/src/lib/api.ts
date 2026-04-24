@@ -745,7 +745,7 @@ export async function resetPassword(
   return parseResponse<AuthMessageResponse>(response)
 }
 
-export async function verifyPendingEmail(token: string): Promise<AuthMessageResponse> {
+export async function verifyEmail(token: string): Promise<AuthMessageResponse> {
   const response = await safeFetch(`${getApiUrl()}/auth/email/verify`, {
     method: 'POST',
     headers: {

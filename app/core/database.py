@@ -38,6 +38,8 @@ _SQLITE_SCHEMA_PATCHES: dict[str, tuple[tuple[str, str], ...]] = {
         ("sessionVersion", "ALTER TABLE users ADD COLUMN sessionVersion INTEGER DEFAULT 1"),
         ("passwordResetTokenHash", "ALTER TABLE users ADD COLUMN passwordResetTokenHash VARCHAR"),
         ("passwordResetTokenExpiresAt", "ALTER TABLE users ADD COLUMN passwordResetTokenExpiresAt DATETIME"),
+        ("signupVerificationTokenHash", "ALTER TABLE users ADD COLUMN signupVerificationTokenHash VARCHAR"),
+        ("signupVerificationTokenExpiresAt", "ALTER TABLE users ADD COLUMN signupVerificationTokenExpiresAt DATETIME"),
         ("pendingEmailTokenHash", "ALTER TABLE users ADD COLUMN pendingEmailTokenHash VARCHAR"),
         ("pendingEmailTokenExpiresAt", "ALTER TABLE users ADD COLUMN pendingEmailTokenExpiresAt DATETIME"),
         ("riskProfile", "ALTER TABLE users ADD COLUMN riskProfile VARCHAR"),
@@ -93,7 +95,13 @@ def ensure_local_sqlite_schema(bind=engine) -> None:
                             passwordAuthEnabled = COALESCE(passwordAuthEnabled, 1),
                             emailNotificationsEnabled = COALESCE(emailNotificationsEnabled, 0),
                             sessionVersion = COALESCE(sessionVersion, 1),
-                            emailVerifiedAt = COALESCE(emailVerifiedAt, createdAt)
+                            emailVerifiedAt = CASE
+                                WHEN emailVerifiedAt IS NULL
+                                 AND signupVerificationTokenHash IS NULL
+                                 AND signupVerificationTokenExpiresAt IS NULL
+                                THEN createdAt
+                                ELSE emailVerifiedAt
+                            END
                         """
                     )
                 )
