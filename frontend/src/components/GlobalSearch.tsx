@@ -350,7 +350,6 @@ export function GlobalSearch({ token, onUnauthorized }: GlobalSearchProps) {
               type="button"
             >
               <span>View all results for <strong>{query.trim()}</strong></span>
-              <span className="search-view-all-arrow" aria-hidden="true">→</span>
             </button>
           )}
         </div>

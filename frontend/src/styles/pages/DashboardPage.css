@@ -23,7 +23,7 @@
 
 .dashboard-hero-copy {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   align-content: start;
   justify-items: start;
   max-width: 100%;
@@ -38,19 +38,80 @@
   margin: 0;
 }
 
-.dashboard-hero-intro-stack {
+.dashboard-hero-briefing {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  justify-items: start;
   width: 100%;
-  max-width: min(100%, 34rem);
+  max-width: min(100%, 42rem);
 }
 
 .dashboard-hero-intro {
   max-width: none;
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: 1.05rem;
+  line-height: 1.62;
   color: var(--muted);
+}
+
+.dashboard-guides-strip {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(201, 106, 69, 0.18);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.9));
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-guides-strip-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dashboard-guides-strip-copy span {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dashboard-guides-strip-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.dashboard-guides-strip-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgba(201, 106, 69, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-guides-strip-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(201, 106, 69, 0.44);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
 }
 
 .dashboard-metric-grid {
@@ -61,12 +122,30 @@
   align-self: stretch;
 }
 
-/* Risk profile strip inside hero */
-
-.dashboard-risk-strip {
-  padding-top: 0;
+.dashboard-investor-lens {
+  display: grid;
+  gap: 12px;
   width: 100%;
-  max-width: min(100%, 34rem);
+  max-width: min(100%, 42rem);
+  padding: 18px 20px;
+  border: 1px solid rgba(201, 106, 69, 0.18);
+  border-left: 4px solid var(--accent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(201, 106, 69, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(247, 250, 252, 0.72));
+}
+
+.dashboard-investor-lens .rq-badge-row {
+  gap: 10px;
+}
+
+.dashboard-investor-lens .rq-badge-tagline {
+  max-width: none;
+}
+
+.dashboard-investor-lens--prompt {
+  border-left-style: dashed;
 }
 
 .dashboard-risk-prompt {
@@ -117,25 +196,25 @@
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(60px, 0.92fr);
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .dashboard-hero-followup > * {
   min-width: 0;
-  height: auto;
-  align-self: start;
+  height: 100%;
+  align-self: stretch;
 }
 
 .dashboard-hero-followup .tracked-symbols-preview {
   grid-column: auto;
-  align-self: start;
+  align-self: stretch;
   gap: 14px;
   padding: 20px;
 }
 
 .dashboard-hero-followup .tracked-symbols-preview,
 .dashboard-hero-followup .insight-card {
-  min-height: 0;
+  min-height: 100%;
   border-radius: 28px;
 }
 
@@ -271,9 +350,22 @@
     line-height: 1.58;
   }
 
+  .dashboard-guides-strip {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .dashboard-guides-strip-link {
+    width: 100%;
+  }
+
   .dashboard-metric-grid {
     grid-template-columns: 1fr;
   }
+
 }
 
 .dashboard-bottom-row {

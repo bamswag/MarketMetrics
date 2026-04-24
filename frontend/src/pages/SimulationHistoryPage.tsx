@@ -503,7 +503,7 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 type="button"
               >
-                Next →
+                Next
               </button>
             </div>
           )}

@@ -820,7 +820,6 @@ export function InstrumentPage({
                 to={`/forecast/${encodeURIComponent(symbol)}`}
               >
                 <span>Run forecast</span>
-                <span aria-hidden="true" className="instrument-cta-arrow">→</span>
               </Link>
             ) : (
               <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
@@ -839,7 +838,6 @@ export function InstrumentPage({
                 to={`/instrument/${encodeURIComponent(symbol)}/project`}
               >
                 <span>Simulate</span>
-                <span aria-hidden="true" className="instrument-cta-arrow">→</span>
               </Link>
             ) : (
               <span className="instrument-forecast-cta-lock">Sign in to simulate</span>

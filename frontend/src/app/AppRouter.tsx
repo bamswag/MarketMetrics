@@ -11,6 +11,7 @@ import { AuthActions } from '../components/AuthActions'
 import { GlobalSearch } from '../components/GlobalSearch'
 import { DashboardPage } from '../pages/DashboardPage'
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
+import { GuidesPage } from '../pages/GuidesPage'
 import { LandingPage } from '../pages/LandingPage'
 import { LegalPage } from '../pages/LegalPage'
 import { LoginPage } from '../pages/LoginPage'
@@ -1467,6 +1468,15 @@ function AppContent() {
             </>
           }
           path="/privacy"
+        />
+        <Route
+          element={
+            <>
+              {token ? authenticatedHeader : guestHeader}
+              <GuidesPage />
+            </>
+          }
+          path="/guides"
         />
         <Route
           element={

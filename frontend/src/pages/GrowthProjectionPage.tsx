@@ -467,7 +467,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
           </Link>
           {token ? (
             <Link className="forecast-back-link" to="/simulation-history">
-              View history →
+              View history
             </Link>
           ) : null}
         </div>
@@ -994,7 +994,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
               className="primary-action primary-action--teal"
               to={`/forecast/${encodeURIComponent(symbol)}`}
             >
-              Run forecast →
+              Run forecast
             </Link>
           </div>
           <div className="forecast-page-cta-card">
@@ -1008,7 +1008,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
               className="primary-action primary-action--teal"
               to={`/instrument/${encodeURIComponent(symbol)}`}
             >
-              View chart →
+              View chart
             </Link>
           </div>
         </div>

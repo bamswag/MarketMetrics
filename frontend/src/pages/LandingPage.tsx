@@ -116,7 +116,9 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
           variant="landing"
         />
 
-        <InsightCard id="not-financial-advice" />
+        <div className="landing-financial-advice-card">
+          <InsightCard id="not-financial-advice" />
+        </div>
       </section>
 
       <section className="landing-feature-section page-section">
@@ -137,6 +139,20 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="landing-guides-callout page-section">
+        <div className="landing-guides-copy">
+          <p className="section-label">Guides</p>
+          <h2 className="landing-section-heading">Understand the results before you act on them</h2>
+          <p className="landing-section-subtext">
+            Learn the basics behind market moves, performance metrics, forecasts, projections,
+            alerts, and responsible research workflows in plain language.
+          </p>
+        </div>
+        <Link className="primary-action" to="/guides">
+          Open Guides
+        </Link>
       </section>
 
       <section className="landing-process page-section">

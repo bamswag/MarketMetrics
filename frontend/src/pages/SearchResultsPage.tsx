@@ -277,7 +277,7 @@ export function SearchResultsPage({
                     onClick={() => setActiveCategory(catKey)}
                     type="button"
                   >
-                    View all {section.label} →
+                    View all {section.label}
                   </button>
                 )}
               </div>

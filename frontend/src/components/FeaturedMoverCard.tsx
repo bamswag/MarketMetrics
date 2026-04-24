@@ -355,7 +355,7 @@ export function FeaturedMoverCard() {
             </div>
 
             <Link className="hero-gainer-link" to={`/instrument/${encodeURIComponent(mover.symbol)}`}>
-              View instrument &rarr;
+              View instrument
             </Link>
           </div>
         </div>

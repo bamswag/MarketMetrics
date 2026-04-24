@@ -1020,7 +1020,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
               className="primary-action primary-action--teal"
               to={`/instrument/${encodeURIComponent(symbol)}/project`}
             >
-              Simulate →
+              Simulate
             </Link>
           </div>
           <div className="forecast-page-cta-card forecast-page-cta-card--chart">
@@ -1034,7 +1034,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
               className="primary-action primary-action--teal"
               to={`/instrument/${encodeURIComponent(symbol)}`}
             >
-              View chart →
+              View chart
             </Link>
           </div>
         </div>

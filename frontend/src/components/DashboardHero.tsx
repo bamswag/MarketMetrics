@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import { RiskProfileBadge } from './RiskProfileQuiz'
 import { FeaturedMoverCard } from './FeaturedMoverCard'
 import type { RiskProfile } from '../lib/api'
@@ -22,24 +24,30 @@ export function DashboardHero({
           <h1 className="dashboard-heading">
             {displayName ? `Welcome back, ${displayName}.` : 'Your market overview'}
           </h1>
-          <div className="dashboard-hero-intro-stack">
+
+          <div className="dashboard-hero-briefing">
             <p className="dashboard-hero-intro">
-              MarketMetrics brings forecasts, projections, alerts, movers, and live market context into one workspace so you can scan the market faster and make sharper decisions with less friction.
+              Your workspace is ready. Track your shortlist, compare live movers, review forecasts, and keep alerts close as the market changes.
             </p>
-            <p className="dashboard-hero-intro">
-              You can move from search to charts, forecasts, projections, and alert setup without losing context, which makes it easier to compare short-term signals with longer-term scenarios in one place.
-            </p>
-            <p className="dashboard-hero-intro">
-              Whether you are tracking a focused shortlist or watching for broader market momentum, MarketMetrics helps you stay organized with timely visibility, cleaner workflows, and decision support that stays readable.
-            </p>
+            <div className="dashboard-guides-strip">
+              <div className="dashboard-guides-strip-copy">
+                <span>Need context?</span>
+                <p>Guides explain forecasts, projections, alerts, and market metrics in plain language.</p>
+              </div>
+              <Link className="dashboard-guides-strip-link" to="/guides">
+                View Guides
+              </Link>
+            </div>
           </div>
 
           {riskProfile ? (
-            <div className="dashboard-risk-strip">
+            <div className="dashboard-investor-lens">
+              <p className="section-label">Investor lens</p>
               <RiskProfileBadge profile={riskProfile} onRetake={onRetakeRiskQuiz} />
             </div>
           ) : onStartRiskQuiz ? (
-            <div className="dashboard-risk-prompt">
+            <div className="dashboard-investor-lens dashboard-investor-lens--prompt">
+              <p className="section-label">Investor lens</p>
               <p className="dashboard-risk-prompt-text">
                 <strong>Personalise your experience</strong> — take a 4-question quiz to set your investor risk profile and unlock tailored insights.
               </p>
