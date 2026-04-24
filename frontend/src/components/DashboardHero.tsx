@@ -22,9 +22,17 @@ export function DashboardHero({
           <h1 className="dashboard-heading">
             {displayName ? `Welcome back, ${displayName}.` : 'Your market overview'}
           </h1>
-          <p className="dashboard-hero-intro">
-            MarketMetrics brings forecasts, projections, alerts, movers, and live market context into one workspace so you can scan the market faster and make sharper decisions with less friction.
-          </p>
+          <div className="dashboard-hero-intro-stack">
+            <p className="dashboard-hero-intro">
+              MarketMetrics brings forecasts, projections, alerts, movers, and live market context into one workspace so you can scan the market faster and make sharper decisions with less friction.
+            </p>
+            <p className="dashboard-hero-intro">
+              You can move from search to charts, forecasts, projections, and alert setup without losing context, which makes it easier to compare short-term signals with longer-term scenarios in one place.
+            </p>
+            <p className="dashboard-hero-intro">
+              Whether you are tracking a focused shortlist or watching for broader market momentum, MarketMetrics helps you stay organized with timely visibility, cleaner workflows, and decision support that stays readable.
+            </p>
+          </div>
 
           {riskProfile ? (
             <div className="dashboard-risk-strip">

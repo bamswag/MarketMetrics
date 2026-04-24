@@ -1,163 +1,155 @@
 # Project Log
 
-This file is a short record of how MarketMetrics has developed over time and what direction the project has taken.
+This file records how MarketMetrics has developed and where the project stands now.
 
 ## Starting Point
 
-The project started as an idea for a stock analysis platform, not just a price viewer. I wanted it to do more than show charts. The main goal was to build a system that could combine:
+MarketMetrics started as a stock analysis platform rather than a simple price viewer. The original goal was to combine user accounts, tracked symbols, alerts, historical simulation, short-term forecasting, and longer-term projection in one explainable system.
 
-- user accounts
-- tracked symbols
-- alerts
-- historical simulation
-- short-term forecasting
-- longer-term projection
+The backend came first, which shaped the project around routes, services, schemas, models, and tests instead of one large application file.
 
-From the beginning, I wanted the backend to be modular so the project would be easier to explain and extend.
+## Backend Foundation
 
-## Early Backend Work
+The backend is a FastAPI app with SQLAlchemy models, Alembic migrations, Pydantic schemas, and service modules. That split made it easier to add features without mixing API handlers, database operations, external API calls, and business logic together.
 
-The first phase was getting the backend structure in place. I split the project into routes, services, schemas, models, and shared core utilities instead of keeping everything in one file.
+Current backend areas include auth, search, quotes, movers, instruments, watchlists, alerts, WebSocket quotes, historical simulation, forecast inference, growth projection, projection history, and health checks.
 
-That helped with two things:
+## Authentication And Account Management
 
-- the code became easier to read
-- new features were easier to add without turning the project into a mess
+Auth began with email/password registration and JWT login. It now includes:
 
-## Authentication
+- Argon2 password hashing
+- JWT access tokens
+- `sessionVersion` invalidation for password changes and logout-all-sessions
+- Google OAuth login/sign-up
+- Google account linking through `googleSubject`
+- password reset tokens
+- pending email verification
+- email notification preferences
+- risk-profile preferences
 
-One of the first important features was authentication. I added registration and login using JWT so user-specific features could be protected properly.
+Google OAuth uses a signed state token that carries `returnTo`, `intent`, `acceptedTerms`, and `frontendOrigin`.
 
-This mattered because features like tracked symbols, alerts, and saved simulations only make sense if they belong to a user account.
+## Persistence And Migrations
 
-Later on, authentication also had to work with WebSocket quote streaming and Google sign-in, so the auth layer became a more important part of the system than I expected at the start.
+The project uses Alembic migrations for schema history. The current migration chain runs from `20260401_0001` through `20260425_0009`.
 
-## Persistence
+Important schema changes over time:
 
-As more user features were added, database structure became more important. I used SQLAlchemy models and Alembic migrations so schema changes were tracked properly.
+- baseline users, alerts, simulation history, and watchlist tables
+- expanded simulation metrics
+- alert composite index
+- expanded alert model with `percent_change`, `range_exit`, severity, expiration, and trigger history
+- email notification preference
+- account auth extensions
+- risk profile
+- Google identity and password-access tracking
+- reworked `simulation_history` to store growth projection runs
 
-This made the project feel much more stable than relying on ad hoc table creation. It also made it easier to explain how the system evolved.
+## Market Data
 
-## Simulation
+Alpaca powers quotes, historical bars, snapshots, movers, and asset metadata. The app uses a local symbol catalog for search, market-category display, crypto naming, chart eligibility, and supported-symbol behavior.
 
-The simulation feature was one of the first parts that felt more analytical than just “API plus data”.
+Several backend caches keep memory bounded on Render, especially for quotes, historical daily close data, bar data, earliest-available dates, movers, and featured movers.
 
-I extended it beyond a simple one-off investment calculator so it could compare:
+## Tracked Symbols, Alerts, And Live Quotes
 
-- buy-and-hold
-- dollar-cost averaging
-- recurring contributions over time
+Tracked symbols let users keep a shortlist of instruments. Alerts let the system react to price movement rather than only displaying static data.
 
-I also added metrics like return, volatility, and drawdown so the output was more useful.
+The alert system now supports:
 
-## Tracked Symbols, Alerts, and Live Quotes
+- `above`
+- `below`
+- `percent_change`
+- `range_exit`
+- severity
+- expiration
+- trigger history
+- bulk pause/resume/reset/delete
+- browser notifications
+- in-app toasts
+- WebSocket quote checks for active alert symbols
 
-Another big step was building a better monitoring flow.
-
-Tracked symbols were added so users could save names they cared about. Alerts were added so the system could respond to price conditions instead of only showing passive data. Then WebSocket quote streaming helped connect those parts into something that felt more live.
-
-This part of the project made the app feel less like a collection of CRUD routes and more like an actual market tool.
+This moved the product closer to an actual monitoring workspace.
 
 ## Forecasting
 
-The forecasting module was added as a separate analytical layer. I wanted it to be more than a token “AI” feature, so I treated it as its own part of the project with training, evaluation, and saved artifacts.
+Forecasting is an experimental analytical layer using trained artifacts under `artifacts/prediction`. The route lazy-loads model dependencies to protect normal web traffic from unnecessary memory usage.
 
-Over time I improved it by adding:
-
-- better features
-- benchmark context
-- date-aware validation
-- multiple models for comparison
-- interval output
-
-That made it easier to justify the forecasting results instead of just exposing model predictions without explanation.
+The frontend explains forecasting through insight cards covering Random Forest, MAE, forecast limitations, and the distinction between forecasts and long-term projections.
 
 ## Long-Term Projection
 
-One design choice I am happy with is keeping long-term projection separate from short-term forecasting.
+Long-term projection is intentionally separate from short-term forecasting. It uses assumptions, deterministic pessimistic/baseline/optimistic scenarios, recurring contributions, inflation settings, and Monte Carlo ranges.
 
-Short-term forecasting tries to estimate what may happen over the next few trading days.
-
-Long-term projection is different. It is more about planning and assumptions over years, so I built it as a separate engine with:
-
-- deterministic scenarios
-- Monte Carlo output
-- inflation-aware values
-- recurring contributions
-
-That separation makes the project more methodologically sensible.
+The projection route now accepts optional auth. If a valid user is present, the backend saves the projection into `simulation_history`; logged-out requests can still compute a projection at the backend level.
 
 ## Frontend Development
 
-The frontend came later, after the backend had enough features to support a real dashboard.
+The frontend has grown into a full dashboard experience:
 
-The frontend now includes:
+- public landing page
+- login, sign-up, password reset, and email verification flows
+- dashboard hero with product intro and risk profile
+- featured mover card
+- tracked-symbol preview
+- daily movers with gainers/losers and insight cards
+- compact alerts/activity preview
+- instrument chart pages
+- forecast and projection pages
+- account, settings, and history pages
 
-- landing page
-- login and signup pages
-- dashboard
-- instrument detail pages
-- tracked symbols page
-- account and settings pages
-
-One of the main improvements during this phase was moving away from a rough prototype feel and making the UI look more like a market dashboard.
+Recent UI work focused on making the homepage/dashboard feel more product-ready: less oversized alert management UI, cleaner dashboard hero copy, insight cards placed around market content, restored chart tooltip styling, and clearer daily movers sections.
 
 ## Testing
 
-As the project grew, testing became more important. The backend test suite now covers the main systems such as:
+The backend test suite covers:
 
-- authentication
+- auth
 - alerts
 - watchlists
 - movers
 - instruments
-- simulations
+- quotes
+- search
+- simulations and projection history
 - forecasting
+- projections
+- WebSocket quotes
+- SQLite schema compatibility
 
-This helped a lot when features started interacting with each other.
+Run all backend tests with:
 
-## Current State
+```bash
+python -m unittest discover -s tests -p 'test_*.py' -v
+```
 
-At this point, the project has grown into a fairly broad market analysis system with:
+## Current Deployment State
 
-- backend APIs
-- user-specific features
-- live market data
-- chart-oriented frontend pages
-- forecasting and projection tools
-- Render deployment with PostgreSQL, Brevo email, Alpaca market data, and Google OAuth
+The project is deployed on Render.
 
-It is still not a production trading platform, but it is much more complete than the original idea.
+- Live website: `https://marketmetrics.dev`
+- Deployed test backend: `https://marketmetrics.onrender.com`
+- Local full-stack/FastAPI origin: `http://127.0.0.1:8000`
+- Vite dev origin: `http://127.0.0.1:5173`
 
-## Deployment State
+The backend environment needs `FRONTEND_BASE_URL=https://marketmetrics.dev` so password reset links, email verification links, CORS, and Google OAuth redirects point to the live frontend.
 
-The current deployment setup uses Render.
+Local origins such as `http://127.0.0.1:8000` and `http://127.0.0.1:5173` belong in `ADDITIONAL_FRONTEND_ORIGINS` when they need to call the deployed backend.
 
-- The live website is `https://marketmetrics.dev`.
-- The deployed test backend is `https://marketmetrics.onrender.com`.
-- The local frontend/full-stack test origin is `http://127.0.0.1:8000`.
-- The Vite dev server normally runs at `http://127.0.0.1:5173`.
+## Current Limitations
 
-The backend environment needs `FRONTEND_BASE_URL=https://marketmetrics.dev` so password reset links, email verification links, CORS, and Google OAuth redirects resolve to the live frontend. Local frontend origins such as `http://127.0.0.1:8000` belong in `ADDITIONAL_FRONTEND_ORIGINS` when they need to call the deployed backend.
+- Forecasting and projection outputs are not financial advice.
+- Alpaca availability and feed limits affect many product surfaces.
+- Public forecast/projection usage should have rate limits before being promoted.
+- Forecast artifacts must exist for the forecast route to work.
+- Historical market-data caches need to stay bounded to protect Render memory.
+- The frontend can continue to be refined, especially around responsive dashboard density and product copy.
 
-## Limitations
+## Next Useful Steps
 
-Some limitations are still clear:
-
-- the forecasting model is still experimental
-- the project still depends heavily on one market-data provider
-- the frontend can still be polished further
-- public forecast or projection access needs rate limits and careful cost control
-
-## Next Steps
-
-The next useful steps are:
-
-- keep refining the frontend
-- keep tightening deployment checks and monitoring
-- tidy documentation for submission
-- keep tightening the explanation of the analytical parts
-
-## Reflection
-
-The biggest lesson from this project has been that building a stronger system is not only about adding features. A lot of the real progress came from restructuring, simplifying, and revisiting earlier choices once the project had more moving parts.
+- Add rate limiting and abuse protection around expensive public routes.
+- Keep tightening dashboard layout and responsive behavior.
+- Add clearer forecast/projection confidence and limitation messaging.
+- Expand frontend tests or browser-based smoke checks for key routes.
+- Keep documentation synced whenever schema, auth, deployment, or route behavior changes.

@@ -23,66 +23,34 @@
 
 .dashboard-hero-copy {
   display: grid;
-  gap: 16px;
-  align-content: center;
-}
-
-.dashboard-greeting-row {
-  display: flex;
-  gap: 8px;
-}
-
-.dashboard-greeting-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(16, 185, 129, 0.1));
-  color: #0f766e;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  gap: 18px;
+  align-content: start;
+  justify-items: start;
+  max-width: 100%;
 }
 
 .dashboard-heading {
   font-family: var(--heading);
   font-size: clamp(2rem, 3.5vw, 3rem);
-  line-height: 1;
+  line-height: 0.96;
   letter-spacing: -0.035em;
-  max-width: 16ch;
+  max-width: 12ch;
+  margin: 0;
 }
 
-.dashboard-quick-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: 4px;
-}
-
-.dashboard-quick-stat {
+.dashboard-hero-intro-stack {
   display: grid;
-  gap: 2px;
+  gap: 12px;
+  width: 100%;
+  max-width: min(100%, 34rem);
 }
 
-.dashboard-quick-stat-value {
-  font-size: 1.35rem;
-  line-height: 1.1;
-  color: var(--text-main);
-}
-
-.dashboard-quick-stat-label {
-  font-size: 0.76rem;
+.dashboard-hero-intro {
+  max-width: none;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
   color: var(--muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.dashboard-quick-stat-divider {
-  width: 1px;
-  height: 32px;
-  background: var(--panel-border);
 }
 
 .dashboard-metric-grid {
@@ -96,7 +64,9 @@
 /* Risk profile strip inside hero */
 
 .dashboard-risk-strip {
-  padding-top: 4px;
+  padding-top: 0;
+  width: 100%;
+  max-width: min(100%, 34rem);
 }
 
 .dashboard-risk-prompt {
@@ -287,8 +257,18 @@
     border-radius: 24px;
   }
 
-  .dashboard-quick-stats {
+  .dashboard-hero-copy {
     gap: 14px;
+  }
+
+  .dashboard-heading {
+    max-width: 15ch;
+  }
+
+  .dashboard-hero-intro {
+    max-width: none;
+    font-size: 0.94rem;
+    line-height: 1.58;
   }
 
   .dashboard-metric-grid {
