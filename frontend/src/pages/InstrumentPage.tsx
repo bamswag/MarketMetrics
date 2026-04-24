@@ -30,9 +30,25 @@ type AdvisoryMessage = {
 } | null
 
 const DEFAULT_PERCENT_CHANGE_THRESHOLD = '5'
+const SIMULATOR_MIN_HISTORY_YEARS = 3
+const SIMULATOR_UNAVAILABLE_REASON =
+  'Simulation unavailable: at least 3 years of monthly history is required.'
 
 function formatPercentThreshold(value: number): string {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
+}
+
+function hasEnoughSimulatorHistory(earliestAvailableDate?: string | null): boolean {
+  if (!earliestAvailableDate) return false
+
+  const earliestDate = new Date(`${earliestAvailableDate}T00:00:00`)
+  if (Number.isNaN(earliestDate.getTime())) return false
+
+  const requiredStartDate = new Date()
+  requiredStartDate.setHours(0, 0, 0, 0)
+  requiredStartDate.setFullYear(requiredStartDate.getFullYear() - SIMULATOR_MIN_HISTORY_YEARS)
+
+  return earliestDate <= requiredStartDate
 }
 
 function isEditableAlertCondition(condition: AlertCondition): boolean {
@@ -170,6 +186,11 @@ export function InstrumentPage({
   const [editError, setEditError] = useState('')
 
   const isTracked = trackedSymbols.some((item) => item.symbol === symbol)
+  const simulatorUnavailableReason = instrumentDetail && !hasEnoughSimulatorHistory(
+    instrumentDetail.earliestAvailableDate,
+  )
+    ? SIMULATOR_UNAVAILABLE_REASON
+    : ''
 
   const loadSymbolAlerts = useCallback(async () => {
     if (!token || !symbol) {
@@ -831,8 +852,20 @@ export function InstrumentPage({
               <p className="instrument-forecast-cta-sub">
                 Project long-term growth with Monte Carlo scenarios — up to 50 years out.
               </p>
+              {simulatorUnavailableReason ? (
+                <p className="instrument-forecast-cta-note">{simulatorUnavailableReason}</p>
+              ) : null}
             </div>
-            {token ? (
+            {simulatorUnavailableReason ? (
+              <button
+                aria-disabled="true"
+                className="primary-action primary-action--teal instrument-cta-action instrument-cta-action--disabled"
+                disabled
+                type="button"
+              >
+                <span>Simulate</span>
+              </button>
+            ) : token ? (
               <Link
                 className="primary-action primary-action--teal instrument-cta-action"
                 to={`/instrument/${encodeURIComponent(symbol)}/project`}

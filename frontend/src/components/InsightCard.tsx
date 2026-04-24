@@ -29,7 +29,7 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
       'It can learn recurring patterns, but it cannot know tomorrow\'s news, earnings surprises, or sudden liquidity shocks.',
     ctaLabel: 'Run a sample forecast',
     ctaTo: '/forecast/AAPL',
-    tone: 'teal',
+    tone: 'amber',
   },
   mae: {
     title: 'What MAE means and why it matters',
@@ -59,7 +59,7 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
       'Always treat outputs as educational signals and compare them with your own research, risk tolerance, and goals.',
     ctaLabel: 'Read the terms',
     ctaTo: '/terms',
-    tone: 'rose',
+    tone: 'teal',
   },
   'forecast-vs-projection': {
     title: 'Forecasting vs long-term projection',

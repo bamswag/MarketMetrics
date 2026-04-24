@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 
 import { RiskProfileBadge } from './RiskProfileQuiz'
 import { FeaturedMoverCard } from './FeaturedMoverCard'
-import type { RiskProfile } from '../lib/api'
+import type { FeaturedMoverDirection, RiskProfile } from '../lib/api'
 
 type DashboardHeroProps = {
   displayName?: string
@@ -17,6 +18,9 @@ export function DashboardHero({
   onStartRiskQuiz,
   onRetakeRiskQuiz,
 }: DashboardHeroProps) {
+  const [featuredMoverDirection, setFeaturedMoverDirection] =
+    useState<FeaturedMoverDirection>('gainer')
+
   return (
     <section className="dashboard-hero page-section">
       <article className="dashboard-hero-card">
@@ -59,8 +63,12 @@ export function DashboardHero({
         </div>
       </article>
 
-      <article className="display-card dashboard-hero-feature-card">
-        <FeaturedMoverCard />
+      <article
+        className={`display-card dashboard-hero-feature-card dashboard-hero-feature-card--${
+          featuredMoverDirection === 'loser' ? 'negative' : 'positive'
+        }`}
+      >
+        <FeaturedMoverCard onDirectionChange={setFeaturedMoverDirection} />
       </article>
     </section>
   )

@@ -128,7 +128,8 @@ def _generate_synthetic_rows(start_day: date, count: int, start_price: float, sl
 
 
 class AuthTests(BaseAPITestCase):
-    def test_register_and_login_returns_bearer_token(self):
+    @patch("app.services.auth.send_welcome_email", return_value=True)
+    def test_register_and_login_returns_bearer_token(self, mock_send_welcome_email):
         response = self.client.post(
             "/auth/register",
             json={
@@ -143,6 +144,7 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(response.json()["primaryAuthProvider"], "password")
         self.assertEqual(response.json()["planName"], "Free")
         self.assertEqual(response.json()["accountStatus"], "Active")
+        mock_send_welcome_email.assert_called_once_with("auth@example.com", "Auth User")
 
         login_response = self.client.post(
             "/auth/login",
@@ -152,6 +154,25 @@ class AuthTests(BaseAPITestCase):
         payload = login_response.json()
         self.assertIn("access_token", payload)
         self.assertEqual(payload["token_type"], "bearer")
+
+    @patch("app.services.auth.send_welcome_email", return_value=False)
+    def test_register_succeeds_when_welcome_email_delivery_fails(self, mock_send_welcome_email):
+        response = self.client.post(
+            "/auth/register",
+            json={
+                "email": "welcome-failure@example.com",
+                "password": "password123",
+                "displayName": "Welcome Failure",
+                "acceptedTerms": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["email"], "welcome-failure@example.com")
+        mock_send_welcome_email.assert_called_once_with(
+            "welcome-failure@example.com",
+            "Welcome Failure",
+        )
 
     def test_authenticated_user_profile_returns_display_name(self):
         token = self.register_and_login(
@@ -186,8 +207,13 @@ class AuthTests(BaseAPITestCase):
             request_origin="http://testserver",
         )
 
+    @patch("app.services.auth.send_welcome_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
-    def test_google_callback_creates_user_and_redirects_with_token(self, mock_exchange_google_code):
+    def test_google_callback_creates_user_and_redirects_with_token(
+        self,
+        mock_exchange_google_code,
+        mock_send_welcome_email,
+    ):
         mock_exchange_google_code.return_value = (
             {
                 "email": "googleuser@example.com",
@@ -220,13 +246,63 @@ class AuthTests(BaseAPITestCase):
             self.assertFalse(user.passwordAuthEnabled)
             self.assertEqual(user.googleSubject, "google-sub-1")
             self.assertIsNotNone(user.emailVerifiedAt)
+        mock_send_welcome_email.assert_called_once_with("googleuser@example.com", "Google User")
 
+    @patch("app.services.auth.send_welcome_email", return_value=True)
+    @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
+    def test_google_callback_existing_google_user_does_not_send_welcome_email(
+        self,
+        mock_exchange_google_code,
+        mock_send_welcome_email,
+    ):
+        mock_exchange_google_code.return_value = (
+            {
+                "email": "returning-google@example.com",
+                "name": "Returning Google",
+                "sub": "google-sub-returning",
+            },
+            {"returnTo": "/", "intent": "signup", "acceptedTerms": True},
+        )
+
+        first_response = self.client.get(
+            "/auth/google/callback",
+            params={"code": "google-code", "state": "signed-state"},
+            follow_redirects=False,
+        )
+        self.assertEqual(first_response.status_code, 307)
+        mock_send_welcome_email.assert_called_once_with(
+            "returning-google@example.com",
+            "Returning Google",
+        )
+
+        mock_send_welcome_email.reset_mock()
+        mock_exchange_google_code.return_value = (
+            {
+                "email": "returning-google@example.com",
+                "name": "Returning Google",
+                "sub": "google-sub-returning",
+            },
+            {"returnTo": "/", "intent": "login", "acceptedTerms": False},
+        )
+
+        second_response = self.client.get(
+            "/auth/google/callback",
+            params={"code": "google-code", "state": "signed-state"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(second_response.status_code, 307)
+        mock_send_welcome_email.assert_not_called()
+
+    @patch("app.services.auth.send_welcome_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
     def test_google_callback_links_existing_password_account_without_weakening_password_rules(
         self,
         mock_exchange_google_code,
+        mock_send_welcome_email,
     ):
         token = self.register_and_login(email="hybrid@example.com", password="password123")
+        mock_send_welcome_email.reset_mock()
         mock_exchange_google_code.return_value = (
             {
                 "email": "hybrid@example.com",
@@ -249,6 +325,7 @@ class AuthTests(BaseAPITestCase):
             self.assertEqual(user.primaryAuthProvider, "password")
             self.assertTrue(user.passwordAuthEnabled)
             self.assertEqual(user.googleSubject, "google-sub-hybrid")
+        mock_send_welcome_email.assert_not_called()
 
         missing_current_password_response = self.client.post(
             "/auth/me/password",
@@ -432,6 +509,15 @@ class AuthTests(BaseAPITestCase):
         self.assertEqual(html.count(expected_href), 2)
         self.assertNotIn("https://marketmetrics.dev\n/reset-password", html)
         self.assertIn("Ayo &lt;Admin&gt;", html)
+
+    def test_welcome_email_html_escapes_display_name(self):
+        from app.services.email import _build_welcome_email_html
+
+        html = _build_welcome_email_html("Ayo <Admin>")
+
+        self.assertIn("Welcome to MarketMetrics", html)
+        self.assertIn("Ayo &lt;Admin&gt;", html)
+        self.assertNotIn("Ayo <Admin>", html)
 
     def test_email_action_url_redaction_keeps_tokens_out_of_logs(self):
         from app.services.email import _redact_action_url

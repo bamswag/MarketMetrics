@@ -1,6 +1,6 @@
 .insight-card {
   --insight-accent: var(--accent);
-  --insight-soft: rgba(15, 118, 110, 0.1);
+  --insight-soft: rgba(15, 118, 110, 0.42);
   display: grid;
   align-content: space-between;
   gap: 22px;
@@ -16,29 +16,34 @@
   box-shadow: var(--panel-shadow);
 }
 
+.insight-card--teal {
+  --insight-accent: #0f766e;
+  --insight-soft: rgba(15, 118, 110, 0.42);
+}
+
 .insight-card--blue {
   --insight-accent: #2563eb;
-  --insight-soft: rgba(37, 99, 235, 0.1);
+  --insight-soft: rgba(37, 99, 235, 0.38);
 }
 
 .insight-card--amber {
   --insight-accent: #b45309;
-  --insight-soft: rgba(180, 83, 9, 0.11);
+  --insight-soft: rgba(180, 83, 9, 0.44);
 }
 
 .insight-card--rose {
   --insight-accent: #be5f46;
-  --insight-soft: rgba(190, 95, 70, 0.1);
+  --insight-soft: rgba(190, 95, 70, 0.4);
 }
 
 .insight-card--indigo {
   --insight-accent: #4f46e5;
-  --insight-soft: rgba(79, 70, 229, 0.09);
+  --insight-soft: rgba(79, 70, 229, 0.36);
 }
 
 .insight-card--slate {
   --insight-accent: #334155;
-  --insight-soft: rgba(51, 65, 85, 0.08);
+  --insight-soft: rgba(51, 65, 85, 0.32);
 }
 
 .insight-card-copy {

@@ -100,6 +100,10 @@ type SegmentedControlProps<T extends string> = {
   value: T
 }
 
+type FeaturedMoverCardProps = {
+  onDirectionChange?: (direction: FeaturedMoverDirection) => void
+}
+
 function CompactSelect<T extends string>({
   ariaLabel,
   onChange,
@@ -148,7 +152,7 @@ function FeaturedMoverSkeleton() {
   )
 }
 
-export function FeaturedMoverCard() {
+export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps) {
   const { preferences } = useMarketPreferences()
   const [selection, setSelection] = useState<FeaturedMoverSelection>(DEFAULT_SELECTION)
   const [featured, setFeatured] = useState<FeaturedMoverResponse | null>(null)
@@ -166,6 +170,10 @@ export function FeaturedMoverCard() {
     const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue)
     return [Number.isFinite(numericValue) ? formatCurrencyWithPreferences(numericValue, preferences) : '--', 'Price']
   }
+
+  useEffect(() => {
+    onDirectionChange?.(selection.direction)
+  }, [onDirectionChange, selection.direction])
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -229,7 +237,11 @@ export function FeaturedMoverCard() {
   const accentFill = isLoser ? 'rgba(201, 106, 69, 0.16)' : 'rgba(15, 118, 110, 0.16)'
 
   return (
-    <div className="featured-mover-shell">
+    <div
+      className={`featured-mover-shell ${
+        isLoser ? 'featured-mover-shell--negative' : 'featured-mover-shell--positive'
+      }`}
+    >
       <p className="section-label">{title}</p>
 
       <div className="featured-mover-controls">

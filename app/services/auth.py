@@ -26,6 +26,7 @@ from app.orm_models.user import UserDB
 from app.services.email import (
     send_email_change_verification_email,
     send_password_reset_email,
+    send_welcome_email,
 )
 
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -140,6 +141,7 @@ def register_user(db: Session, email: str, password: str, display_name: str) -> 
     db.add(user)
     db.commit()
     db.refresh(user)
+    send_welcome_email(user.email, user.displayName)
     return user
 
 
@@ -585,4 +587,5 @@ def get_or_create_google_user(
     db.add(user)
     db.commit()
     db.refresh(user)
+    send_welcome_email(user.email, user.displayName)
     return user

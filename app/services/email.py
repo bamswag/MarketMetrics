@@ -190,6 +190,23 @@ def _build_email_verification_html(display_name: str, action_url: str) -> str:
     """
 
 
+def _build_welcome_email_html(display_name: str) -> str:
+    safe_display_name = escape(display_name.strip() or "there")
+    return f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
+        <h2 style="margin: 0 0 10px;">Welcome to MarketMetrics</h2>
+        <p style="color: #555; margin: 0 0 20px;">Hi {safe_display_name}, your MarketMetrics account is ready.</p>
+        <p style="color: #555; margin: 0 0 16px;">
+            You can now search instruments, track stocks, ETFs, and crypto, create price alerts,
+            and explore market data from your dashboard.
+        </p>
+        <p style="font-size: 13px; color: #999; margin: 24px 0 0;">
+            This email confirms that a MarketMetrics account was created with this address.
+        </p>
+    </div>
+    """
+
+
 def send_alert_email(
     to_email: str,
     symbol: str,
@@ -205,6 +222,17 @@ def send_alert_email(
         to_email=to_email,
         subject=subject,
         html_content=html_content,
+    )
+
+
+def send_welcome_email(
+    to_email: str,
+    display_name: str,
+) -> bool:
+    return _send_transactional_email(
+        to_email=to_email,
+        subject="Welcome to MarketMetrics",
+        html_content=_build_welcome_email_html(display_name),
     )
 
 

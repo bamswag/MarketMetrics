@@ -177,9 +177,17 @@
   gap: 4px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--success);
   text-decoration: none;
   white-space: nowrap;
+}
+
+.featured-mover-shell--positive .hero-gainer-link {
+  color: var(--success);
+}
+
+.featured-mover-shell--negative .hero-gainer-link {
+  color: var(--accent);
 }
 
 .hero-gainer-link:hover {

@@ -22,8 +22,8 @@
   border: 1px solid var(--panel-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at top left, rgba(29, 158, 117, 0.07), transparent 42%),
-    radial-gradient(circle at bottom right, rgba(13, 148, 136, 0.05), transparent 42%),
+    radial-gradient(circle at top left, rgba(29, 158, 117, 0.14), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(13, 148, 136, 0.10), transparent 42%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -47,7 +47,9 @@
   padding: 22px 22px;
   border: 1px solid var(--panel-border);
   border-radius: 20px;
-  background: var(--panel-bg);
+  background:
+    radial-gradient(circle at top right, rgba(29, 158, 117, 0.10), transparent 50%),
+    var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
 
@@ -55,7 +57,7 @@
 .projection-summary-card--main {
   border-color: rgba(29, 158, 117, 0.22);
   background:
-    radial-gradient(circle at top right, rgba(29, 158, 117, 0.06), transparent 55%),
+    radial-gradient(circle at top right, rgba(29, 158, 117, 0.12), transparent 55%),
     var(--panel-bg);
 }
 
@@ -63,7 +65,7 @@
 .projection-summary-card--main-loss {
   border-color: rgba(184, 74, 51, 0.22);
   background:
-    radial-gradient(circle at top right, rgba(184, 74, 51, 0.06), transparent 55%),
+    radial-gradient(circle at top right, rgba(184, 74, 51, 0.12), transparent 55%),
     var(--panel-bg);
 }
 
