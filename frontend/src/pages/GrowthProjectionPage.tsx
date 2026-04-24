@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 
 import { MoverLogo } from '../components/MoverLogo'
+import { SimilarInstrumentsSection } from '../components/SimilarInstrumentsSection'
 import {
   ApiError,
   fetchGrowthProjection,
@@ -969,6 +970,14 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {hasResults && (
+        <SimilarInstrumentsSection
+          assetCategory={instrument?.assetCategory}
+          instrumentName={instrument?.companyName ?? companyName}
+          symbol={instrument?.symbol ?? symbol}
+        />
       )}
 
       {/* ── Related tools ── */}

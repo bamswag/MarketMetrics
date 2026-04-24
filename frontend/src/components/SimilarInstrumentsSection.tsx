@@ -5,6 +5,7 @@ import type { SimilarInstrument } from '../lib/api'
 import { fetchSimilarInstruments } from '../lib/api'
 import { assetCategoryLabel } from '../lib/marketPreferences'
 import { MoverLogo } from './MoverLogo'
+import '../styles/components/SimilarInstrumentsSection.css'
 
 type SimilarInstrumentsSectionProps = {
   assetCategory?: string | null

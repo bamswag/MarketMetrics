@@ -15,7 +15,6 @@ type InsightCardContent = {
   caveat: string
   ctaLabel: string
   ctaTo: string
-  eyebrow: string
   secondaryBody?: string
   title: string
   tone: 'teal' | 'blue' | 'amber' | 'rose' | 'indigo' | 'slate'
@@ -23,7 +22,6 @@ type InsightCardContent = {
 
 const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
   'random-forest': {
-    eyebrow: 'Forecast model',
     title: 'How Random Forest shapes a forecast',
     body:
       'MarketMetrics uses a Random Forest model to compare many small decision trees trained on historical price features. The final forecast blends those trees so one noisy signal does not dominate the result.',
@@ -34,7 +32,6 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     tone: 'teal',
   },
   mae: {
-    eyebrow: 'Model accuracy',
     title: 'What MAE means and why it matters',
     body:
       'MAE, or Mean Absolute Error, tells you the average size of the model\'s miss in price terms. It is useful because it turns model accuracy into something easier to compare than abstract scores.',
@@ -45,7 +42,6 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     tone: 'blue',
   },
   'monte-carlo': {
-    eyebrow: 'Long-term projection',
     title: 'How Monte Carlo projection works',
     body:
       'The projection tool simulates many possible future paths using return and volatility assumptions. Instead of one neat answer, it shows a range of outcomes so upside, downside, and uncertainty are visible together.',
@@ -56,7 +52,6 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     tone: 'amber',
   },
   'not-financial-advice': {
-    eyebrow: 'Responsible use',
     title: 'Why forecasts are not financial advice',
     body:
       'Forecasts and projections are designed to support market research, not to tell you what to buy or sell. They combine historical data, assumptions, and model output into context you can question.',
@@ -69,7 +64,6 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     tone: 'rose',
   },
   'forecast-vs-projection': {
-    eyebrow: 'Two lenses',
     title: 'Forecasting vs long-term projection',
     body:
       'Forecasting focuses on the next few trading days and uses a trained model. Long-term projection looks across years and tests investment assumptions through deterministic and Monte Carlo scenarios.',
@@ -80,7 +74,6 @@ const INSIGHT_CARD_CONTENT: Record<InsightCardId, InsightCardContent> = {
     tone: 'indigo',
   },
   'live-market-data': {
-    eyebrow: 'Data flow',
     title: 'How live market data moves through the app',
     body:
       'Alpaca market data powers quotes, charts, movers, and alert checks. The frontend reads that data through focused API helpers so the same symbol can move from search to chart to watchlist without changing context.',
@@ -102,7 +95,6 @@ export function InsightCard({ id }: InsightCardProps) {
   return (
     <article className={`insight-card insight-card--${card.tone}`}>
       <div className="insight-card-copy">
-        <p className="section-label">{card.eyebrow}</p>
         <h2 className="insight-card-title">{card.title}</h2>
         <p className="insight-card-body">{card.body}</p>
         {card.secondaryBody ? <p className="insight-card-body">{card.secondaryBody}</p> : null}

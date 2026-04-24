@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 
 import { MoverLogo } from '../components/MoverLogo'
+import { SimilarInstrumentsSection } from '../components/SimilarInstrumentsSection'
 import {
   ApiError,
   fetchForecast,
@@ -995,6 +996,14 @@ export function ForecastPage({ token }: ForecastPageProps) {
             </div>
           )}
         </div>
+      )}
+
+      {token && !isLoading && !error && result && (
+        <SimilarInstrumentsSection
+          assetCategory={instrument?.assetCategory}
+          instrumentName={instrument?.companyName ?? companyName}
+          symbol={instrument?.symbol ?? symbol}
+        />
       )}
 
       {/* ── Related tools ── */}
