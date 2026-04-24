@@ -81,15 +81,16 @@ class BaseAPITestCase(unittest.TestCase):
         market_overview_service._featured_mover_cache_locks.clear()
 
     def register_and_login(self, email="tester@example.com", password="password123", display_name="Tester"):
-        register_response = self.client.post(
-            "/auth/register",
-            json={
-                "email": email,
-                "password": password,
-                "displayName": display_name,
-                "acceptedTerms": True,
-            },
-        )
+        with patch("app.services.auth.send_welcome_email", return_value=True):
+            register_response = self.client.post(
+                "/auth/register",
+                json={
+                    "email": email,
+                    "password": password,
+                    "displayName": display_name,
+                    "acceptedTerms": True,
+                },
+            )
         self.assertEqual(register_response.status_code, 201)
 
         login_response = self.client.post(
@@ -513,11 +514,16 @@ class AuthTests(BaseAPITestCase):
     def test_welcome_email_html_escapes_display_name(self):
         from app.services.email import _build_welcome_email_html
 
-        html = _build_welcome_email_html("Ayo <Admin>")
+        html = _build_welcome_email_html(
+            "Ayo <Admin>",
+            "https://marketmetrics.dev\n/account",
+        )
 
         self.assertIn("Welcome to MarketMetrics", html)
         self.assertIn("Ayo &lt;Admin&gt;", html)
         self.assertNotIn("Ayo <Admin>", html)
+        self.assertEqual(html.count('href="https://marketmetrics.dev/account"'), 2)
+        self.assertNotIn("https://marketmetrics.dev\n/account", html)
 
     def test_email_action_url_redaction_keeps_tokens_out_of_logs(self):
         from app.services.email import _redact_action_url

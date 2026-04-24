@@ -190,19 +190,47 @@ def _build_email_verification_html(display_name: str, action_url: str) -> str:
     """
 
 
-def _build_welcome_email_html(display_name: str) -> str:
+def _build_welcome_email_html(display_name: str, account_url: str) -> str:
     safe_display_name = escape(display_name.strip() or "there")
+    safe_account_url = escape(_compact_url(account_url), quote=True)
     return f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px;">
-        <h2 style="margin: 0 0 10px;">Welcome to MarketMetrics</h2>
-        <p style="color: #555; margin: 0 0 20px;">Hi {safe_display_name}, your MarketMetrics account is ready.</p>
-        <p style="color: #555; margin: 0 0 16px;">
-            You can now search instruments, track stocks, ETFs, and crypto, create price alerts,
-            and explore market data from your dashboard.
-        </p>
-        <p style="font-size: 13px; color: #999; margin: 24px 0 0;">
-            This email confirms that a MarketMetrics account was created with this address.
-        </p>
+    <div style="margin: 0; padding: 0; background: #f4f7f9;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 620px; margin: 0 auto; padding: 40px 20px;">
+            <div style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 24px; overflow: hidden; box-shadow: 0 22px 70px rgba(15, 23, 42, 0.12);">
+                <div style="padding: 32px 34px; background: linear-gradient(135deg, #0f766e 0%, #153f3a 58%, #c96a45 100%); color: #ffffff;">
+                    <p style="margin: 0 0 18px; font-size: 12px; line-height: 1; letter-spacing: 0.16em; font-weight: 800; text-transform: uppercase;">MarketMetrics</p>
+                    <h1 style="margin: 0 0 12px; font-size: 30px; line-height: 1.15; font-weight: 800;">Welcome to MarketMetrics.</h1>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.86); font-size: 16px; line-height: 1.65;">Hi {safe_display_name}, welcome to your market monitoring workspace.</p>
+                </div>
+
+                <div style="padding: 32px 34px 34px;">
+                    <p style="margin: 0 0 18px; color: #4b5563; font-size: 16px; line-height: 1.7;">
+                        You can now search instruments, track stocks, ETFs, and crypto, create price alerts,
+                        and review your account settings from one dashboard.
+                    </p>
+                    <div style="margin: 26px 0 28px;">
+                        <a href="{safe_account_url}" style="display: inline-block; padding: 14px 22px; border-radius: 999px; background: #0f766e; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 800; box-shadow: 0 12px 28px rgba(15, 118, 110, 0.24);">
+                            Open your account
+                        </a>
+                    </div>
+                    <div style="margin: 0 0 26px;">
+                        <div style="padding: 16px 18px; border-radius: 18px; background: #f7faf9; border: 1px solid rgba(15, 118, 110, 0.12); margin: 0 0 12px;">
+                            <strong style="display: block; margin: 0 0 4px; color: #111827; font-size: 14px;">Track what matters</strong>
+                            <span style="color: #64748b; font-size: 13px; line-height: 1.6;">Build watchlists and monitor price movement across supported assets.</span>
+                        </div>
+                        <div style="padding: 16px 18px; border-radius: 18px; background: #fff8f5; border: 1px solid rgba(201, 106, 69, 0.14);">
+                            <strong style="display: block; margin: 0 0 4px; color: #111827; font-size: 14px;">Stay informed</strong>
+                            <span style="color: #64748b; font-size: 13px; line-height: 1.6;">Create alerts and revisit your account preferences whenever you need to.</span>
+                        </div>
+                    </div>
+                    <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px; line-height: 1.6;">If the button does not open, copy and paste this link into your browser:</p>
+                    <a href="{safe_account_url}" style="color: #0f766e; font-size: 13px; line-height: 1.7; text-decoration: underline; word-break: break-word; overflow-wrap: anywhere;">{safe_account_url}</a>
+                    <p style="margin: 26px 0 0; color: #9ca3af; font-size: 12px; line-height: 1.6;">
+                        This email confirms that a MarketMetrics account was created with this address.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
     """
 
@@ -229,10 +257,11 @@ def send_welcome_email(
     to_email: str,
     display_name: str,
 ) -> bool:
+    account_url = f"{settings.frontend_base_url}/account"
     return _send_transactional_email(
         to_email=to_email,
         subject="Welcome to MarketMetrics",
-        html_content=_build_welcome_email_html(display_name),
+        html_content=_build_welcome_email_html(display_name, account_url),
     )
 
 
