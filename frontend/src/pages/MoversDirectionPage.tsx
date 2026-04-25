@@ -50,7 +50,7 @@ const PAGE_CONFIG: Record<MoversDirection, MoversPageConfig> = {
     eyebrow: 'Daily losers',
     oppositeCta: 'View gainers',
     oppositePath: '/movers/gainers',
-    pageTitle: "Today's market laggards",
+    pageTitle: "Today's market losers",
     tone: 'negative',
   },
 }
@@ -62,7 +62,6 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState('')
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
   const [limit, setLimit] = useState(INITIAL_MOVERS_LIMIT)
   const [requestedLimit, setRequestedLimit] = useState(INITIAL_MOVERS_LIMIT)
 
@@ -84,7 +83,6 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
 
         setMovers(payload)
         setLimit(nextLimit)
-        setLastUpdatedAt(new Date())
       })
       .catch((requestError) => {
         if (cancelled || (requestError instanceof DOMException && requestError.name === 'AbortError')) {
@@ -127,7 +125,6 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
     setMovers(null)
     setLimit(INITIAL_MOVERS_LIMIT)
     setRequestedLimit(INITIAL_MOVERS_LIMIT)
-    setLastUpdatedAt(null)
     setError('')
   }, [direction])
 
@@ -211,9 +208,7 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
     visibleCategories.length > 0
       ? visibleCategories.map(({ key }) => assetCategoryLabel(key)).join(' + ')
       : undefined
-  const updatedLabel = lastUpdatedAt
-    ? lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : null
+
   const canLoadMore = limit < MAX_MOVERS_LIMIT && !isLoading && !isLoadingMore
 
   function handleLoadMore() {
@@ -265,11 +260,6 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
                 ? `${strongestMover.change_percent} on the latest daily move.`
                 : 'Waiting for the next market update.'}
             </p>
-          </article>
-          <article className="movers-direction-summary-card">
-            <span className="metric-label">Updated</span>
-            <strong className="metric-value">{updatedLabel ?? '--'}</strong>
-            <p>Loaded from the shared public movers feed with no account-specific payload.</p>
           </article>
         </div>
 
