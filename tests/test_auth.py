@@ -556,7 +556,10 @@ class AuthTests(BaseAPITestCase):
             self.assertIsNone(user.signupVerificationTokenExpiresAt)
 
     @patch("app.services.auth.send_email_change_verification_email", return_value=True)
-    @patch("app.services.auth._generate_one_time_token", return_value="verify-email-token")
+    @patch(
+        "app.services.auth._generate_one_time_token",
+        side_effect=["signup-dummy-token", "verify-email-token"],
+    )
     def test_verify_email_commits_pending_email(self, _mock_token, _mock_send_email):
         token = self.register_and_login(email="beforeverify@example.com")
 

@@ -285,7 +285,7 @@ def request_password_reset(db: Session, email: str) -> None:
     normalized_email = normalize_email(email)
     user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
     if not user:
-        logger.warning("Password reset requested for non-existent account: %s", normalized_email)
+        logger.info("Password reset requested for unknown email address (not found in database)")
         return
 
     token = _generate_one_time_token()
@@ -293,9 +293,9 @@ def request_password_reset(db: Session, email: str) -> None:
     user.passwordResetTokenExpiresAt = _password_reset_expiry()
     db.commit()
 
-    logger.warning(
-        "Password reset token created for %s; expires at %s",
-        user.email,
+    logger.info(
+        "Password reset token created for userID=%s; expires at %s",
+        user.userID,
         user.passwordResetTokenExpiresAt,
     )
 
@@ -305,9 +305,9 @@ def request_password_reset(db: Session, email: str) -> None:
         _password_reset_url(token),
     )
     if email_sent:
-        logger.warning("Password reset email delivery accepted for %s", user.email)
+        logger.info("Password reset email delivery accepted for userID=%s", user.userID)
     else:
-        logger.warning("Password reset email delivery was not accepted for %s", user.email)
+        logger.warning("Password reset email delivery was not accepted for userID=%s", user.userID)
 
 
 def reset_password_with_token(db: Session, token: str, new_password: str) -> None:
@@ -345,13 +345,6 @@ def verify_email_token(db: Session, token: str) -> UserDB:
     token_hash = _hash_one_time_token(normalized_token)
     now = datetime.utcnow()
 
-    logger.warning(
-        "verify_email_token called: token_len=%d hash_prefix=%s now=%s",
-        len(normalized_token),
-        token_hash[:8],
-        now.isoformat(),
-    )
-
     signup_user = (
         db.query(UserDB)
         .filter(UserDB.signupVerificationTokenHash == token_hash)
@@ -359,12 +352,6 @@ def verify_email_token(db: Session, token: str) -> UserDB:
     )
     if signup_user is not None:
         expiry = signup_user.signupVerificationTokenExpiresAt
-        logger.warning(
-            "verify_email_token signup match: userID=%s expiry=%s emailVerifiedAt=%s",
-            signup_user.userID,
-            expiry.isoformat() if expiry else None,
-            signup_user.emailVerifiedAt.isoformat() if signup_user.emailVerifiedAt else None,
-        )
         if expiry is None or expiry < now:
             raise ValueError("Email verification link is invalid or expired.")
         signup_user.emailVerifiedAt = now
@@ -381,19 +368,9 @@ def verify_email_token(db: Session, token: str) -> UserDB:
     )
     if user is not None:
         expiry = user.pendingEmailTokenExpiresAt
-        logger.warning(
-            "verify_email_token pending-email match: userID=%s expiry=%s pendingEmail=%s",
-            user.userID,
-            expiry.isoformat() if expiry else None,
-            user.pendingEmail,
-        )
         if expiry is None or expiry < now or not user.pendingEmail:
             raise ValueError("Email verification link is invalid or expired.")
     else:
-        logger.warning(
-            "verify_email_token no match found for hash_prefix=%s",
-            token_hash[:8],
-        )
         raise ValueError("Email verification link is invalid or expired.")
 
     normalized_pending_email = normalize_email(user.pendingEmail)

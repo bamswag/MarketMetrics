@@ -38,7 +38,7 @@ def _annualization_factor_for_symbol(symbol: str) -> int:
 
 async def run_simulation(req: SimulationRequest) -> SimulationResult:
     symbol = req.assetSymbol.strip().upper()
-    company_name = await fetch_company_name(symbol)
+    company_name = fetch_company_name(symbol)
 
     # Fetch daily closes
     try:

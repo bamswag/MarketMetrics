@@ -97,7 +97,7 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
             await websocket.accept()
         accepted = True
         symbol = symbol.upper()
-        logger.info("WS authenticated user=%s symbol=%s", user.email, symbol)
+        logger.info("WS authenticated userID=%s symbol=%s", user.userID, symbol)
 
         last_price = None
         transient_failures = 0
@@ -105,7 +105,7 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
 
         while True:
             if asyncio.get_event_loop().time() - connection_opened_at > MAX_CONNECTION_SECONDS:
-                logger.info("WS max lifetime reached for user=%s symbol=%s — closing", user.email, symbol)
+                logger.info("WS max lifetime reached userID=%s symbol=%s — closing", user.userID, symbol)
                 await websocket.close(code=1001, reason="Connection lifetime limit reached. Reconnect to continue.")
                 return
 
@@ -204,10 +204,12 @@ async def ws_quotes(websocket: WebSocket, symbol: str):
         logger.info("WebSocket disconnected by client")
         return
     except Exception as e:
-        logger.error("Outer WebSocket error: %s", e)
+        logger.error("Outer WebSocket error: %s", e, exc_info=True)
         if accepted:
             try:
-                await websocket.send_json({"type": "error", "message": str(e)})
+                await websocket.send_json(
+                    {"type": "error", "message": "An unexpected server error occurred. Please reconnect."}
+                )
             except RuntimeError:
                 pass
         return

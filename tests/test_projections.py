@@ -72,7 +72,7 @@ class LongTermProjectionApiTests(BaseAPITestCase):
         start_price, slope = base.get(symbol, (180.0, 0.0008))
         return _generate_synthetic_rows(date(2013, 1, 2), 3400, start_price, slope)
 
-    @patch("app.projections.engine.fetch_company_name", new_callable=AsyncMock)
+    @patch("app.projections.engine.fetch_company_name")
     @patch("app.projections.engine.fetch_daily_bar_rows", new_callable=AsyncMock)
     def test_long_term_projection_returns_monthly_projection_payload(
         self,
@@ -106,6 +106,9 @@ class LongTermProjectionApiTests(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["symbol"], "MSFT")
+        # companyName must be a real string, not a coroutine repr
+        self.assertIsInstance(payload["companyName"], str)
+        self.assertNotIn("coroutine", payload["companyName"])
         self.assertEqual(payload["projectionYears"], 5)
         self.assertEqual(payload["projectionMonths"], 60)
         self.assertEqual(len(payload["monthlyChartData"]), 60)
@@ -139,7 +142,7 @@ class LongTermProjectionApiTests(BaseAPITestCase):
         )
         self.assertGreater(payload["projectedContributionTotal"], 0)
 
-    @patch("app.projections.engine.fetch_company_name", new_callable=AsyncMock)
+    @patch("app.projections.engine.fetch_company_name")
     @patch("app.projections.engine.fetch_daily_bar_rows", new_callable=AsyncMock)
     def test_long_term_projection_supports_fifty_year_monthly_output(
         self,

@@ -81,7 +81,7 @@ class SimulationMetricUnitTests(unittest.TestCase):
 
 
 class SimulationAndHistoryTests(BaseAPITestCase):
-    @patch("app.services.simulations.fetch_company_name", new_callable=AsyncMock)
+    @patch("app.services.simulations.fetch_company_name")
     @patch("app.services.simulations.fetch_daily_close_series", new_callable=AsyncMock)
     def test_simulation_endpoint_returns_comparison_data(
         self,
@@ -121,6 +121,9 @@ class SimulationAndHistoryTests(BaseAPITestCase):
         self.assertIn("contributionOccurred", payload["chartData"][1])
         self.assertIn("annualizedReturnPct", payload)
         self.assertIn("volatilityPct", payload)
+        # companyName must be a real string, not a coroutine repr
+        self.assertIsInstance(payload["companyName"], str)
+        self.assertNotIn("coroutine", payload["companyName"])
 
     def test_history_empty_initially(self):
         """GET /simulate/history returns empty list for a new user."""
