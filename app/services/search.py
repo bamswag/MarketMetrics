@@ -205,9 +205,16 @@ DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
         "CMCSA", "LMT", "DE",
     ],
     "crypto": [
+        # Large cap
         "BTC/USD", "ETH/USD", "SOL/USD", "BNB/USD", "XRP/USD",
         "ADA/USD", "DOGE/USD", "AVAX/USD", "DOT/USD", "MATIC/USD",
         "LINK/USD", "LTC/USD",
+        # Mid cap
+        "UNI/USD", "ATOM/USD", "XLM/USD", "ALGO/USD", "BCH/USD",
+        "ETC/USD", "HBAR/USD", "FIL/USD", "NEAR/USD", "APT/USD",
+        # DeFi / layer-2 / other
+        "ARB/USD", "OP/USD", "MKR/USD", "AAVE/USD", "CRV/USD",
+        "SAND/USD", "SHIB/USD", "TRX/USD", "GRT/USD",
     ],
     "etfs": [
         # Broad market
@@ -217,8 +224,10 @@ DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
         "XLK", "XLF", "XLV", "XLE", "XLU",
         "XLC", "XLI", "XLB", "XLRE",
         # Thematic / bond / commodity
-        "SMH", "ARKK", "TLT", "GLD", "SLV",
-        "IBB", "HYG", "AGG", "VNQ",
+        "SMH", "SOXX", "ARKK", "TLT", "GLD",
+        "SLV", "IBB", "HYG", "AGG", "VNQ",
+        # International
+        "EFA", "EEM", "IEMG", "SPDW",
     ],
 }
 
