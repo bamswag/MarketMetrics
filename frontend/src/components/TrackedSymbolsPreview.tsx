@@ -63,7 +63,10 @@ export function TrackedSymbolsPreview({
       ) : null}
 
       {isEmpty ? (
-        <div className="empty-state tracked-symbols-empty tracked-symbols-empty-hero">
+        <Link
+          to="/movers/gainers"
+          className="empty-state tracked-symbols-empty tracked-symbols-empty-hero tracked-symbols-empty-cta"
+        >
           <div className="tracked-symbols-empty-badge">+</div>
           <div className="tracked-symbols-empty-copy">
             <strong>
@@ -77,7 +80,7 @@ export function TrackedSymbolsPreview({
                 : 'Track a symbol to pin it here.'}
             </p>
           </div>
-        </div>
+        </Link>
       ) : null}
 
       {previewSymbols.length > 0 ? (

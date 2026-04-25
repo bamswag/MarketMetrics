@@ -341,18 +341,32 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Non
 def verify_email_token(db: Session, token: str) -> UserDB:
     ensure_user_schema(db.get_bind())
 
-    token_hash = _hash_one_time_token(token)
+    normalized_token = (token or "").strip()
+    token_hash = _hash_one_time_token(normalized_token)
     now = datetime.utcnow()
+
+    logger.warning(
+        "verify_email_token called: token_len=%d hash_prefix=%s now=%s",
+        len(normalized_token),
+        token_hash[:8],
+        now.isoformat(),
+    )
+
     signup_user = (
         db.query(UserDB)
-        .filter(
-            UserDB.signupVerificationTokenHash == token_hash,
-            UserDB.signupVerificationTokenExpiresAt.is_not(None),
-            UserDB.signupVerificationTokenExpiresAt >= now,
-        )
+        .filter(UserDB.signupVerificationTokenHash == token_hash)
         .first()
     )
-    if signup_user:
+    if signup_user is not None:
+        expiry = signup_user.signupVerificationTokenExpiresAt
+        logger.warning(
+            "verify_email_token signup match: userID=%s expiry=%s emailVerifiedAt=%s",
+            signup_user.userID,
+            expiry.isoformat() if expiry else None,
+            signup_user.emailVerifiedAt.isoformat() if signup_user.emailVerifiedAt else None,
+        )
+        if expiry is None or expiry < now:
+            raise ValueError("Email verification link is invalid or expired.")
         signup_user.emailVerifiedAt = now
         signup_user.signupVerificationTokenHash = None
         signup_user.signupVerificationTokenExpiresAt = None
@@ -362,14 +376,24 @@ def verify_email_token(db: Session, token: str) -> UserDB:
 
     user = (
         db.query(UserDB)
-        .filter(
-            UserDB.pendingEmailTokenHash == token_hash,
-            UserDB.pendingEmailTokenExpiresAt.is_not(None),
-            UserDB.pendingEmailTokenExpiresAt >= now,
-        )
+        .filter(UserDB.pendingEmailTokenHash == token_hash)
         .first()
     )
-    if not user or not user.pendingEmail:
+    if user is not None:
+        expiry = user.pendingEmailTokenExpiresAt
+        logger.warning(
+            "verify_email_token pending-email match: userID=%s expiry=%s pendingEmail=%s",
+            user.userID,
+            expiry.isoformat() if expiry else None,
+            user.pendingEmail,
+        )
+        if expiry is None or expiry < now or not user.pendingEmail:
+            raise ValueError("Email verification link is invalid or expired.")
+    else:
+        logger.warning(
+            "verify_email_token no match found for hash_prefix=%s",
+            token_hash[:8],
+        )
         raise ValueError("Email verification link is invalid or expired.")
 
     normalized_pending_email = normalize_email(user.pendingEmail)

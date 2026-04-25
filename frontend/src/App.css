@@ -1280,6 +1280,24 @@
   color: var(--muted);
 }
 
+.tracked-symbols-empty-cta {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: all 200ms ease;
+}
+
+.tracked-symbols-empty-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.24);
+  border-color: rgba(37, 99, 235, 0.16);
+}
+
+.tracked-symbols-empty-cta:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .tracked-symbols-preview-list {
   grid-template-columns: 1fr;
 }
