@@ -1157,6 +1157,7 @@ export type ForecastMetrics = {
   rmsePrice: number
   maeReturn: number
   directionalAccuracy: number
+  naiveMaePrice?: number | null
 }
 
 export type ForecastResponse = {

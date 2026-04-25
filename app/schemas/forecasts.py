@@ -43,6 +43,7 @@ class PredictionMetrics(BaseModel):
     downDayHitRate: Optional[float] = None
     signalStrategyReturn: Optional[float] = None
     buyAndHoldReturn: Optional[float] = None
+    naiveMaePrice: Optional[float] = None
 
 
 class FeatureImportancePoint(BaseModel):

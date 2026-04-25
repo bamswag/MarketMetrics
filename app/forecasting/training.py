@@ -484,6 +484,7 @@ def _evaluate_returns(
     directional_accuracy = _calculate_directional_accuracy(actual_returns, predicted_returns, np)
     return_correlation = _calculate_return_correlation(actual_returns, predicted_returns, np)
     up_hit_rate, down_hit_rate = _calculate_up_down_hit_rates(actual_returns, predicted_returns, np)
+    naive_mae_price = float(mean_absolute_error(actual_prices, base_close_series))
 
     return (
         {
@@ -495,6 +496,7 @@ def _evaluate_returns(
             "returnCorrelation": round(return_correlation, 6),
             "upDayHitRate": round(up_hit_rate, 6),
             "downDayHitRate": round(down_hit_rate, 6),
+            "naiveMaePrice": round(naive_mae_price, 6),
         },
         predicted_prices,
     )

@@ -940,8 +940,17 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   ±{formatCurrency(result.metrics.maePrice)}
                 </span>
                 <span className="forecast-metric-sub">on average</span>
+                {result.metrics.naiveMaePrice != null && (
+                  <span className="forecast-metric-sub" style={{ marginTop: '2px' }}>
+                    Naïve baseline: ±{formatCurrency(result.metrics.naiveMaePrice)}
+                    {result.metrics.maePrice < result.metrics.naiveMaePrice
+                      ? ' ✓ model wins'
+                      : ' model trails baseline'}
+                  </span>
+                )}
                 <span className="forecast-metric-explain">
                   On average, the forecast was about this far away from the real price.
+                  {result.metrics.naiveMaePrice != null && ' The naïve baseline simply predicts no price change.'}
                 </span>
               </div>
               <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.rmsePrice}>

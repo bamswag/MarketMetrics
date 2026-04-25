@@ -144,7 +144,7 @@
   color: var(--muted);
   line-height: 1.55;
   margin: 0;
-  max-width: 60ch;
+  max-width: 100%;
 }
 
 .rq-retake-link {

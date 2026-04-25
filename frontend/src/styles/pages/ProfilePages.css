@@ -13,12 +13,13 @@
 
 .profile-page-title {
   max-width: 100%;
+  font-size: 2.2rem;
 }
 
 .profile-page-copy {
   color: var(--muted);
   font-size: 1.02rem;
-  max-width: 64ch;
+  max-width: 100%;
 }
 
 .profile-grid,
