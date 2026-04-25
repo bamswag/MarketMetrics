@@ -1,10 +1,83 @@
+import unittest
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from app.schemas.simulations import ContributionFrequency
+from app.services.simulations import (
+    TRADING_DAYS_PER_YEAR_CRYPTO,
+    TRADING_DAYS_PER_YEAR_EQUITY,
+    calculate_performance_metrics,
+    simulate_buy_and_hold,
+    simulate_dollar_cost_averaging,
+)
 
 try:
     from test_auth import BaseAPITestCase
 except ModuleNotFoundError:
     from tests.test_auth import BaseAPITestCase
+
+
+class SimulationMetricUnitTests(unittest.TestCase):
+    """Direct unit tests for the targeted fixes."""
+
+    def test_dca_metrics_exclude_contribution_day_jumps(self):
+        # Flat price → asset has 0 return every day. Without the fix, contribution
+        # days would appear as huge "best day" returns and inflate volatility.
+        flat_window = [(date(2024, 1, d), 100.0) for d in range(1, 11)]
+        result = simulate_dollar_cost_averaging(
+            window=flat_window,
+            initial_amount=1000.0,
+            recurring_contribution=200.0,
+            contribution_frequency=ContributionFrequency.weekly,
+        )
+        perf = result["performance"]
+
+        self.assertAlmostEqual(perf.bestDayReturnPct, 0.0, places=6)
+        self.assertAlmostEqual(perf.worstDayReturnPct, 0.0, places=6)
+        self.assertAlmostEqual(perf.volatilityPct, 0.0, places=6)
+        self.assertAlmostEqual(perf.maxDrawdownPct, 0.0, places=6)
+
+    def test_buy_and_hold_metrics_unchanged_for_equities(self):
+        # Buy-and-hold should be unaffected by the changes.
+        window = [
+            (date(2024, 1, 1), 100.0),
+            (date(2024, 1, 2), 110.0),
+            (date(2024, 1, 3), 121.0),
+        ]
+        result = simulate_buy_and_hold(window=window, initial_amount=1000.0)
+        perf = result["performance"]
+
+        self.assertAlmostEqual(perf.finalValue, 1210.0, places=4)
+        self.assertAlmostEqual(perf.bestDayReturnPct, 10.0, places=4)
+        self.assertAlmostEqual(perf.worstDayReturnPct, 10.0, places=4)
+
+    def test_annualization_factor_changes_volatility(self):
+        # Same return series, two annualisation factors → ratio = sqrt(365/252).
+        import math
+
+        values = [100.0, 101.0, 100.0, 101.0, 100.0, 101.0]
+        equity = calculate_performance_metrics(
+            values=values,
+            invested_amount=100.0,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 1, 6),
+            annualization_factor=TRADING_DAYS_PER_YEAR_EQUITY,
+        )
+        crypto = calculate_performance_metrics(
+            values=values,
+            invested_amount=100.0,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 1, 6),
+            annualization_factor=TRADING_DAYS_PER_YEAR_CRYPTO,
+        )
+        expected_ratio = math.sqrt(
+            TRADING_DAYS_PER_YEAR_CRYPTO / TRADING_DAYS_PER_YEAR_EQUITY
+        )
+        self.assertAlmostEqual(
+            crypto["volatility_pct"] / equity["volatility_pct"],
+            expected_ratio,
+            places=6,
+        )
 
 
 class SimulationAndHistoryTests(BaseAPITestCase):

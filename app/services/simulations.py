@@ -17,7 +17,23 @@ from app.schemas.simulations import (
     StrategyPerformance,
 )
 from app.services.price_history import fetch_daily_close_series, slice_series
-from app.services.search import resolve_company_name as fetch_company_name
+from app.services.search import (
+    get_symbol_asset_class,
+    resolve_company_name as fetch_company_name,
+)
+
+
+# Trading days per year used to annualise volatility.
+# Stocks/ETFs trade ~252 weekdays; crypto trades 365 days.
+TRADING_DAYS_PER_YEAR_EQUITY = 252
+TRADING_DAYS_PER_YEAR_CRYPTO = 365
+
+
+def _annualization_factor_for_symbol(symbol: str) -> int:
+    asset_class = get_symbol_asset_class(symbol)
+    if asset_class == "crypto":
+        return TRADING_DAYS_PER_YEAR_CRYPTO
+    return TRADING_DAYS_PER_YEAR_EQUITY
 
 
 async def run_simulation(req: SimulationRequest) -> SimulationResult:
@@ -44,7 +60,13 @@ async def run_simulation(req: SimulationRequest) -> SimulationResult:
     if start_price <= 0:
         raise HTTPException(status_code=400, detail="Invalid starting price from data provider.")
 
-    buy_and_hold = simulate_buy_and_hold(window, req.initialAmount)
+    annualization_factor = _annualization_factor_for_symbol(symbol)
+
+    buy_and_hold = simulate_buy_and_hold(
+        window,
+        req.initialAmount,
+        annualization_factor=annualization_factor,
+    )
     comparison = [buy_and_hold["performance"]]
     chart_data = build_chart_data(window, buy_and_hold, None)
     selected = buy_and_hold["performance"]
@@ -55,6 +77,7 @@ async def run_simulation(req: SimulationRequest) -> SimulationResult:
             req.initialAmount,
             req.recurringContribution,
             req.contributionFrequency,
+            annualization_factor=annualization_factor,
         )
         if req.strategy == SimulationStrategy.dollar_cost_averaging and dca["performance"].contributionCount == 0:
             raise HTTPException(
@@ -129,6 +152,8 @@ def max_drawdown_pct(values: list[float]) -> float:
 def simulate_buy_and_hold(
     window: List[Tuple[date, float]],
     initial_amount: float,
+    *,
+    annualization_factor: int = TRADING_DAYS_PER_YEAR_EQUITY,
 ) -> Dict[str, object]:
     shares = initial_amount / window[0][1]
     values = [shares * close for _, close in window]
@@ -140,6 +165,7 @@ def simulate_buy_and_hold(
         invested_amount=initial_amount,
         start_date=window[0][0],
         end_date=window[-1][0],
+        annualization_factor=annualization_factor,
     )
 
     return {
@@ -167,6 +193,8 @@ def simulate_dollar_cost_averaging(
     initial_amount: float,
     recurring_contribution: float,
     contribution_frequency: ContributionFrequency,
+    *,
+    annualization_factor: int = TRADING_DAYS_PER_YEAR_EQUITY,
 ) -> Dict[str, object]:
     shares = initial_amount / window[0][1]
     values = [shares * window[0][1]]
@@ -192,11 +220,18 @@ def simulate_dollar_cost_averaging(
 
     final_value = values[-1]
     profit = final_value - invested_amount
+    # Use the underlying close-price series for return-based metrics so that
+    # cash injections on contribution days do not appear as market returns.
+    # This is a time-weighted asset-performance view; final_value, profit, and
+    # totalReturnPct still reflect the full portfolio including contributions.
+    asset_close_series = [close for _, close in window]
     metrics = calculate_performance_metrics(
         values=values,
         invested_amount=invested_amount,
         start_date=window[0][0],
         end_date=window[-1][0],
+        return_series=asset_close_series,
+        annualization_factor=annualization_factor,
     )
 
     return {
@@ -265,8 +300,16 @@ def calculate_performance_metrics(
     invested_amount: float,
     start_date: date,
     end_date: date,
+    return_series: Optional[List[float]] = None,
+    annualization_factor: int = TRADING_DAYS_PER_YEAR_EQUITY,
 ) -> Dict[str, float]:
-    daily_returns = calculate_daily_returns(values)
+    # `values` is the displayed portfolio value series (includes contributions).
+    # `return_series`, when supplied, is an asset-only mark-to-market series used
+    # to compute volatility, best/worst day, and drawdown without contribution
+    # jumps polluting the returns. Falls back to `values` for buy-and-hold,
+    # which is unchanged because b&h shares are constant.
+    return_basis = return_series if return_series is not None else values
+    daily_returns = calculate_daily_returns(return_basis)
     total_return_pct = ((values[-1] - invested_amount) / invested_amount) * 100 if invested_amount else 0.0
     years = max((end_date - start_date).days / 365.25, 1 / 365.25)
     annualized_return_pct = calculate_annualized_return_pct(
@@ -274,13 +317,17 @@ def calculate_performance_metrics(
         invested_amount=invested_amount,
         years=years,
     )
-    volatility_pct = pstdev(daily_returns) * math.sqrt(252) * 100 if len(daily_returns) > 1 else 0.0
+    volatility_pct = (
+        pstdev(daily_returns) * math.sqrt(annualization_factor) * 100
+        if len(daily_returns) > 1
+        else 0.0
+    )
 
     return {
         "total_return_pct": total_return_pct,
         "annualized_return_pct": annualized_return_pct,
         "volatility_pct": volatility_pct,
-        "max_drawdown_pct": max_drawdown_pct(values),
+        "max_drawdown_pct": max_drawdown_pct(return_basis),
         "best_day_return_pct": max(daily_returns) * 100 if daily_returns else 0.0,
         "worst_day_return_pct": min(daily_returns) * 100 if daily_returns else 0.0,
     }
