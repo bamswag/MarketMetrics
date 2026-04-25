@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 import '../styles/pages/AuthPages.css'
@@ -15,6 +15,13 @@ export function VerifyEmailPage({ isAuthenticated = false, onVerify }: VerifyEma
   const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
+  // Keep a stable ref to onVerify so the effect only re-runs when the
+  // verification token itself changes — not when the parent re-renders and
+  // passes a new function reference (which would trigger a duplicate API call
+  // that fails because the token is already consumed).
+  const onVerifyRef = useRef(onVerify)
+  onVerifyRef.current = onVerify
+
   useEffect(() => {
     if (!verificationToken) {
       setStatus('error')
@@ -29,7 +36,7 @@ export function VerifyEmailPage({ isAuthenticated = false, onVerify }: VerifyEma
       setMessage('')
 
       try {
-        const successMessage = await onVerify(verificationToken)
+        const successMessage = await onVerifyRef.current(verificationToken)
         if (cancelled) {
           return
         }
@@ -53,7 +60,10 @@ export function VerifyEmailPage({ isAuthenticated = false, onVerify }: VerifyEma
     return () => {
       cancelled = true
     }
-  }, [onVerify, verificationToken])
+  // onVerify intentionally excluded: the ref above keeps it current without
+  // causing re-runs. Verification should only fire once per unique token.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verificationToken])
 
   return (
     <section className="auth-page page-section">
