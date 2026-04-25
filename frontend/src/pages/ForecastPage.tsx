@@ -94,16 +94,16 @@ function humanizeFeatureName(raw: string): string {
 
   // Known patterns (order matters — longest first)
   const patterns: Array<[RegExp, string]> = [
-    [/^sma_ratio_(\d+)$/, 'price vs $1-day average'],
-    [/^ema_ratio_(\d+)$/, 'price vs $1-day EMA'],
+    [/^sma_ratio_(\d+)$/, 'price compared with $1-day average'],
+    [/^ema_ratio_(\d+)$/, 'price compared with $1-day EMA'],
     [/^sma_(\d+)$/, '$1-day moving average'],
     [/^ema_(\d+)$/, '$1-day exponential avg'],
     [/^rsi_?(\d+)?$/, 'RSI momentum'],
     [/^macd(_signal)?$/, 'MACD trend'],
     [/^bollinger_?.*$/, 'Bollinger band position'],
-    [/^intraday_return$/, 'today\u2019s move'],
-    [/^overnight_return$/, 'overnight move'],
-    [/^return_(\d+)d$/, '$1-day return'],
+    [/^intraday_return$/, 'movement today'],
+    [/^overnight_return$/, 'overnight movement'],
+    [/^return_(\d+)d$/, 'return over $1 days'],
     [/^return$/, 'recent return'],
     [/^log_return_(\d+)d$/, '$1-day log return'],
     [/^log_return$/, 'log return'],
@@ -142,11 +142,11 @@ function humanizeFeatureName(raw: string): string {
 // Short user-friendly description for each metric
 const METRIC_DESCRIPTIONS: Record<string, string> = {
   directional:
-    'How often the model correctly predicted up vs. down on past data. Above 55% is considered genuinely useful; 50% is equivalent to a coin flip.',
+    'How often the model correctly guessed whether the price would go up or down. 50% is about the same as guessing.',
   maePrice:
-    'Mean Absolute Error on price — the average dollar distance between predicted and actual price during backtesting. Lower is better.',
+    'On average, the forecast was about this far away from the real price. Lower is better.',
   rmsePrice:
-    'Root Mean Squared Error — like MAE but penalises large misses more heavily. Useful for spotting tail risk.',
+    'This highlights bigger mistakes more strongly than the typical price miss.',
 }
 
 function resolveConfidenceLevel(dirAcc: number): ConfidenceLevel {
@@ -164,10 +164,10 @@ function describeConfidence(level: ConfidenceLevel): string {
 
 function buildDirectionalExplanation(dirAcc: number): string {
   const pct = dirAcc * 100
-  if (pct < 50) return 'This model has recently been less reliable than a coin flip on direction.'
-  if (pct <= 55) return 'This model is correct about as often as a coin flip.'
-  if (pct <= 70) return 'This model has a modest edge on direction in backtests.'
-  return 'This model has shown a stronger directional edge in backtests.'
+  if (pct < 50) return 'Worse than random guessing on historical data.'
+  if (pct <= 55) return 'About as good as random guessing.'
+  if (pct <= 70) return 'Better than random, but not highly reliable.'
+  return 'Consistently better than random on historical data.'
 }
 
 function getModelUpdatedDate(result: ForecastResponse): string | null {
@@ -899,9 +899,9 @@ export function ForecastPage({ token }: ForecastPageProps) {
           {/* Accuracy */}
           <div className="forecast-accuracy-card">
             <div className="forecast-card-heading">
-              <p className="forecast-card-title">How reliable is this model?</p>
+              <p className="forecast-card-title">How much should I trust this forecast?</p>
               <p className="forecast-card-subtitle">
-                Measured on past data the model has never seen during training.
+                These checks compare the model's past predictions with what actually happened.
               </p>
             </div>
             <div className="forecast-metrics-grid forecast-metrics-grid--reliability">
@@ -914,7 +914,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 title={METRIC_DESCRIPTIONS.directional}
               >
                 <span className="forecast-metric-label">
-                  Right direction
+                  Direction accuracy
                   <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
                 </span>
                 <span
@@ -933,28 +933,28 @@ export function ForecastPage({ token }: ForecastPageProps) {
               </div>
               <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.maePrice}>
                 <span className="forecast-metric-label">
-                  Avg price error
+                  Typical price miss
                   <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
                 </span>
                 <span className="forecast-metric-value">
                   ±{formatCurrency(result.metrics.maePrice)}
                 </span>
-                <span className="forecast-metric-sub">per prediction</span>
+                <span className="forecast-metric-sub">on average</span>
                 <span className="forecast-metric-explain">
-                  On average, predictions are off by this amount in either direction.
+                  On average, the forecast was about this far away from the real price.
                 </span>
               </div>
               <div className="forecast-metric-tile" title={METRIC_DESCRIPTIONS.rmsePrice}>
                 <span className="forecast-metric-label">
-                  Prediction error (RMSE)
+                  Large-error score
                   <span className="forecast-metric-hint" aria-hidden>ⓘ</span>
                 </span>
                 <span className="forecast-metric-value">
                   ±{formatCurrency(result.metrics.rmsePrice)}
                 </span>
-                <span className="forecast-metric-sub">RMSE</span>
+                <span className="forecast-metric-sub">penalizes big misses</span>
                 <span className="forecast-metric-explain">
-                  Larger misses count more heavily in this score.
+                  This highlights bigger mistakes more strongly than the typical price miss.
                 </span>
               </div>
             </div>
@@ -964,9 +964,9 @@ export function ForecastPage({ token }: ForecastPageProps) {
           {topFeatures.length > 0 && (
             <div className="forecast-features-card">
               <div className="forecast-card-heading">
-                <p className="forecast-card-title">What the model looks at</p>
+                <p className="forecast-card-title">What influenced the forecast?</p>
                 <p className="forecast-card-subtitle">
-                  The signals that influenced this forecast the most, in plain English.
+                  These are the market signals the model relied on most when making this prediction.
                 </p>
               </div>
               <div className="forecast-features-list">
@@ -995,6 +995,14 @@ export function ForecastPage({ token }: ForecastPageProps) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {token && !isLoading && !error && result && (
+        <div className="forecast-page-note" style={{ marginTop: '24px', padding: '16px 20px', borderRadius: '20px', background: 'rgba(148, 163, 184, 0.08)', border: '1px solid rgba(148, 163, 184, 0.16)' }}>
+          <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--muted)', lineHeight: '1.5' }}>
+            Forecasts are estimates, not guarantees. Use them as learning support, not financial advice.
+          </p>
         </div>
       )}
 

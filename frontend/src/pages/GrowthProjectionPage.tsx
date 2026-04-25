@@ -230,7 +230,7 @@ function ProjectionTooltip(props: any) {
       )}
       {baseline != null && (
         <span className="projection-tooltip-row">
-          Expected: {formatCompact(baseline)}
+          Average growth: {formatCompact(baseline)}
         </span>
       )}
       {invested != null && (
@@ -703,7 +703,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                     className="projection-legend-swatch projection-legend-swatch--dashed"
                     style={{ borderTopColor: '#1e293b' }}
                   />
-                  Expected (fixed rate)
+                  Average growth
                 </span>
                 <span className="projection-legend-item">
                   <span
@@ -811,7 +811,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   type="monotone"
                 />
 
-                {/* Expected (baseline fixed rate) — dark navy dashed, clearly distinct from teal band */}
+                {/* Average growth (baseline fixed rate) — dark navy dashed, clearly distinct from teal band */}
                 <Line
                   animationDuration={1000}
                   animationEasing="ease-out"

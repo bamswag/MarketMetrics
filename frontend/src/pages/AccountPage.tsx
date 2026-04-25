@@ -312,10 +312,6 @@ export function AccountPage({
               <span className="metric-label">Account ID</span>
               <strong className="profile-code">{currentUser.userID}</strong>
             </div>
-            <div className="account-meta-item">
-              <span className="metric-label">Plan / status</span>
-              <strong>{currentUser.planName ?? 'Free'} · {currentUser.accountStatus ?? 'Active'}</strong>
-            </div>
           </div>
         </article>
 

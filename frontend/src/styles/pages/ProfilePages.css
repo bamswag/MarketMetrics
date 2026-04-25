@@ -8,11 +8,11 @@
 .profile-page-head {
   display: grid;
   gap: 14px;
-  max-width: 920px;
+  max-width: 100%;
 }
 
 .profile-page-title {
-  max-width: 14ch;
+  max-width: 100%;
 }
 
 .profile-page-copy {
