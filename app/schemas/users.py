@@ -63,6 +63,7 @@ class UserOut(BaseModel):
     planName: str = "Free"
     accountStatus: str = "Active"
     riskProfile: Optional[str] = None
+    isAdmin: bool = False
 
 
 class UserPreferencesUpdate(BaseModel):

@@ -184,10 +184,25 @@ DEFAULT_SYMBOL_CATALOG: List[Dict[str, Any]] = [
 
 DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
     "stocks": [
+        # Mega-cap tech
         "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL",
         "META", "TSLA", "AMD", "NFLX", "INTC",
-        "JPM", "BAC", "V", "MA", "WMT",
-        "DIS", "KO", "PEP", "XOM", "CVX",
+        # Enterprise tech / software
+        "CRM", "ORCL", "CSCO", "QCOM", "ADBE",
+        "IBM", "NOW", "UBER", "PYPL", "SHOP",
+        # Financials
+        "JPM", "BAC", "V", "MA", "GS",
+        "MS", "C", "AXP", "WFC", "BLK",
+        # Consumer staples / discretionary
+        "WMT", "DIS", "KO", "PEP", "MCD",
+        "NKE", "HD", "SBUX", "TGT", "COST",
+        # Energy
+        "XOM", "CVX", "SLB", "OXY", "PSX",
+        # Healthcare
+        "JNJ", "UNH", "PFE", "MRK", "ABBV",
+        # Industrials / other
+        "CAT", "BA", "HON", "T", "VZ",
+        "CMCSA", "LMT", "DE",
     ],
     "crypto": [
         "BTC/USD", "ETH/USD", "SOL/USD", "BNB/USD", "XRP/USD",
@@ -195,9 +210,15 @@ DEFAULT_MOVER_UNIVERSE_BY_CATEGORY: Dict[str, List[str]] = {
         "LINK/USD", "LTC/USD",
     ],
     "etfs": [
+        # Broad market
         "SPY", "QQQ", "DIA", "IWM", "VOO",
-        "VTI", "XLK", "XLF", "XLV", "XLE",
-        "SMH", "ARKK", "TLT", "GLD",
+        "VTI", "SPYG", "SPYV",
+        # Sector
+        "XLK", "XLF", "XLV", "XLE", "XLU",
+        "XLC", "XLI", "XLB", "XLRE",
+        # Thematic / bond / commodity
+        "SMH", "ARKK", "TLT", "GLD", "SLV",
+        "IBB", "HYG", "AGG", "VNQ",
     ],
 }
 

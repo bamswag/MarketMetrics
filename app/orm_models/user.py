@@ -26,6 +26,8 @@ class UserDB(Base):
     pendingEmailTokenHash = Column(String, nullable=True)
     pendingEmailTokenExpiresAt = Column(DateTime, nullable=True)
     riskProfile = Column(String, nullable=True)
+    isAdmin = Column(Boolean, default=False, nullable=False)
+    isActive = Column(Boolean, default=True, nullable=False)
     createdAt = Column(DateTime, default=datetime.utcnow, nullable=False)
     lastLoginAt = Column(DateTime, nullable=True)
 
@@ -35,7 +37,7 @@ class UserDB(Base):
 
     @property
     def accountStatus(self) -> str:
-        return "Active"
+        return "Active" if self.isActive else "Deactivated"
 
     @property
     def googleLinked(self) -> bool:

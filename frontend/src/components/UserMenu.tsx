@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 
+type UserMenuProps = {
+  isAdmin?: boolean
+}
+
 function menuItemClass(isActive: boolean) {
   return isActive ? 'user-menu-item is-active' : 'user-menu-item'
 }
 
-export function UserMenu() {
+export function UserMenu({ isAdmin = false }: UserMenuProps) {
   const location = useLocation()
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -63,6 +67,11 @@ export function UserMenu() {
           <NavLink className={({ isActive }) => menuItemClass(isActive)} to="/settings">
             Settings
           </NavLink>
+          {isAdmin ? (
+            <NavLink className={({ isActive }) => menuItemClass(isActive)} to="/admin/users">
+              Admin
+            </NavLink>
+          ) : null}
         </div>
       ) : null}
     </div>

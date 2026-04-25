@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from app.api.routes import alerts, forecasts, growth_projections, health, instruments, movers, quotes, search
 from app.api.routes import simulations, watchlists, websocket_quotes
+from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
 from app.core.config import settings
 from app.core.database import database_runtime_summary
@@ -42,6 +43,7 @@ app.include_router(auth_router)
 app.include_router(websocket_quotes.router)
 app.include_router(watchlists.router)
 app.include_router(alerts.router)
+app.include_router(admin_router)
 
 # Serve React frontend static files
 static_dir = Path(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")).resolve()

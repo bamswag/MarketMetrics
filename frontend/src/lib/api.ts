@@ -114,6 +114,7 @@ export type UserOut = {
   planName?: string
   accountStatus?: string
   riskProfile?: 'conservative' | 'moderate' | 'aggressive' | null
+  isAdmin?: boolean
 }
 
 export type RiskProfile = 'conservative' | 'moderate' | 'aggressive'
@@ -1366,4 +1367,188 @@ export async function updateSimulationHistoryNotes(
     },
   )
   return parseResponse<SimulationHistoryItem>(response)
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export type AdminUserOut = {
+  userID: string
+  email: string
+  displayName: string
+  primaryAuthProvider: string
+  passwordAuthEnabled: boolean
+  googleLinked: boolean
+  emailNotificationsEnabled: boolean
+  emailVerifiedAt: string | null
+  isAdmin: boolean
+  isActive: boolean
+  sessionVersion: number
+  riskProfile: string | null
+  createdAt: string
+  lastLoginAt: string | null
+  planName: string
+  accountStatus: string
+}
+
+export type AdminUserListResponse = {
+  items: AdminUserOut[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export type AdminUserUpdatePayload = {
+  displayName?: string
+  emailVerifiedAt?: string | null
+}
+
+export type AdminAuditLogOut = {
+  id: string
+  adminUserID: string
+  targetUserID: string | null
+  action: string
+  details: string | null
+  createdAt: string
+}
+
+export type AdminAuditLogListResponse = {
+  items: AdminAuditLogOut[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export async function fetchAdminUsers(
+  token: string,
+  params: { search?: string; page?: number; pageSize?: number } = {},
+): Promise<AdminUserListResponse> {
+  const query = new URLSearchParams()
+  if (params.search) query.set('search', params.search)
+  if (params.page) query.set('page', String(params.page))
+  if (params.pageSize) query.set('pageSize', String(params.pageSize))
+  const response = await safeFetch(`${getApiUrl()}/admin/users?${query.toString()}`, {
+    headers: authHeaders(token),
+  })
+  return parseResponse<AdminUserListResponse>(response)
+}
+
+export async function fetchAdminUser(token: string, userId: string): Promise<AdminUserOut> {
+  const response = await safeFetch(`${getApiUrl()}/admin/users/${encodeURIComponent(userId)}`, {
+    headers: authHeaders(token),
+  })
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function updateAdminUser(
+  token: string,
+  userId: string,
+  payload: AdminUserUpdatePayload,
+): Promise<AdminUserOut> {
+  const response = await safeFetch(`${getApiUrl()}/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function setUserStatus(
+  token: string,
+  userId: string,
+  active: boolean,
+): Promise<AdminUserOut> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/status`,
+    {
+      method: 'PATCH',
+      headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active }),
+    },
+  )
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function forceLogoutUser(token: string, userId: string): Promise<AdminUserOut> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/force-logout`,
+    {
+      method: 'POST',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function promoteUser(token: string, userId: string): Promise<AdminUserOut> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/promote`,
+    {
+      method: 'POST',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function demoteUser(token: string, userId: string): Promise<AdminUserOut> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/demote`,
+    {
+      method: 'POST',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function resendVerification(token: string, userId: string): Promise<AdminUserOut> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/resend-verification`,
+    {
+      method: 'POST',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AdminUserOut>(response)
+}
+
+export async function sendPasswordResetAdmin(
+  token: string,
+  userId: string,
+): Promise<AuthMessageResponse> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}/send-password-reset`,
+    {
+      method: 'POST',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function deleteAdminUser(token: string, userId: string): Promise<AuthMessageResponse> {
+  const response = await safeFetch(
+    `${getApiUrl()}/admin/users/${encodeURIComponent(userId)}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(token),
+    },
+  )
+  return parseResponse<AuthMessageResponse>(response)
+}
+
+export async function fetchAuditLogs(
+  token: string,
+  params: { search?: string; page?: number; pageSize?: number } = {},
+): Promise<AdminAuditLogListResponse> {
+  const query = new URLSearchParams()
+  if (params.search) query.set('search', params.search)
+  if (params.page) query.set('page', String(params.page))
+  if (params.pageSize) query.set('pageSize', String(params.pageSize))
+  const response = await safeFetch(`${getApiUrl()}/admin/audit-logs?${query.toString()}`, {
+    headers: authHeaders(token),
+  })
+  return parseResponse<AdminAuditLogListResponse>(response)
 }

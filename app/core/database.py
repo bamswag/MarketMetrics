@@ -43,6 +43,8 @@ _SQLITE_SCHEMA_PATCHES: dict[str, tuple[tuple[str, str], ...]] = {
         ("pendingEmailTokenHash", "ALTER TABLE users ADD COLUMN pendingEmailTokenHash VARCHAR"),
         ("pendingEmailTokenExpiresAt", "ALTER TABLE users ADD COLUMN pendingEmailTokenExpiresAt DATETIME"),
         ("riskProfile", "ALTER TABLE users ADD COLUMN riskProfile VARCHAR"),
+        ("isAdmin", "ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT 0"),
+        ("isActive", "ALTER TABLE users ADD COLUMN isActive BOOLEAN DEFAULT 1"),
     ),
     "price_alerts": (
         ("severity", "ALTER TABLE price_alerts ADD COLUMN severity VARCHAR DEFAULT 'normal'"),

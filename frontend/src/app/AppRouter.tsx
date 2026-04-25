@@ -82,6 +82,14 @@ const GrowthProjectionPage = lazy(() =>
   import('../pages/GrowthProjectionPage').then((module) => ({ default: module.GrowthProjectionPage })),
 )
 
+const AdminUsersPage = lazy(() =>
+  import('../pages/AdminUsersPage').then((module) => ({ default: module.AdminUsersPage })),
+)
+
+const AdminAuditLogsPage = lazy(() =>
+  import('../pages/AdminAuditLogsPage').then((module) => ({ default: module.AdminAuditLogsPage })),
+)
+
 type DashboardData = {
   alerts: AlertListResponse | null
   movers: MoversResponse | null
@@ -1335,7 +1343,7 @@ function AppContent() {
       actions={
         <>
           <span className="connected-chip">Connected</span>
-          <UserMenu />
+          <UserMenu isAdmin={currentUser?.isAdmin ?? false} />
           <button className="ghost-action" onClick={handleLogout} type="button">
             Log out
           </button>
@@ -1682,6 +1690,40 @@ function AppContent() {
             </>
           }
           path="/instrument/:symbol/project"
+        />
+        <Route
+          element={
+            !token ? (
+              <Navigate replace to="/login" />
+            ) : !currentUser?.isAdmin ? (
+              <Navigate replace to="/dashboard" />
+            ) : (
+              <>
+                {authenticatedHeader}
+                <Suspense fallback={<RouteLoadingState />}>
+                  <AdminUsersPage token={token} />
+                </Suspense>
+              </>
+            )
+          }
+          path="/admin/users"
+        />
+        <Route
+          element={
+            !token ? (
+              <Navigate replace to="/login" />
+            ) : !currentUser?.isAdmin ? (
+              <Navigate replace to="/dashboard" />
+            ) : (
+              <>
+                {authenticatedHeader}
+                <Suspense fallback={<RouteLoadingState />}>
+                  <AdminAuditLogsPage token={token} />
+                </Suspense>
+              </>
+            )
+          }
+          path="/admin/audit-logs"
         />
         <Route path="*" element={<Navigate replace to={token ? '/dashboard' : '/'} />} />
       </Routes>
