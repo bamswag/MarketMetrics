@@ -103,7 +103,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
 
   async function runAction(
     userId: string,
-    action: () => Promise<AdminUserOut | void>,
+    action: () => Promise<AdminUserOut | void | unknown>,
     successMsg: string,
   ) {
     setPendingActionId(userId)
