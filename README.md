@@ -46,6 +46,7 @@ Live site: **https://marketmetrics.dev**
 
 **Frontend**
 
+- Node.js 18+
 - React 19 + TypeScript
 - Vite 8
 - React Router 7
@@ -172,12 +173,18 @@ Admin pages are available at:
 - `/admin/users` — user list with management options.
 - `/admin/audit-logs` — audit event history.
 
-Admin access is controlled by the `isAdmin` field on the user record. Regular users cannot grant themselves admin access. Admin accounts should be set up manually after the first deployment (see Admin Setup in `docs/DEPLOYMENT.md`).
+Admin access is controlled by the `isAdmin` field on the user record. Regular users cannot grant themselves admin access. Admin accounts should be set up manually after the first deployment (see Admin Setup in `DEPLOYMENT.md`).
 
 Assessment admin account (for marker access):
 
 - Email: `admin@marketmetrics.dev`
-- Password: `password123`
+- Password: `password.123`
+
+To create this account locally, run:
+
+```bash
+python scripts/create_admin.py
+```
 
 ---
 
@@ -203,7 +210,6 @@ frontend/src/
 
 migrations/versions/ Alembic migration history (9 revisions)
 tests/               Backend unittest suite
-docs/                Supporting documentation
 scripts/             Training and symbol-catalog utilities
 data/                Symbol catalog and training universe files
 artifacts/           Generated forecast model artifacts
@@ -213,9 +219,22 @@ artifacts/           Generated forecast model artifacts
 
 ## Running Locally
 
+**Prerequisites:** Python 3.9+, Node.js 18+, npm.
+
 ### Backend
 
-1. Create a virtual environment and activate it.
+1. Create and activate a virtual environment:
+
+```bash
+# macOS / Linux
+python -m venv .venv
+source .venv/bin/activate
+
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+```
+
 2. Install dependencies:
 
 ```bash
@@ -275,7 +294,7 @@ The backend test suite currently has 99 passing tests. Run it with:
 PYTHONPATH=.:tests .venv/bin/python -m unittest discover -s tests -v
 ```
 
-Tests cover: auth (registration, login, session versioning, email verification, password reset, Google OAuth), alerts, watchlists, simulations, long-term projections, forecasting, instruments, movers, search, WebSocket behaviour, and SQLite schema compatibility.
+Tests cover: auth (registration, login, session versioning, email verification, password reset, Google OAuth), alerts, watchlists, simulations, long-term projections, forecasting, instruments, movers, search and WebSocket behaviour.
 
 There is currently no automated frontend test suite. Frontend testing is future work.
 
@@ -376,14 +395,14 @@ Search, movers grouping, quote eligibility, and asset-class handling all depend 
 
 ## Deployment Notes
 
-The project is deployed on Render. See `docs/DEPLOYMENT.md` for the full setup guide.
+The project is deployed on Render. See `DEPLOYMENT.md` for the full setup guide.
 
 Short summary:
 
 - One Render web service for the full-stack app (`https://marketmetrics.dev`).
 - One Render web service as a deployed test backend (`https://marketmetrics.onrender.com`).
-- Shared PostgreSQL 18 database (Render, Oregon region).
-- `JWT_SECRET` must be set to a secure random string. The backend will not start on Render if it is missing or set to `"change-me"`.
+- Shared PostgreSQL 18 database (Created on Render).
+- `JWT_SECRET` must be set to a secure random string. The backend will not start on Render if it is missing.
 - Run `alembic upgrade head` on first deploy to create the schema.
 - Forecast model artifacts are not persisted across Render deploys — this is a known limitation.
 
