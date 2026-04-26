@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   type AdminUserOut,
   type AdminUserUpdatePayload,
@@ -173,8 +174,13 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
   return (
     <section className="admin-page page-section">
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Users</h1>
-        <span className="admin-badge">Admin</span>
+        <div>
+          <h1 className="admin-page-title">Users</h1>
+          <span className="admin-badge">Admin</span>
+        </div>
+        <Link to="/admin/audit-logs" className="admin-nav-button">
+          View Audit Logs
+        </Link>
       </div>
 
       {actionSuccess ? (

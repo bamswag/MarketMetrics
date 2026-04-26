@@ -32,6 +32,29 @@
   text-transform: uppercase;
 }
 
+.admin-nav-button {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: background 150ms ease, transform 100ms ease;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.admin-nav-button:hover {
+  background: #0d6560;
+  transform: translateY(-1px);
+}
+
 /* Toolbar */
 .admin-toolbar {
   display: flex;

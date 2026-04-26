@@ -231,6 +231,22 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
   const yMax = yValues.length > 0 ? Math.max(...yValues) : 100
   const yPad = (yMax - yMin) * 0.08 || 1
   const yDomain: [number, number] = [yMin - yPad, yMax + yPad]
+
+  // Pick at most 5 evenly-spaced x-axis labels (first, ¼, ½, ¾, last) so the
+  // axis stays readable on both intraday (many points) and weekly/monthly data.
+  const xAxisTicks = useMemo(() => {
+    const n = chartData.length
+    if (n === 0) return []
+    if (n <= 4) return chartData.map((p) => p.date)
+    const indices = [
+      0,
+      Math.round(n / 4),
+      Math.round(n / 2),
+      Math.round((3 * n) / 4),
+      n - 1,
+    ]
+    return [...new Set(indices)].map((i) => chartData[i].date)
+  }, [chartData])
   const title = activeFeatured?.title ?? buildTitle(selection)
   const isLoser = selection.direction === 'loser'
   const accentColor = isLoser ? '#c96a45' : '#0f766e'
@@ -303,7 +319,7 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                   <XAxis
                     axisLine={false}
                     dataKey="date"
-                    interval="preserveStartEnd"
+                    interval={0}
                     tick={{ fontSize: 11, fill: '#6b7280' }}
                     tickFormatter={(value: string) => {
                       if (!value) return ''
@@ -320,6 +336,7 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                       })
                     }}
                     tickLine={false}
+                    ticks={xAxisTicks}
                   />
                   <YAxis
                     axisLine={false}
