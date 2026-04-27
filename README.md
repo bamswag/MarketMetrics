@@ -291,7 +291,7 @@ VITE_ALLOW_REMOTE_API_IN_DEV=true
 The backend test suite currently has 99 passing tests. Run it with:
 
 ```bash
-PYTHONPATH=.:tests .venv/bin/python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 Tests cover: auth (registration, login, session versioning, email verification, password reset, Google OAuth), alerts, watchlists, simulations, long-term projections, forecasting, instruments, movers, search and WebSocket behaviour.
