@@ -208,7 +208,7 @@ frontend/src/
 ├─ lib/              API helpers, formatters, market utilities
 └─ styles/           Page and component CSS
 
-migrations/versions/ Alembic migration history (9 revisions)
+migrations/versions/ Alembic migration history (11 revisions)
 tests/               Backend unittest suite
 scripts/             Training and symbol-catalog utilities
 data/                Symbol catalog and training universe files

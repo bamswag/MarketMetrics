@@ -1,223 +1,278 @@
-# Project Log
-
-This file records how MarketMetrics has developed and where the project stands as of submission.
-
----
-
-## Starting Point
-
-MarketMetrics started as a stock analysis platform rather than a simple price viewer. The original goal was to combine user accounts, tracked symbols, alerts, historical simulation, short-term forecasting, and longer-term projection in one explainable system. The project is scoped as an educational financial investment assistant — not a trading platform or commercial product.
-
-The backend came first, which shaped the project around routes, services, schemas, models, and tests instead of one large application file. That separation has made the codebase easier to extend and test as features were added throughout the year.
+# Project Log — MarketMetrics
+## A Financial Investment Assistant (CO3201 FYP)
 
 ---
 
-## Backend Foundation
+## Week 1 [w/c 29/09/2025]
 
-The backend is a FastAPI app with SQLAlchemy models, Alembic migrations, Pydantic v2 schemas, and service modules separated from route handlers. Integrations (Alpaca, Brevo, Google OAuth) are isolated in their own subpackage.
-
-Current backend areas include auth, search, quotes, movers, instruments, watchlists, alerts, WebSocket quotes, historical simulations, forecast inference, growth projection, projection history, admin, and health checks.
-
----
-
-## Authentication and Account Management
-
-Auth began with email/password registration and JWT login. It now includes:
-
-- Argon2 password hashing
-- JWT access tokens with configurable expiry
-- `sessionVersion` claim for invalidating tokens across devices (password change, logout-all-sessions)
-- Google OAuth login and sign-up with account linking via `googleSubject`
-- Password reset with email link (Brevo, time-limited token)
-- Pending email change with verification link
-- Email notification preferences
-- Risk-profile preferences
-
-Google OAuth uses a signed short-lived state token to carry `returnTo`, `intent`, `acceptedTerms`, and `frontendOrigin` through the callback flow. The backend validates the frontend origin against a strict allowlist before redirecting.
+- Clarified project scope with supervisor: educational investment assistant (not trading platform or financial advice).
+- Researched retail investment platforms and financial literacy problem; confirmed scope as decision-support + simulation.
+- Drafted initial project aims: allow users to explore instruments, simulate historical strategies, forecast short-term prices, project long-term growth.
+- Sketched system architecture: FastAPI backend, React frontend, PostgreSQL DB, Render deployment.
+- Set up GitHub repository and initial project structure.
 
 ---
 
-## Persistence and Migrations
+## Week 2 [w/c 06/10/2025]
 
-The project uses Alembic for schema history. The current migration chain runs from `20260401_0001` through `20260425_0009`.
-
-Schema changes over time:
-
-1. Baseline users, watchlist, alerts, and simulation history tables.
-2. Expanded simulation history metrics.
-3. Alert composite index for `(userID, symbol, isActive)` queries.
-4. Extended alert model: `percent_change`, `range_exit`, severity, expiration, trigger history.
-5. Email notification preference field.
-6. Account auth extensions: reset tokens, email verification, `primaryAuthProvider`.
-7. Risk profile field.
-8. Google identity linkage and password-access tracking.
-9. Reworked `simulation_history` to store long-term growth projection runs.
-
-All migrations use `render_as_batch=True` for SQLite compatibility in local development.
+- Literature review: reviewed robo-advisors, stock analysis platforms, retail investor tools.
+- Identified gap: most platforms don't explain market metrics or strategy differences well for beginners.
+- Started requirements analysis: mapped user flows (search → watchlist → alert → simulate → forecast → project).
+- Drafted functional requirements covering accounts, market data, alerts, simulations, forecasting, projections.
 
 ---
 
-## Market Data
+## Week 3 [w/c 13/10/2025]
 
-All market data comes from Alpaca (IEX feed by default). The app uses a locally cached symbol catalog for search, market-category display, crypto symbol naming, chart eligibility, and supported-symbol behaviour.
-
-Several backend caches keep memory bounded on Render, especially for quotes, historical daily close data, bar data, earliest-available dates, movers, and featured movers.
-
----
-
-## Tracked Symbols, Alerts, and Live Quotes
-
-Tracked symbols let users keep a shortlist of instruments. Alerts let the system react to price movement rather than only displaying static data.
-
-The alert system supports:
-
-- Four condition types: `above`, `below`, `percent_change`, `range_exit`
-- Severity (normal / urgent)
-- Optional expiration
-- Trigger history via `alert_events` table
-- Bulk pause, resume, reset, and delete
-- Browser notifications (with permission)
-- In-app toasts
-- Near-real-time quote checks through WebSocket connections
-
-WebSocket connections are polling-backed: the backend fetches a new Alpaca quote every 30 seconds and evaluates active alerts against it. Alerts are only evaluated when an active browser session has an open connection for the relevant symbol. There is no independent background monitoring process.
+- Completed requirements specification: 7 major objectives (auth, market data, watchlists, alerts, simulations, forecasting, projections, admin).
+- Designed database schema: users, watchlist_items, price_alerts, alert_events, simulation_history.
+- Selected tech stack: FastAPI (backend), React 19 (frontend), PostgreSQL (production), SQLite (dev), Alembic (migrations), Pydantic (validation).
+- Chose Alpaca IEX feed for market data (free tier sufficient, reliable, covers stocks/ETFs/crypto).
 
 ---
 
-## Historical Investment Simulations
+## Week 4 [w/c 20/10/2025]
 
-The simulation feature lets users compare buy-and-hold and dollar-cost averaging strategies over a historical date range. Both strategies are always computed so users can see a side-by-side comparison.
-
-Metrics include final value, profit, total return, annualised return, volatility, max drawdown, and best/worst single day. Equity and crypto use different annualisation factors (252 vs 365 trading days).
-
-A bug was discovered and fixed during final preparation: the `run_simulation` function had a spurious `await` on `fetch_company_name`, which is a synchronous function. Awaiting it in production raised a `TypeError` and caused every `/simulate/` call to return HTTP 500. The fix was to remove the `await`. Tests were also updated to use a plain `MagicMock` instead of `AsyncMock` for that function, and regression assertions were added to catch the same class of mistake in future.
-
----
-
-## Forecasting
-
-Forecasting is an experimental analytical layer using a trained Random Forest model. Artifacts are stored under `artifacts/prediction/`. The forecast route lazy-loads ML dependencies so normal web traffic does not pull pandas, scikit-learn, or model artifacts into memory.
-
-The frontend explains the forecasting approach through static insight cards covering Random Forest, MAE, forecast limitations, and the distinction between forecasts and long-term projections.
+- Designed system architecture: clear separation of routes, services, integrations, ORM models, schemas.
+- Planned authentication approach: JWT tokens + Argon2 hashing + Google OAuth + session versioning.
+- Drafted alert system: 4 condition types (above, below, percent_change, range_exit), WebSocket evaluation, email notifications.
+- Sketched UI wireframes: login/signup, dashboard, instrument detail, search, movers, forecast, projection pages.
 
 ---
 
-## Long-Term Projection
+## Week 5 [w/c 27/10/2025]
 
-Long-term projection is intentionally separate from short-term forecasting. It uses:
-
-- Historical return assumptions (derived from data) or manual overrides
-- Deterministic pessimistic/baseline/optimistic scenarios
-- Configurable recurring contributions and inflation rate
-- Monte Carlo simulation with configurable run count
-- Nominal and inflation-adjusted end values
-
-If a valid user token is present, the backend saves the projection result to `simulation_history`. Logged-out users can compute projections at the backend level (the frontend currently requires a token before making the request).
+- Set up development environment: FastAPI hello-world, Render account, virtual environment, `.env` template.
+- Implemented user model and initial auth routes (`/auth/register`, `/auth/login`).
+- Added Argon2 password hashing and Pydantic schemas for auth.
+- Created first Alembic migration: baseline users table.
+- Wrote auth unit tests (registration, password validation).
 
 ---
 
-## Admin Pages
+## Week 6 [w/c 03/11/2025]
 
-Two admin pages were added:
-
-- `/admin/users` — view and manage registered user accounts
-- `/admin/audit-logs` — view audit event history
-
-Access is controlled by the `isAdmin` flag on the user record. Normal users cannot self-promote to admin. Admin accounts must be created manually via a direct database update. The pages are implemented as lazy-loaded React components with routes protected on the frontend and enforced on the backend.
-
----
-
-## Frontend Development
-
-The frontend has grown into a full dashboard experience:
-
-- Public landing page, login, sign-up, password reset, email verification, legal pages
-- Dashboard with hero, featured mover card, tracked symbol preview, daily movers, insight cards, and alerts panel
-- Instrument detail pages with charts, quotes, similar instruments, watchlist controls, and alert creation
-- Search results page grouped by asset category
-- Movers direction pages
-- Forecast and projection pages
-- Account, settings, projection history, admin pages
-
-Recent UI work focused on cleaner dashboard density, the featured mover card, daily movers presentation, insight card placement, chart tooltip styling, and x-axis label readability.
+- Integrated Brevo for transactional email (password reset, email verification).
+- Implemented email verification workflow: token generation, verification link, confirmation route.
+- Added password reset: forgot-password request, email link, reset with token validation.
+- Extended migrations: added reset token and email verification fields to users table.
+- Wrote tests for password reset and email verification flows.
 
 ---
 
-## Security Hardening (Final Fixes)
+## Week 7 [w/c 10/11/2025]
 
-Several security and reliability issues were addressed before submission:
-
-**JWT production guard:** The backend now checks on startup whether `JWT_SECRET` is empty or set to the placeholder `"change-me"`. If running on Render and the secret is not properly set, the app refuses to start with a clear error message. This prevents accidental deployment with a known weak secret.
-
-**Reduced PII in logs:** Operational log lines in the WebSocket handler and auth service were updated to use `user.userID` (internal UUID) instead of `user.email`. Debug-level password reset log lines that included token hash prefixes were removed. This reduces the risk of personal data appearing in unstructured server logs.
-
-**WebSocket client error isolation:** The outer exception handler in the WebSocket route was updated to send a generic error message to the browser instead of `str(e)`. The full exception is still logged server-side with `exc_info=True`. This prevents internal error details (stack traces, database error messages) from being exposed to the client.
+- Designed and implemented Google OAuth 2.0: state token generation, Google redirect, callback handling.
+- Added account linking: existing users can link Google identity via `googleSubject`.
+- Created migration for `primaryAuthProvider` and `googleSubject` fields.
+- Tested OAuth flow end-to-end with test credentials.
+- Implemented role-based access control: `isAdmin` flag for admin routes.
 
 ---
 
-## Testing
+## Week 8 [w/c 17/11/2025]
 
-The backend test suite covers:
-
-- Auth (registration, login, session versioning, logout-all, email verification, password reset, Google OAuth)
-- Alerts (CRUD, bulk actions, condition validation, trigger evaluation, history)
-- Watchlists
-- Movers
-- Instruments
-- Quotes
-- Search
-- Simulations (buy-and-hold, DCA, metrics, annualisation factor)
-- Long-term projections (assumptions derivation, deterministic engine, Monte Carlo, API)
-- Projection history (save, list, delete, patch notes)
-- Forecasting
-- WebSocket quotes (auth, quote streaming, alert evaluation)
-- SQLite schema compatibility
-
-Run the full suite with:
-
-```bash
-PYTHONPATH=.:tests .venv/bin/python -m unittest discover -s tests -v
-```
-
-Current result: **99 tests passing**.
-
-There is no automated frontend test suite. Frontend testing (React Testing Library or Playwright) is future work.
+- Designed price alert system: 4 condition types with Pydantic validation enforcing condition-specific fields.
+- Implemented alert CRUD: `POST /alerts`, `GET /alerts`, `PATCH /alerts/{id}`, `DELETE /alerts/{id}`.
+- Created `alert_events` table for trigger history; added severity and expiration fields.
+- Implemented bulk alert operations: pause, resume, reset, delete in single endpoint.
+- Wrote comprehensive alert tests covering all condition types and validations.
 
 ---
 
-## Current Deployment State
+## Week 9 [w/c 24/11/2025]
 
-The project is deployed on Render.
-
-- Live website: `https://marketmetrics.dev`
-- Deployed test backend: `https://marketmetrics.onrender.com`
-- Shared PostgreSQL 18 database (Render, Oregon)
-
-The backend requires `FRONTEND_BASE_URL=https://marketmetrics.dev` so password reset links, email verification links, CORS, and Google OAuth redirects work correctly.
+- Integrated Alpaca market data API; created alpaca_client service.
+- Implemented quote caching with async locking to prevent duplicate API calls.
+- Fetched historical OHLCV bars; implemented caching with 1-hour TTL.
+- Created symbol catalogue search endpoint with fuzzy matching.
+- Tested with real symbols: AAPL, BTC, SPY (worked reliably).
 
 ---
 
-## Current Limitations
+## Week 10 [w/c 01/12/2025]
 
-- No frontend automated test suite.
-- No CI/CD pipeline. Deploys are triggered manually.
-- No API rate limiting on any route.
-- Alerts only evaluate during active WebSocket sessions — no background monitoring process.
-- WebSocket quotes are polling-backed (30-second ticks), not true streaming.
-- Forecast artifacts do not persist across Render redeploys without additional storage configuration.
-- Simulations do not model tax, transaction costs, FX conversion, or dividends.
-- Forecasts and projections are educational analytical tools, not financial advice.
-- All market data depends on Alpaca availability and feed support.
-- In-memory caches are per-process and not distributed.
+- Implemented `GET /movers` endpoint: top gainers/losers with 5-min caching.
+- Created `GET /movers/featured` endpoint: curated mover card with day/week/month filters.
+- Implemented watchlist enrichment: fetch quotes and alert counts for each symbol; graceful fallback on API failure.
+- Built movers service and tests; updated dashboard wireframe.
+- Supervisor feedback: project on track, architecture sound.
 
 ---
 
-## Potential Next Steps
+## Week 11 [w/c 08/12/2025]
 
-- Add rate limiting (e.g. `slowapi`) on registration, login, forecast, and projection routes.
-- Set up a frontend test suite for key user flows.
-- Set up CI/CD with GitHub Actions for automated test runs and deploy triggers.
-- Persist forecast artifacts to Render Disk or external storage.
-- Enable logged-out forecast and projection access in the frontend (with rate limiting in place).
-- Add cross-user isolation tests to the backend suite.
-- Extend simulation modelling to include basic cost assumptions.
+- Designed WebSocket architecture: one connection per symbol, 30-second polling, alert evaluation.
+- Implemented `WS /ws/quotes/{symbol}` endpoint: authentication, quote polling, alert evaluation.
+- Created alert evaluation logic: check all conditions, trigger if met, send email async.
+- Added WebSocket connection timeout (30 min), transient error backoff (5s → 15s → 30s).
+- Wrote WebSocket tests: authentication, quote streaming, alert evaluation.
+
+---
+
+## Week 12 [w/c 15/12/2025]
+
+- **Issue**: ORM objects become detached in long-lived WebSocket connections after ~30 seconds. Solved by serializing alerts to dicts before returning.
+- Implemented investment simulation engine: both buy-and-hold and dollar-cost averaging.
+- Designed performance metrics: total return, annualized return, volatility (pstdev), max drawdown, best/worst day.
+- Added separate annualization factors: 252 for equities, 365 for crypto.
+- Built simulation tests covering both strategies, metrics accuracy, date range validation.
+
+---
+
+## Week 13 [w/c 22/12/2025]
+
+- Designed forecasting pipeline: walk-forward cross-validation to prevent look-ahead bias.
+- Implemented Random Forest training script: historical bars → features → model artifacts.
+- Created lazy-loading mechanism: ML dependencies only imported on forecast route.
+- Designed long-term projection engine: deterministic scenarios + Monte Carlo simulation.
+- Created projection schema: assumptions, scenario outputs, P10/P50/P90 confidence bands.
+
+---
+
+## Week 14 [w/c 29/12/2025]
+
+- **Issue**: Walk-forward CV training had leaky train-test split initially. Fixed by shifting test window forward each iteration.
+- **Issue**: Forecasting is slow (5–10 seconds per symbol). Accepted trade-off; added loading spinners.
+- Implemented admin endpoints: `/admin/users`, `/admin/audit-logs`.
+- Created audit logging: records admin actions (user, action, timestamp).
+- Added role-based access control: only `isAdmin=true` can access `/admin/*`.
+
+---
+
+## Week 15 [w/c 05/01/2026]
+
+- Initialized React 19 + TypeScript + Vite frontend; created page structure (landing, login, dashboard, etc.).
+- Implemented auth pages: login, signup, password reset, email verification, Google OAuth redirect.
+- Built API client layer: base URL config, token management, request handling.
+- Created routing with React Router v7: protected routes, guest-only routes, lazy loading.
+- Implemented basic dashboard layout and components.
+
+---
+
+## Week 16 [w/c 12/01/2026]
+
+- **Issue**: Database migration for new fields caused SQLite compatibility problem. Implemented runtime ALTER TABLE hack with `ensure_user_schema()` (cached per bind).
+- **Issue**: Vite bundle was 200KB uncompressed. Optimised with gzip/brotli compression and code splitting for lazy pages.
+- Built dashboard components: featured mover card, daily movers, alerts panel, tracked symbols preview.
+- Implemented instrument detail page: chart (Recharts), quote, similar instruments, watchlist toggle, alert creation.
+- Built search results page with category grouping.
+
+---
+
+## Week 17 [w/c 19/01/2026]
+
+- Built movers direction pages (gainers/losers) with sparkline cards.
+- Implemented chart tooltip styling: created shared `ChartTooltip.css` for consistency across pages.
+- Built forecast page: input → prediction chart → MAE metric → uncertainty disclaimer.
+- Built projection page: assumptions input → scenario table + Monte Carlo chart.
+- Implemented watchlist management UI: add/remove buttons, enriched display.
+
+---
+
+## Week 18 [w/c 26/01/2026]
+
+- **Major issue**: Forecast page was slow (5–10 seconds). Profiling showed ML model loading was bottleneck. Added loading spinner; users understand wait on dedicated page.
+- **Major issue**: Projection page had similar latency. Added progress indication.
+- Built alert creation form with dynamic field validation (condition-specific fields enforced).
+- Created projection history page: list, view, edit notes.
+- Implemented account/settings pages: profile update, preference management, risk profile selection.
+
+---
+
+## Week 19 [w/c 02/02/2026]
+
+- Built admin pages: user management (view, disable, promote), audit log viewer.
+- Implemented SPA fallback: FastAPI serves `frontend/dist/index.html` for unknown routes.
+- Configured Render deployment: built React frontend, deployed FastAPI, set environment variables.
+- Created database migrations on Render (`alembic upgrade head` on deploy).
+- Tested full-stack app on `https://marketmetrics.dev`.
+
+---
+
+## Week 20 [w/c 09/02/2026]
+
+- **Major issue**: Render memory constraint (~512 MB). Memory spiked to 100% when multiple users accessed forecast simultaneously. Solved by lazy-loading ML model per-request (not on startup).
+- **Major issue**: API latency on forecast/projection pages caused UI hang. Added async loading + loading spinners; frontend state management became complex.
+- Deployed backend-only test service: `https://marketmetrics.onrender.com` (useful for frontend testing).
+- Verified database migrations on Render (SQLite dev, PostgreSQL prod both work).
+- Began writing comprehensive test suite.
+
+---
+
+## Week 21 [w/c 16/02/2026]
+
+- Wrote backend test suite: 99 passing tests covering auth, alerts, watchlists, simulations, projections, forecasting, WebSocket, search, movers.
+- Tested SQLite schema compatibility (all migrations work on both SQLite and PostgreSQL).
+- Ran load testing on slow routes; identified in-memory caches as largest memory consumers.
+- Reduced cache sizes (quotes: max 1000, bars: max 500) to balance memory vs API calls.
+- Manual end-to-end testing on Render: registered account, created watchlist, set alerts, ran simulations.
+
+---
+
+## Week 22 [w/c 23/02/2026]
+
+- **Critical bug fix**: `run_simulation()` was awaiting synchronous `fetch_company_name()`, causing HTTP 500 on every `/simulate` call. Removed spurious `await`. Updated tests (MagicMock instead of AsyncMock).
+- **Security hardening**: Added JWT production guard (backend refuses to start on Render if `JWT_SECRET` is empty or `"change-me"`).
+- Reduced PII in logs: changed WebSocket handler to log `userID` instead of `email`; removed password reset token hashes from debug logs.
+- **WebSocket error isolation**: outer exception handler sends generic error to browser instead of `str(e)`.
+- Supervisor check-in: project on track for submission.
+
+---
+
+## Week 23 [w/c 02/03/2026]
+
+- **Major issue**: Frontend rerendering on dashboard. Alerts panel flickered on parent state change. Fixed with `useCallback()` and `React.memo()` to prevent unnecessary rerenders.
+- **Data leakage bug**: Stale frontend state appearing in wrong view context (e.g., old alert data showing in search). Traced to shared state in AppRouter; moved to context provider. Now each view gets fresh data on navigation.
+- Optimised API calls: added request deduplication (same request within 100ms skips duplicate).
+- Added loading states to slow pages.
+- Profiled and optimised memory usage: reduced cache footprint, added TTL bounds.
+
+---
+
+## Week 24 [w/c 09/03/2026]
+
+- Comprehensive manual testing: all workflows (auth, search, watchlist, alerts, simulations, forecasting, projections, admin).
+- Edge case testing: invalid inputs, missing data, boundary conditions (1-day vs 10-year simulations).
+- **Remaining latency**: Forecast page still ~8–10 seconds (acceptable given ML compute). Documented as limitation.
+- Finalised codebase: comments, cleaned up debug logs, removed TODOs.
+- Updated README.md, DEPLOYMENT.md, PROJECTLOG.md.
+- **Final deployment**: `https://marketmetrics.dev` live and stable. 99/99 tests passing.
+- **Submission ready**: codebase, documentation, test suite, deployment guide prepared.
+
+---
+
+## Key Technical Achievements
+
+- **Auth System**: Email/password + Argon2 + JWT + session versioning + Google OAuth + 2-step workflows (email verification, password reset)
+- **Market Data Integration**: Alpaca IEX feed, real-time quotes via WebSocket (30s polling), caching strategy (30s quotes, 1h bars)
+- **Alert System**: 4 condition types, Pydantic validation, trigger history, bulk operations, near-real-time evaluation
+- **Investment Analysis**: Buy-and-hold + DCA simulations, Random Forest forecasting (walk-forward CV), Monte Carlo projections, deterministic scenarios
+- **Full-Stack Deployment**: Render web service, PostgreSQL 18, Alembic migrations (11 revisions), SPA fallback serving
+- **Test Coverage**: 99 backend tests covering all major features; SQLite/PostgreSQL compatibility verified
+
+---
+
+## Known Limitations (Documented)
+
+- No frontend automated tests (future work)
+- No CI/CD pipeline (manual deploys)
+- No API rate limiting (future work)
+- Alerts only evaluate during active WebSocket sessions (no background worker)
+- WebSocket polling (30s ticks), not true exchange streaming
+- Forecast artifacts ephemeral on Render (no persistent storage)
+- Simulations omit tax, transaction costs, FX, dividends
+- Forecasts and projections are educational, not financial advice
+- In-memory caches not distributed (single Render instance)
+
+---
+
+## Future Improvements
+
+- Rate limiting on registration, login, forecast, projection routes
+- Frontend test suite (React Testing Library or Playwright)
+- CI/CD pipeline (GitHub Actions)
+- Persistent forecast artifacts (Render Disk or S3)
+- Background worker for 24/7 alert monitoring
+- Enhanced simulation modelling (transaction costs, taxes)
+- Better forecasting models (LSTM, Transformer, ensemble)

@@ -11,7 +11,7 @@ from datetime import datetime
 from uuid import uuid4
 
 ADMIN_EMAIL = "admin@marketmetrics.dev"
-ADMIN_PASSWORD = "password123"
+ADMIN_PASSWORD = "password.123"
 ADMIN_DISPLAY_NAME = "MarketMetrics Admin"
 
 def create_or_promote_admin():
