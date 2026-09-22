@@ -297,15 +297,19 @@ Admin access is controlled by the `isAdmin` field on the `users` table.
 
 Normal users cannot register themselves as admins. Admin access must be provisioned manually.
 
-### Creating an Admin Account Locally
+### Promoting an Existing User
 
-The simplest local setup method is:
+Administrator credentials must not be stored in source control. First create
+the account through the application's normal signup or Google OAuth flow. From
+a trusted environment configured with the intended `DATABASE_URL`, run:
 
 ```bash
-python scripts/create_admin.py
+python scripts/create_admin.py --email your-admin-email@example.com
 ```
 
-This script creates or promotes the configured admin account.
+The script only promotes an existing user; it does not create an account or set
+a password. It also activates the account and invalidates existing sessions
+when permissions change, so the administrator must sign in again.
 
 ### Manually Promoting a User
 
@@ -316,15 +320,6 @@ UPDATE users
 SET "isAdmin" = true
 WHERE email = 'your-admin-email@example.com';
 ```
-
-### Admin Account
-
-For assessment and demonstration, the admin account is:
-
-
-Email:    admin@marketmetrics.dev  
-Password: password.123
-
 
 Admin routes:
 

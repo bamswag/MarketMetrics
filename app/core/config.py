@@ -22,6 +22,10 @@ class Settings:
         return Path(__file__).resolve().parents[2]
 
     @property
+    def app_environment(self) -> str:
+        return os.getenv("APP_ENV", "development").strip().lower()
+
+    @property
     def database_url(self) -> str:
         configured_url = os.getenv("DATABASE_URL", "").strip()
         if configured_url:
@@ -32,8 +36,8 @@ class Settings:
             or os.getenv("RENDER_SERVICE_ID")
             or os.getenv("RENDER_EXTERNAL_URL")
         )
-        if running_on_render:
-            raise RuntimeError("DATABASE_URL must be set for Render deployments.")
+        if running_on_render or self.app_environment == "production":
+            raise RuntimeError("DATABASE_URL must be set for production deployments.")
 
         return "sqlite:///./marketmetrics.db"
 

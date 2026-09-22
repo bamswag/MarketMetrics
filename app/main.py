@@ -95,14 +95,15 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 def log_runtime_environment() -> None:
     logger.info("MarketMetrics API starting with database %s", database_runtime_summary())
 
-    # Refuse to start on Render if JWT_SECRET is missing or still set to the dev placeholder.
+    # Refuse to start in production if JWT_SECRET is missing or still set to the
+    # development placeholder.
     running_on_render = bool(
         os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID") or os.getenv("RENDER_EXTERNAL_URL")
     )
     jwt_secret = os.getenv("JWT_SECRET", "")
-    if running_on_render and jwt_secret in ("", "change-me"):
+    if (running_on_render or settings.app_environment == "production") and jwt_secret in ("", "change-me"):
         raise RuntimeError(
-            "JWT_SECRET must be set to a secure random value for Render deployments. "
+            "JWT_SECRET must be set to a secure random value for production deployments. "
             "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
         )
 

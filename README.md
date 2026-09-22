@@ -175,16 +175,17 @@ Admin pages are available at:
 
 Admin access is controlled by the `isAdmin` field on the user record. Regular users cannot grant themselves admin access. Admin accounts should be set up manually after the first deployment (see Admin Setup in `DEPLOYMENT.md`).
 
-Assessment admin account (for marker access):
-
-- Email: `admin@marketmetrics.dev`
-- Password: `password.123`
-
-To create this account locally, run:
+Administrator credentials are never stored in the repository. Register the
+account through the normal signup or Google OAuth flow, then promote that
+existing user from a trusted environment connected to the intended database:
 
 ```bash
-python scripts/create_admin.py
+python scripts/create_admin.py --email your-admin-email@example.com
 ```
+
+The command does not create an account or set a password. If it changes the
+user's permissions, existing sessions are invalidated and the administrator
+must sign in again.
 
 ---
 

@@ -3,6 +3,7 @@
 
 # Environment variables
 .env
+.env.production
 
 # Python cache
 __pycache__/
@@ -18,3 +19,6 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# Container build output
+frontend/dist/
