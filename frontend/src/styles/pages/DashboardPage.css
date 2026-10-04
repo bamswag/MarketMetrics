@@ -15,8 +15,8 @@
   border-radius: 32px;
   border: 1px solid var(--panel-border);
   background:
-    radial-gradient(circle at top left, rgba(201, 106, 69, 0.42), transparent 38%),
-    radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.34), transparent 34%),
+    radial-gradient(circle at top left, rgb(from var(--brand-red) r g b / 0.42), transparent 38%),
+    radial-gradient(circle at bottom right, rgb(from var(--red-dark) r g b / 0.34), transparent 34%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -61,10 +61,10 @@
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  border: 1px solid rgba(201, 106, 69, 0.18);
+  border: 1px solid rgb(from var(--brand-red) r g b / 0.18);
   border-radius: 20px;
   background:
-    radial-gradient(circle at top left, rgba(201, 106, 69, 0.34), transparent 46%),
+    radial-gradient(circle at top left, rgb(from var(--brand-red) r g b / 0.34), transparent 46%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.9));
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
 }
@@ -98,7 +98,7 @@
   gap: 6px;
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid rgba(201, 106, 69, 0.24);
+  border: 1px solid rgb(from var(--brand-red) r g b / 0.24);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--accent);
@@ -110,7 +110,7 @@
 
 .dashboard-guides-strip-link:hover {
   transform: translateY(-1px);
-  border-color: rgba(201, 106, 69, 0.44);
+  border-color: rgb(from var(--brand-red) r g b / 0.44);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
 }
 
@@ -123,8 +123,8 @@
 .display-card.dashboard-hero-feature-card--positive {
   align-self: stretch;
   background:
-    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.42), transparent 38%),
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.24), transparent 34%),
+    radial-gradient(circle at bottom right, rgb(from var(--brand-green) r g b / 0.42), transparent 38%),
+    radial-gradient(circle at top left, rgb(from var(--green-teal) r g b / 0.24), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.94)),
     var(--panel-bg);
 }
@@ -132,9 +132,9 @@
 .dashboard-hero-feature-card--negative,
 .display-card.dashboard-hero-feature-card--negative {
   background:
-    radial-gradient(circle at bottom right, rgba(201, 106, 69, 0.44), transparent 38%),
-    radial-gradient(circle at top left, rgba(220, 38, 38, 0.22), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 247, 245, 0.94)),
+    radial-gradient(circle at bottom right, rgb(from var(--brand-red) r g b / 0.44), transparent 38%),
+    radial-gradient(circle at top left, rgb(from var(--red-red) r g b / 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgb(from var(--red-surface-soft) r g b / 0.94)),
     var(--panel-bg);
 }
 
@@ -144,11 +144,11 @@
   width: 100%;
   max-width: min(100%, 42rem);
   padding: 18px 20px;
-  border: 1px solid rgba(201, 106, 69, 0.18);
+  border: 1px solid rgb(from var(--brand-red) r g b / 0.18);
   border-left: 4px solid var(--accent);
   border-radius: 20px;
   background:
-    radial-gradient(circle at top right, rgba(201, 106, 69, 0.42), transparent 46%),
+    radial-gradient(circle at top right, rgb(from var(--brand-red) r g b / 0.42), transparent 46%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(247, 250, 252, 0.72));
 }
 
@@ -170,7 +170,7 @@
   padding: 16px 20px;
   border-radius: 14px;
   border: 1.5px dashed var(--panel-border);
-  background: rgba(201, 106, 69, 0.04);
+  background: rgb(from var(--brand-red) r g b / 0.04);
   max-width: 480px;
 }
 

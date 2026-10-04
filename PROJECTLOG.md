@@ -242,13 +242,26 @@
 
 ---
 
+## Post-submission infrastructure update [22/09/2026]
+
+- Migrated the full-stack deployment from Render to an Ubuntu OVHcloud VPS.
+- Containerised production with Docker Compose: Caddy reverse proxy, FastAPI/React application and PostgreSQL 18.
+- Configured Caddy-managed HTTPS for `marketmetrics.dev` and `www.marketmetrics.dev`.
+- Hardened the VPS with SSH key-only access, disabled root/password login, UFW and Fail2ban.
+- Moved production persistence from Neon PostgreSQL to a private PostgreSQL 18 container with a persistent Docker volume.
+- Rehearsed the database migration before the final cutover, then verified the Alembic revision, row counts, authentication, admin access and database writes.
+- Retained Neon temporarily as a rollback source while OVH backup procedures are established.
+- Removed published administrator credentials from current documentation and changed admin setup to promote an existing registered account.
+
+---
+
 ## Key Technical Achievements
 
 - **Auth System**: Email/password + Argon2 + JWT + session versioning + Google OAuth + 2-step workflows (email verification, password reset)
 - **Market Data Integration**: Alpaca IEX feed, real-time quotes via WebSocket (30s polling), caching strategy (30s quotes, 1h bars)
 - **Alert System**: 4 condition types, Pydantic validation, trigger history, bulk operations, near-real-time evaluation
 - **Investment Analysis**: Buy-and-hold + DCA simulations, Random Forest forecasting (walk-forward CV), Monte Carlo projections, deterministic scenarios
-- **Full-Stack Deployment**: Render web service, PostgreSQL 18, Alembic migrations (11 revisions), SPA fallback serving
+- **Full-Stack Deployment**: Docker Compose on OVHcloud, Caddy-managed HTTPS, private PostgreSQL 18 service, Alembic migrations (11 revisions), SPA fallback serving
 - **Test Coverage**: 99 backend tests covering all major features; SQLite/PostgreSQL compatibility verified
 
 ---
@@ -260,10 +273,12 @@
 - No API rate limiting (future work)
 - Alerts only evaluate during active WebSocket sessions (no background worker)
 - WebSocket polling (30s ticks), not true exchange streaming
-- Forecast artifacts ephemeral on Render (no persistent storage)
+- Single VPS is a shared point of failure for the application and database
+- No PostgreSQL replica, automatic failover or automated off-server backup yet
+- Runtime-generated forecast artifacts are container-local without a dedicated artifact store
 - Simulations omit tax, transaction costs, FX, dividends
 - Forecasts and projections are educational, not financial advice
-- In-memory caches not distributed (single Render instance)
+- In-memory caches not distributed (single application instance)
 
 ---
 
@@ -272,7 +287,9 @@
 - Rate limiting on registration, login, forecast, projection routes
 - Frontend test suite (React Testing Library or Playwright)
 - CI/CD pipeline (GitHub Actions)
-- Persistent forecast artifacts (Render Disk or S3)
+- Automated encrypted PostgreSQL backups with off-server retention and restore drills
+- Database monitoring and a managed database or replica if availability requirements increase
+- Persistent forecast artifacts in object storage
 - Background worker for 24/7 alert monitoring
 - Enhanced simulation modelling (transaction costs, taxes)
 - Better forecasting models (LSTM, Transformer, ensemble)

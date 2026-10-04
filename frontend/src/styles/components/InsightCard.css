@@ -1,6 +1,6 @@
 .insight-card {
   --insight-accent: var(--accent);
-  --insight-soft: rgba(15, 118, 110, 0.42);
+  --insight-soft: rgb(from var(--brand-green) r g b / 0.42);
   display: grid;
   align-content: space-between;
   gap: 22px;
@@ -11,14 +11,13 @@
   border-radius: 28px;
   background:
     radial-gradient(circle at top left, var(--insight-soft), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.94)),
-    var(--panel-bg);
+    var(--surface-background);
   box-shadow: var(--panel-shadow);
 }
 
 .insight-card--teal {
-  --insight-accent: #0f766e;
-  --insight-soft: rgba(15, 118, 110, 0.42);
+  --insight-accent: var(--brand-green);
+  --insight-soft: rgb(from var(--brand-green) r g b / 0.42);
 }
 
 .insight-card--blue {
@@ -27,13 +26,13 @@
 }
 
 .insight-card--amber {
-  --insight-accent: #b45309;
-  --insight-soft: rgba(180, 83, 9, 0.44);
+  --insight-accent: var(--red-dark);
+  --insight-soft: rgb(from var(--red-dark) r g b / 0.44);
 }
 
 .insight-card--rose {
-  --insight-accent: #be5f46;
-  --insight-soft: rgba(190, 95, 70, 0.4);
+  --insight-accent: var(--red-muted-light);
+  --insight-soft: rgb(from var(--red-muted-light) r g b / 0.4);
 }
 
 .insight-card--indigo {
@@ -72,7 +71,7 @@
 .insight-card-caveat {
   padding-left: 14px;
   border-left: 3px solid var(--insight-accent);
-  color: rgba(20, 32, 51, 0.72);
+  color: var(--muted);
 }
 
 .insight-card-link {

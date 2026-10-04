@@ -29,7 +29,7 @@ const HORIZON_OPTIONS = [
   { label: '90d', value: 90 },
 ]
 
-const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
+const AXIS_TICK = { fill: 'var(--chart-axis)', fontSize: 11 } as const
 const HISTORY_BARS = 60
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -269,11 +269,11 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
                 <ComposedChart data={chartData} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="pred-conf-band" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#c96a45" stopOpacity={0.18} />
-                      <stop offset="100%" stopColor="#c96a45" stopOpacity={0.04} />
+                      <stop offset="0%" stopColor="var(--brand-red)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--brand-red)" stopOpacity={0.04} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="rgba(25,40,62,0.06)" strokeDasharray="4 4" vertical={false} />
+                  <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="4 4" vertical={false} />
                   <XAxis
                     axisLine={false}
                     dataKey="date"
@@ -297,12 +297,12 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
                   {todayDate && (
                     <ReferenceLine
                       x={todayDate}
-                      stroke="#687487"
+                      stroke="var(--chart-axis)"
                       strokeDasharray="4 3"
                       label={{
                         value: 'Today',
                         position: 'insideTopLeft',
-                        fill: '#687487',
+                        fill: 'var(--chart-axis)',
                         fontSize: 10,
                       }}
                     />
@@ -326,7 +326,7 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
                   {/* Actual history line */}
                   <Line
                     dataKey="close"
-                    stroke="#0f766e"
+                    stroke="var(--brand-green)"
                     strokeWidth={2.2}
                     dot={false}
                     connectNulls
@@ -337,7 +337,7 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
                   {/* Forecast line */}
                   <Line
                     dataKey="predictedClose"
-                    stroke="#c96a45"
+                    stroke="var(--brand-red)"
                     strokeWidth={2.2}
                     strokeDasharray="6 3"
                     dot={false}

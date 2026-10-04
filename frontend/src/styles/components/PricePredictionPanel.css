@@ -263,7 +263,7 @@
 .prediction-tooltip-forecast {
   display: block;
   font-weight: 700;
-  color: #c96a45;
+  color: var(--brand-red);
 }
 
 /* ── Responsive ── */

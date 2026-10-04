@@ -12,8 +12,8 @@
   border: 1px solid var(--panel-border);
   border-radius: 28px;
   background:
-    radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(207, 108, 65, 0.12), transparent 40%),
+    radial-gradient(circle at top left, rgb(from var(--brand-green) r g b / 0.16), transparent 40%),
+    radial-gradient(circle at bottom right, rgb(from var(--red-warm) r g b / 0.12), transparent 40%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -241,8 +241,8 @@
 
 .instrument-alert-select:focus {
   outline: none;
-  border-color: rgba(201, 106, 69, 0.34);
-  box-shadow: 0 0 0 4px rgba(201, 106, 69, 0.08);
+  border-color: rgb(from var(--brand-red) r g b / 0.34);
+  box-shadow: 0 0 0 4px rgb(from var(--brand-red) r g b / 0.08);
 }
 
 .instrument-alert-input {
@@ -317,8 +317,8 @@
 }
 
 .instrument-alert-row--editing {
-  border: 1px solid rgba(201, 106, 69, 0.3);
-  background: rgba(201, 106, 69, 0.04);
+  border: 1px solid rgb(from var(--brand-red) r g b / 0.3);
+  background: rgb(from var(--brand-red) r g b / 0.04);
   display: grid;
   gap: 12px;
 }
@@ -516,27 +516,27 @@
 }
 
 .instrument-chart-legend-pill--price {
-  color: #0a6560;
-  border-color: rgba(15, 118, 110, 0.3);
-  background: rgba(15, 118, 110, 0.08);
+  color: var(--green-nav-dark);
+  border-color: rgb(from var(--brand-green) r g b / 0.3);
+  background: rgb(from var(--brand-green) r g b / 0.08);
 }
 
 .instrument-chart-legend-pill--price-up {
-  color: #0a6560;
-  border-color: rgba(15, 118, 110, 0.3);
-  background: rgba(15, 118, 110, 0.08);
+  color: var(--green-nav-dark);
+  border-color: rgb(from var(--brand-green) r g b / 0.3);
+  background: rgb(from var(--brand-green) r g b / 0.08);
 }
 
 .instrument-chart-legend-pill--price-down {
-  color: #a43f2a;
-  border-color: rgba(239, 68, 68, 0.28);
-  background: rgba(239, 68, 68, 0.08);
+  color: var(--red-dark-text);
+  border-color: rgb(from var(--red-red-bright) r g b / 0.28);
+  background: rgb(from var(--red-red-bright) r g b / 0.08);
 }
 
 .instrument-chart-legend-pill--ma30 {
-  color: #92400e;
-  border-color: rgba(245, 158, 11, 0.35);
-  background: rgba(245, 158, 11, 0.1);
+  color: var(--red-deep);
+  border-color: rgb(from var(--red-amber) r g b / 0.35);
+  background: rgb(from var(--red-amber) r g b / 0.1);
 }
 
 .instrument-chart-legend-pill--ma50 {
@@ -554,19 +554,19 @@
 }
 
 .instrument-chart-legend-swatch--price {
-  background: #0f766e;
+  background: var(--brand-green);
 }
 
 .instrument-chart-legend-swatch--price-up {
-  background: #0f766e;
+  background: var(--brand-green);
 }
 
 .instrument-chart-legend-swatch--price-down {
-  background: #ef4444;
+  background: var(--red-red-bright);
 }
 
 .instrument-chart-legend-swatch--ma30 {
-  background: #f59e0b;
+  background: var(--red-amber);
 }
 
 .instrument-chart-legend-swatch--ma50 {
@@ -638,7 +638,7 @@
 
 .instrument-market-stat:hover,
 .instrument-market-stat:focus-visible {
-  border-color: rgba(15, 118, 110, 0.24);
+  border-color: rgb(from var(--brand-green) r g b / 0.24);
   box-shadow: 0 14px 30px rgba(20, 32, 51, 0.1);
   transform: translateY(-1px);
 }
@@ -648,7 +648,7 @@
 }
 
 .instrument-market-stat:focus-visible {
-  outline: 3px solid rgba(15, 118, 110, 0.18);
+  outline: 3px solid rgb(from var(--brand-green) r g b / 0.18);
   outline-offset: 3px;
 }
 
@@ -805,7 +805,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 22px;
   background:
-    radial-gradient(circle at 90% 50%, rgba(201, 106, 69, 0.14), transparent 55%),
+    radial-gradient(circle at 90% 50%, rgb(from var(--brand-red) r g b / 0.14), transparent 55%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -832,7 +832,7 @@
 
 .instrument-forecast-cta-note {
   margin: 4px 0 0;
-  color: #92400e;
+  color: var(--red-deep);
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.35;

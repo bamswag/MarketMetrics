@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from app.integrations.alpaca.market_data import (
+    fetch_daily_close_series_batch,
     fetch_intraday_close_series,
     fetch_snapshots,
     fetch_top_movers,
@@ -193,8 +194,24 @@ async def _rank_period_candidates(
     if not symbols:
         return []
 
-    snapshots = await fetch_snapshots(symbols, asset_class_map=asset_class_map)
     start_date = date.today() - timedelta(days=window_days - 1)
+    end_date = date.today()
+    snapshots_task = fetch_snapshots(symbols, asset_class_map=asset_class_map)
+    try:
+        snapshots, history_map = await asyncio.gather(
+            snapshots_task,
+            fetch_daily_close_series_batch(
+                symbols,
+                start=start_date,
+                end=end_date,
+                asset_class_map=asset_class_map,
+            ),
+        )
+    except Exception:
+        # Preserve the previous per-symbol behaviour if Alpaca's batch bars
+        # endpoint is temporarily unavailable.
+        snapshots = await fetch_snapshots(symbols, asset_class_map=asset_class_map)
+        history_map = {}
     semaphore = asyncio.Semaphore(8)
 
     async def evaluate(symbol: str) -> Optional[Dict[str, Any]]:
@@ -203,15 +220,17 @@ async def _rank_period_candidates(
         if price is None:
             return None
 
-        async with semaphore:
-            try:
-                history = await get_daily_close_series_cached(
-                    symbol,
-                    start=start_date,
-                    end=date.today(),
-                )
-            except Exception:
-                return None
+        history = history_map.get(symbol)
+        if not history:
+            async with semaphore:
+                try:
+                    history = await get_daily_close_series_cached(
+                        symbol,
+                        start=start_date,
+                        end=end_date,
+                    )
+                except Exception:
+                    return None
 
         if not history:
             return None
@@ -234,6 +253,7 @@ async def _rank_period_candidates(
             "change_percent": _to_percent_string(change_percent_value),
             "change_percent_value": change_percent_value,
             "volume": _to_int(snapshot.get("volume") if snapshot else None),
+            "_historical_series": history,
         }
 
     # Process in batches to avoid creating hundreds of coroutines simultaneously,
@@ -511,15 +531,17 @@ async def _build_featured_mover_response(
         except Exception:
             chart_points = []
     else:
-        window_days = FEATURED_MOVER_LOOKBACK_DAYS[period]
-        try:
-            chart_points = await get_daily_close_series_cached(
-                symbol,
-                start=date.today() - timedelta(days=window_days - 1),
-                end=date.today(),
-            )
-        except Exception:
-            chart_points = []
+        chart_points = featured_item.get("_historical_series") or []
+        if not chart_points:
+            window_days = FEATURED_MOVER_LOOKBACK_DAYS[period]
+            try:
+                chart_points = await get_daily_close_series_cached(
+                    symbol,
+                    start=date.today() - timedelta(days=window_days - 1),
+                    end=date.today(),
+                )
+            except Exception:
+                chart_points = []
 
     return FeaturedMoverResponse(
         period=period,

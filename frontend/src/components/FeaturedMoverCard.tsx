@@ -249,8 +249,8 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
   }, [chartData])
   const title = activeFeatured?.title ?? buildTitle(selection)
   const isLoser = selection.direction === 'loser'
-  const accentColor = isLoser ? '#c96a45' : '#0f766e'
-  const accentFill = isLoser ? 'rgba(201, 106, 69, 0.16)' : 'rgba(15, 118, 110, 0.16)'
+  const accentColor = isLoser ? 'var(--brand-red)' : 'var(--brand-green)'
+  const accentFill = isLoser ? 'rgb(from var(--brand-red) r g b / 0.16)' : 'rgb(from var(--brand-green) r g b / 0.16)'
 
   return (
     <div
@@ -312,7 +312,7 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
               <ResponsiveContainer height={240} width="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid
-                    stroke={isLoser ? 'rgba(201, 106, 69, 0.14)' : 'rgba(15,118,110,0.1)'}
+                    stroke={isLoser ? 'rgb(from var(--brand-red) r g b / 0.14)' : 'rgb(from var(--brand-green) r g b / 0.1)'}
                     strokeDasharray="3 3"
                     vertical={false}
                   />
@@ -320,7 +320,7 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                     axisLine={false}
                     dataKey="date"
                     interval={0}
-                    tick={{ fontSize: 11, fill: '#6b7280' }}
+                    tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
                     tickFormatter={(value: string) => {
                       if (!value) return ''
                       const parsed = new Date(value)
@@ -342,7 +342,7 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                     axisLine={false}
                     domain={yDomain}
                     orientation="right"
-                    tick={{ fontSize: 11, fill: '#6b7280' }}
+                    tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
                     tickFormatter={formatAxisPrice}
                     tickLine={false}
                     width={64}
@@ -351,8 +351,9 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                     contentStyle={{
                       fontSize: '0.78rem',
                       borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      background: '#fff',
+                      border: '1px solid var(--panel-border)',
+                      background: 'var(--chart-tooltip-bg)',
+                      color: 'var(--text-main)',
                     }}
                     formatter={formatTooltipValue}
                     labelFormatter={(label) => formatTooltipLabel(label, selection.period)}

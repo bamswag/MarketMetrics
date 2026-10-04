@@ -28,7 +28,7 @@ type TopResultCardProps = {
 
 type Tone = 'positive' | 'negative' | 'neutral'
 
-const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
+const AXIS_TICK = { fill: 'var(--chart-axis)', fontSize: 11 } as const
 const MAX_TOP_RESULT_CHART_POINTS = 28
 
 function parsePct(changePercent: string | null | undefined): number | null {
@@ -157,9 +157,9 @@ export function TopResultCard({
     : null
 
   const strokeColor =
-    tone === 'positive' ? '#0f766e' : tone === 'negative' ? '#b14f2b' : '#687487'
+    tone === 'positive' ? 'var(--brand-green)' : tone === 'negative' ? 'var(--red-danger)' : 'var(--chart-neutral)'
   const fillColor =
-    tone === 'positive' ? '#0f766e' : tone === 'negative' ? '#b14f2b' : '#687487'
+    tone === 'positive' ? 'var(--brand-green)' : tone === 'negative' ? 'var(--red-danger)' : 'var(--chart-neutral)'
 
   const yDomain = useMemo((): [number, number] => {
     if (chartData.length === 0) return [0, 1]
@@ -261,7 +261,7 @@ export function TopResultCard({
                       </linearGradient>
                     </defs>
                     <CartesianGrid
-                      stroke="rgba(25, 40, 62, 0.06)"
+                      stroke="var(--chart-grid)"
                       strokeDasharray="4 4"
                       vertical={false}
                     />

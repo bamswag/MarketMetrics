@@ -101,7 +101,8 @@ def log_runtime_environment() -> None:
         os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID") or os.getenv("RENDER_EXTERNAL_URL")
     )
     jwt_secret = os.getenv("JWT_SECRET", "")
-    if (running_on_render or settings.app_environment == "production") and jwt_secret in ("", "change-me"):
+    unsafe_jwt_secrets = ("", "change-me", "replace-with-a-random-secret")
+    if (running_on_render or settings.app_environment == "production") and jwt_secret in unsafe_jwt_secrets:
         raise RuntimeError(
             "JWT_SECRET must be set to a secure random value for production deployments. "
             "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""

@@ -1,23 +1,146 @@
 :root {
-  --bg: #f2f4f8;
-  --bg-elevated: #fbfcfe;
-  --panel-bg: rgba(255, 255, 255, 0.9);
-  --soft-bg: rgba(245, 248, 252, 0.92);
-  --panel-border: rgba(18, 32, 51, 0.1);
+  /*
+   * Brand colour source of truth. Every green and maroon/red theme
+   * colour below is derived from these two editable values.
+   */
+  --brand-green: #14532d;
+  --brand-red: #800000;
+
+  /* Forest-green palette, mixed without channel clipping. */
+  --green-nav-dark: color-mix(in srgb, var(--brand-green) 84%, black);
+  --green-admin-dark: color-mix(in srgb, var(--brand-green) 88%, black);
+  --green-text-dark: color-mix(in srgb, var(--brand-green) 92%, black);
+  --green-deep: color-mix(in srgb, var(--brand-green) 72%, black);
+  --green-deep-alt: color-mix(in srgb, var(--brand-green) 82%, black);
+  --green-medium: color-mix(in srgb, var(--brand-green) 88%, white);
+  --green-chart: color-mix(in srgb, var(--brand-green) 76%, white);
+  --green-bright: color-mix(in srgb, var(--brand-green) 62%, white);
+  --green-status: color-mix(in srgb, var(--brand-green) 72%, white);
+  --green-status-bright: color-mix(in srgb, var(--brand-green) 54%, white);
+  --green-status-light: color-mix(in srgb, var(--brand-green) 34%, white);
+  --green-teal: color-mix(in srgb, var(--brand-green) 58%, white);
+  --green-teal-dark: color-mix(in srgb, var(--brand-green) 78%, white);
+  --green-cyan: color-mix(in srgb, var(--brand-green) 42%, white);
+  --green-cyan-bright: color-mix(in srgb, var(--brand-green) 30%, white);
+  --green-provider: color-mix(in srgb, var(--brand-green) 68%, white);
+  --green-tooltip: color-mix(in srgb, var(--brand-green) 28%, white);
+  --green-pale: color-mix(in srgb, var(--brand-green) 8%, white);
+  --green-teal-pale: color-mix(in srgb, var(--brand-green) 6%, white);
+  --green-surface-pale: color-mix(in srgb, var(--brand-green) 5%, white);
+  --green-surface-subtle: color-mix(in srgb, var(--brand-green) 3%, white);
+
+  /* Maroon/red palette, mixed to retain readable dark and pale states. */
+  --red-strong: color-mix(in srgb, var(--brand-red) 84%, black);
+  --red-danger: var(--brand-red);
+  --red-danger-text: color-mix(in srgb, var(--brand-red) 90%, black);
+  --red-muted: color-mix(in srgb, var(--brand-red) 76%, white);
+  --red-muted-light: color-mix(in srgb, var(--brand-red) 62%, white);
+  --red-soft-text: color-mix(in srgb, var(--brand-red) 82%, black);
+  --red-muted-text: color-mix(in srgb, var(--brand-red) 68%, black);
+  --red-dark-text: color-mix(in srgb, var(--brand-red) 76%, black);
+  --red-dark: color-mix(in srgb, var(--brand-red) 82%, black);
+  --red-deep: color-mix(in srgb, var(--brand-red) 68%, black);
+  --red-deep-alt: color-mix(in srgb, var(--brand-red) 58%, black);
+  --red-brown: color-mix(in srgb, var(--brand-red) 45%, black);
+  --red-red-deepest: color-mix(in srgb, var(--brand-red) 55%, black);
+  --red-red-deep: color-mix(in srgb, var(--brand-red) 68%, black);
+  --red-red-dark: color-mix(in srgb, var(--brand-red) 82%, black);
+  --red-red: color-mix(in srgb, var(--brand-red) 88%, white);
+  --red-red-bright: color-mix(in srgb, var(--brand-red) 72%, white);
+  --red-provider-red: color-mix(in srgb, var(--brand-red) 78%, white);
+  --red-provider-yellow: color-mix(in srgb, var(--brand-red) 42%, white);
+  --red-red-light: color-mix(in srgb, var(--brand-red) 48%, white);
+  --red-red-pale: color-mix(in srgb, var(--brand-red) 26%, white);
+  --red-bright: color-mix(in srgb, var(--brand-red) 68%, white);
+  --red-amber: color-mix(in srgb, var(--brand-red) 58%, white);
+  --red-amber-dark: color-mix(in srgb, var(--brand-red) 80%, black);
+  --red-gold: color-mix(in srgb, var(--brand-red) 62%, white);
+  --red-gold-light: color-mix(in srgb, var(--brand-red) 36%, white);
+  --red-gold-muted: color-mix(in srgb, var(--brand-red) 52%, white);
+  --red-gold-deep: color-mix(in srgb, var(--brand-red) 72%, black);
+  --red-warning-deep: color-mix(in srgb, var(--brand-red) 64%, black);
+  --red-warning-bright: color-mix(in srgb, var(--brand-red) 56%, white);
+  --red-warning-light: color-mix(in srgb, var(--brand-red) 32%, white);
+  --red-error-deep: color-mix(in srgb, var(--brand-red) 78%, black);
+  --red-error: color-mix(in srgb, var(--brand-red) 90%, white);
+  --red-pale: color-mix(in srgb, var(--brand-red) 7%, white);
+  --red-red-bg: color-mix(in srgb, var(--brand-red) 5%, white);
+  --red-peach: color-mix(in srgb, var(--brand-red) 28%, white);
+  --red-warm: color-mix(in srgb, var(--brand-red) 82%, white);
+  --red-surface-border: color-mix(in srgb, var(--brand-red) 12%, white);
+  --red-surface-muted: color-mix(in srgb, var(--brand-red) 9%, white);
+  --red-surface-subtle: color-mix(in srgb, var(--brand-red) 6%, white);
+  --red-surface-soft: color-mix(in srgb, var(--brand-red) 5%, white);
+  --red-surface-soft-alt: color-mix(in srgb, var(--brand-red) 4%, white);
+  --red-surface-pale: color-mix(in srgb, var(--brand-red) 3%, white);
+
+  --bg: #050505;
+  --bg-elevated: #0d0d0f;
+  --panel-bg: rgba(18, 18, 21, 0.88);
+  --soft-bg: rgba(255, 255, 255, 0.065);
+  --panel-border: rgba(255, 255, 255, 0.15);
   --panel-shadow:
-    0 28px 70px rgba(13, 27, 45, 0.08),
-    0 8px 22px rgba(13, 27, 45, 0.05);
-  --text-main: #142033;
-  --muted: #687487;
-  --accent: #c96a45;
-  --accent-strong: #ae512d;
-  --accent-soft: rgba(201, 106, 69, 0.12);
-  --success: #0f766e;
-  --success-soft: rgba(15, 118, 110, 0.12);
-  --danger: #b14f2b;
-  --danger-soft: rgba(177, 79, 43, 0.12);
-  --badge-bg: rgba(20, 32, 51, 0.08);
-  --code-bg: rgba(20, 32, 51, 0.08);
+    0 30px 78px rgba(0, 0, 0, 0.56),
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --subtle-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  --text-main: #f7f7f8;
+  --muted: #a8adb7;
+  --text-subtle: #7f8794;
+  --text-inverse: #09090b;
+  --accent: var(--brand-red);
+  --accent-strong: var(--red-strong);
+  --accent-soft: rgb(from var(--brand-red) r g b / 12%);
+  --success: color-mix(in srgb, var(--brand-green) 45%, white);
+  --success-soft: rgb(from var(--brand-green) r g b / 12%);
+  --danger: var(--red-danger);
+  --danger-soft: rgb(from var(--red-danger) r g b / 12%);
+  --positive-foreground: color-mix(in srgb, var(--brand-green) 45%, white);
+  --negative-foreground: color-mix(in srgb, var(--brand-red) 58%, white);
+  --badge-bg: rgba(255, 255, 255, 0.09);
+  --code-bg: rgba(255, 255, 255, 0.09);
+  --page-background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.055), transparent 28%),
+    radial-gradient(circle at 88% 100%, rgb(from var(--brand-green) r g b / 0.12), transparent 30%),
+    #050505;
+  --surface-background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.018) 48%),
+    rgba(13, 13, 15, 0.92);
+  --surface-background-strong:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 52%),
+    rgba(10, 10, 12, 0.97);
+  --input-bg: rgba(255, 255, 255, 0.07);
+  --input-bg-hover: rgba(255, 255, 255, 0.1);
+  --control-bg: rgba(255, 255, 255, 0.09);
+  --control-border-hover: rgba(255, 255, 255, 0.32);
+  --dark-control-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
+    #0a0a0c;
+  --dark-control-bg-hover:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
+    #101013;
+  --dark-control-bg-disabled: rgba(255, 255, 255, 0.045);
+  --dark-control-border: rgba(255, 255, 255, 0.2);
+  --dark-control-border-hover: rgba(255, 255, 255, 0.42);
+  --dark-control-text: #f7f7f8;
+  --dark-control-text-muted: #a8adb7;
+  --dark-skeleton-bg: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.045) 25%,
+    rgba(255, 255, 255, 0.105) 50%,
+    rgba(255, 255, 255, 0.045) 75%
+  );
+  --focus-ring: rgba(255, 255, 255, 0.34);
+  --surface-glare: rgba(255, 255, 255, 0.62);
+  --surface-glare-opacity: 0.58;
+  --crystal-control-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(226, 230, 236, 0.9));
+  --crystal-control-text: #09090b;
+  --crystal-control-border: rgba(255, 255, 255, 0.78);
+  --chart-grid: rgba(255, 255, 255, 0.1);
+  --chart-axis: #a8adb7;
+  --chart-neutral: #c4c8cf;
+  --chart-tooltip-bg: rgba(15, 15, 18, 0.96);
   --sans:
     'Avenir Next',
     'Aptos',
@@ -35,14 +158,62 @@
   line-height: 1.5;
   font-weight: 400;
   color: var(--text-main);
-  background:
-    radial-gradient(circle at top center, rgba(236, 182, 128, 0.28), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.08), transparent 24%),
-    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+  background: var(--page-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-background-theme='crystal-dark'] {
+  color-scheme: dark;
+}
+
+:root[data-background-theme='diamond-light'] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-elevated: #fbfbfc;
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --soft-bg: rgba(8, 10, 14, 0.045);
+  --panel-border: rgba(0, 0, 0, 0.22);
+  --panel-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.1),
+    0 8px 22px rgba(0, 0, 0, 0.065),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  --subtle-shadow: 0 14px 30px rgba(0, 0, 0, 0.075);
+  --text-main: #101216;
+  --muted: #626976;
+  --text-subtle: #7b818b;
+  --text-inverse: #ffffff;
+  --success: var(--brand-green);
+  --positive-foreground: var(--brand-green);
+  --negative-foreground: var(--brand-red);
+  --badge-bg: rgba(0, 0, 0, 0.065);
+  --code-bg: rgba(0, 0, 0, 0.065);
+  --page-background:
+    radial-gradient(circle at 12% 0%, rgba(0, 0, 0, 0.035), transparent 26%),
+    radial-gradient(circle at 88% 100%, rgb(from var(--brand-green) r g b / 0.07), transparent 30%),
+    #ffffff;
+  --surface-background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(242, 243, 246, 0.93) 56%),
+    #ffffff;
+  --surface-background-strong:
+    linear-gradient(145deg, #ffffff, rgba(235, 237, 241, 0.96)),
+    #ffffff;
+  --input-bg: rgba(0, 0, 0, 0.04);
+  --input-bg-hover: rgba(0, 0, 0, 0.065);
+  --control-bg: rgba(255, 255, 255, 0.9);
+  --control-border-hover: rgba(0, 0, 0, 0.38);
+  --focus-ring: rgba(0, 0, 0, 0.28);
+  --surface-glare: rgba(0, 0, 0, 0.68);
+  --surface-glare-opacity: 0.5;
+  --crystal-control-bg: linear-gradient(145deg, #17191d, #030303);
+  --crystal-control-text: #ffffff;
+  --crystal-control-border: rgba(0, 0, 0, 0.72);
+  --chart-grid: rgba(20, 32, 51, 0.08);
+  --chart-axis: #687487;
+  --chart-neutral: #687487;
+  --chart-tooltip-bg: rgba(255, 255, 255, 0.97);
 }
 
 *,
@@ -59,9 +230,21 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top center, rgba(236, 182, 128, 0.24), transparent 24%),
-    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+  background: var(--page-background);
+  color: var(--text-main);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 a {
@@ -138,10 +321,10 @@ code {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(201, 106, 69, 0.3);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: rgba(201, 106, 69, 0.18);
+  background: rgb(from var(--brand-red) r g b / 0.18);
 }

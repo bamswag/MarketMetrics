@@ -31,19 +31,19 @@
 }
 
 .movers-direction-hero--positive {
-  border-color: rgba(15, 118, 110, 0.16);
+  border-color: rgb(from var(--brand-green) r g b / 0.16);
 }
 
 .movers-direction-hero--positive::before {
-  background: linear-gradient(90deg, rgba(15, 118, 110, 0.9), rgba(16, 185, 129, 0.45));
+  background: linear-gradient(90deg, rgb(from var(--brand-green) r g b / 0.9), rgb(from var(--green-bright) r g b / 0.45));
 }
 
 .movers-direction-hero--negative {
-  border-color: rgba(177, 79, 43, 0.16);
+  border-color: rgb(from var(--red-danger) r g b / 0.16);
 }
 
 .movers-direction-hero--negative::before {
-  background: linear-gradient(90deg, rgba(177, 79, 43, 0.9), rgba(220, 38, 38, 0.42));
+  background: linear-gradient(90deg, rgb(from var(--red-danger) r g b / 0.9), rgb(from var(--red-red) r g b / 0.42));
 }
 
 .movers-direction-head {
@@ -110,19 +110,19 @@
 }
 
 .movers-direction-shell--positive .movers-direction-summary-card--accent {
-  border-color: rgba(15, 118, 110, 0.16);
+  border-color: rgb(from var(--brand-green) r g b / 0.16);
 }
 
 .movers-direction-shell--positive .movers-direction-summary-card--accent::before {
-  background: linear-gradient(90deg, rgba(15, 118, 110, 0.84), rgba(16, 185, 129, 0.4));
+  background: linear-gradient(90deg, rgb(from var(--brand-green) r g b / 0.84), rgb(from var(--green-bright) r g b / 0.4));
 }
 
 .movers-direction-shell--negative .movers-direction-summary-card--accent {
-  border-color: rgba(177, 79, 43, 0.16);
+  border-color: rgb(from var(--red-danger) r g b / 0.16);
 }
 
 .movers-direction-shell--negative .movers-direction-summary-card--accent::before {
-  background: linear-gradient(90deg, rgba(177, 79, 43, 0.84), rgba(220, 38, 38, 0.38));
+  background: linear-gradient(90deg, rgb(from var(--red-danger) r g b / 0.84), rgb(from var(--red-red) r g b / 0.38));
 }
 
 .movers-direction-toolbar {
@@ -159,19 +159,19 @@
 }
 
 .movers-direction-card.mover-group--positive {
-  border-color: rgba(15, 118, 110, 0.16);
+  border-color: rgb(from var(--brand-green) r g b / 0.16);
 }
 
 .movers-direction-card.mover-group--positive::before {
-  background: linear-gradient(90deg, rgba(15, 118, 110, 0.84), rgba(16, 185, 129, 0.34));
+  background: linear-gradient(90deg, rgb(from var(--brand-green) r g b / 0.84), rgb(from var(--green-bright) r g b / 0.34));
 }
 
 .movers-direction-card.mover-group--negative {
-  border-color: rgba(177, 79, 43, 0.16);
+  border-color: rgb(from var(--red-danger) r g b / 0.16);
 }
 
 .movers-direction-card.mover-group--negative::before {
-  background: linear-gradient(90deg, rgba(177, 79, 43, 0.84), rgba(220, 38, 38, 0.34));
+  background: linear-gradient(90deg, rgb(from var(--red-danger) r g b / 0.84), rgb(from var(--red-red) r g b / 0.34));
 }
 
 .movers-direction-card .instrument-surface--positive,
@@ -182,29 +182,29 @@
 }
 
 .movers-direction-card .instrument-surface--positive {
-  border-color: rgba(15, 118, 110, 0.14);
+  border-color: rgb(from var(--brand-green) r g b / 0.14);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 248, 0.97)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgb(from var(--green-surface-subtle) r g b / 0.97)),
     rgba(255, 255, 255, 0.96);
 }
 
 .movers-direction-card .instrument-surface--positive::before {
   background:
-    radial-gradient(circle at top left, rgba(16, 185, 129, 0.16), transparent 42%),
-    linear-gradient(140deg, rgba(15, 118, 110, 0.05), transparent 68%);
+    radial-gradient(circle at top left, rgb(from var(--green-bright) r g b / 0.16), transparent 42%),
+    linear-gradient(140deg, rgb(from var(--brand-green) r g b / 0.05), transparent 68%);
 }
 
 .movers-direction-card .instrument-surface--negative {
-  border-color: rgba(177, 79, 43, 0.14);
+  border-color: rgb(from var(--red-danger) r g b / 0.14);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(251, 247, 245, 0.97)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgb(from var(--red-surface-soft-alt) r g b / 0.97)),
     rgba(255, 255, 255, 0.96);
 }
 
 .movers-direction-card .instrument-surface--negative::before {
   background:
-    radial-gradient(circle at top left, rgba(220, 38, 38, 0.16), transparent 42%),
-    linear-gradient(140deg, rgba(177, 79, 43, 0.05), transparent 68%);
+    radial-gradient(circle at top left, rgb(from var(--red-red) r g b / 0.16), transparent 42%),
+    linear-gradient(140deg, rgb(from var(--red-danger) r g b / 0.05), transparent 68%);
 }
 
 .movers-direction-card .mover-category-columns {

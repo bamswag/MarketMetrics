@@ -1334,6 +1334,7 @@ function AppContent() {
     <AppHeader
       actions={<AuthActions />}
       bannerMessage={flashMessage}
+      className={location.pathname === '/' ? 'top-shell--landing' : undefined}
       center={isSearchResultsPage ? <SearchResultsHeaderInput /> : <GlobalSearch token={token || undefined} />}
     />
   )

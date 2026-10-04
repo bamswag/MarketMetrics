@@ -690,7 +690,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <span className="projection-legend-item">
                   <span
                     className="projection-legend-swatch projection-legend-swatch--solid"
-                    style={{ background: '#1D9E75' }}
+                    style={{ background: 'var(--green-chart)' }}
                   />
                   Most likely outcome
                 </span>
@@ -701,14 +701,14 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <span className="projection-legend-item">
                   <span
                     className="projection-legend-swatch projection-legend-swatch--dashed"
-                    style={{ borderTopColor: '#1e293b' }}
+                    style={{ borderTopColor: 'var(--chart-neutral)' }}
                   />
                   Average growth
                 </span>
                 <span className="projection-legend-item">
                   <span
                     className="projection-legend-swatch projection-legend-swatch--solid"
-                    style={{ background: '#9ca3af' }}
+                    style={{ background: 'var(--chart-axis)' }}
                   />
                   Invested
                 </span>
@@ -732,14 +732,14 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <defs>
                   {/* Nearly transparent at left → more opaque at right (growing uncertainty) */}
                   <linearGradient id="proj-band" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0%"   stopColor="rgb(29,158,117)" stopOpacity={0.06} />
-                    <stop offset="35%"  stopColor="rgb(29,158,117)" stopOpacity={0.22} />
-                    <stop offset="100%" stopColor="rgb(29,158,117)" stopOpacity={0.42} />
+                    <stop offset="0%"   stopColor="var(--green-chart)" stopOpacity={0.06} />
+                    <stop offset="35%"  stopColor="var(--green-chart)" stopOpacity={0.22} />
+                    <stop offset="100%" stopColor="var(--green-chart)" stopOpacity={0.42} />
                   </linearGradient>
                 </defs>
 
                 <CartesianGrid
-                  stroke="rgba(25,40,62,0.05)"
+                  stroke="var(--chart-grid)"
                   strokeDasharray="4 4"
                   vertical={false}
                 />
@@ -747,7 +747,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                 <XAxis
                   axisLine={false}
                   dataKey="date"
-                  tick={{ fill: '#687487', fontSize: 11 }}
+                  tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                   tickFormatter={(d: string) => String(new Date(d).getFullYear())}
                   tickLine={false}
                   ticks={xTicks}
@@ -757,7 +757,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   axisLine={false}
                   domain={yDomain}
                   orientation="left"
-                  tick={{ fill: '#687487', fontSize: 11 }}
+                  tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
                   tickFormatter={formatYAxisValue}
                   tickLine={false}
                   width={72}
@@ -791,7 +791,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   connectNulls
                   dataKey="monteCarloP10"
                   dot={false}
-                  fill="#ffffff"
+                  fill="var(--bg-elevated)"
                   fillOpacity={1}
                   isAnimationActive
                   stroke="none"
@@ -806,7 +806,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dataKey="investedCapital"
                   dot={false}
                   isAnimationActive
-                  stroke="#9ca3af"
+                  stroke="var(--chart-axis)"
                   strokeWidth={1.5}
                   type="monotone"
                 />
@@ -819,7 +819,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dataKey="baselineValue"
                   dot={false}
                   isAnimationActive
-                  stroke="#1e293b"
+                  stroke="var(--chart-neutral)"
                   strokeDasharray="6 4"
                   strokeWidth={2.5}
                   type="monotone"
@@ -833,7 +833,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dataKey="monteCarloP50"
                   dot={false}
                   isAnimationActive
-                  stroke="#1D9E75"
+                  stroke="var(--green-chart)"
                   strokeWidth={3.5}
                   type="monotone"
                 />

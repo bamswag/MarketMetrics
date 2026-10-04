@@ -10,10 +10,10 @@
   justify-content: center;
   width: 32px;
   height: 72px;
-  background: #0f766e;
+  background: var(--brand-green);
   border: none;
   border-radius: 0 14px 14px 0;
-  box-shadow: 2px 0 12px rgba(15, 118, 110, 0.35);
+  box-shadow: 2px 0 12px rgb(from var(--brand-green) r g b / 0.35);
   cursor: pointer;
   font-size: 1rem;
   font-weight: 700;
@@ -23,7 +23,7 @@
 
 .sidenav-toggle:hover {
   width: 38px;
-  background: #0a6560;
+  background: var(--green-nav-dark);
   color: #fff;
 }
 
@@ -87,6 +87,6 @@
 
 .sidenav-link--active {
   color: var(--text-main);
-  background: rgba(15, 118, 110, 0.08);
-  border-right: 3px solid #0f766e;
+  background: rgb(from var(--brand-green) r g b / 0.08);
+  border-right: 3px solid var(--brand-green);
 }

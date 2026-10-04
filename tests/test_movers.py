@@ -2,7 +2,11 @@ import asyncio
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
-from app.integrations.alpaca.market_data import fetch_snapshots, fetch_top_movers
+from app.integrations.alpaca.market_data import (
+    fetch_daily_close_series_batch,
+    fetch_snapshots,
+    fetch_top_movers,
+)
 from app.schemas.movers import (
     FeaturedMoverAsset,
     FeaturedMoverDirection,
@@ -398,14 +402,14 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertEqual(awaited_kwargs["asset_class_map"]["QQQ"], "us_equity")
         mock_fetch_intraday_close_series.assert_awaited_once_with("QQQ", asset_class="us_equity")
 
-    @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)
+    @patch("app.services.market_overview.fetch_daily_close_series_batch", new_callable=AsyncMock)
     @patch("app.services.market_overview.fetch_snapshots", new_callable=AsyncMock)
     @patch("app.services.market_overview.get_dynamic_mover_universe_symbols_by_category", new_callable=AsyncMock)
     def test_featured_month_loser_picks_worst_performer_for_asset_scope(
         self,
         mock_get_dynamic_mover_universe_symbols_by_category,
         mock_fetch_snapshots,
-        mock_get_daily_close_series_cached,
+        mock_fetch_daily_close_series_batch,
     ):
         mock_get_dynamic_mover_universe_symbols_by_category.return_value = {
             "stocks": ["NFLX", "AAPL", "AMD"],
@@ -418,15 +422,11 @@ class MoversServiceTests(BaseAPITestCase):
             "AMD": {"price": 99.0, "volume": 103},
         }
 
-        async def history_side_effect(symbol, start=None, end=None):
-            mapping = {
-                "NFLX": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 92.0)],
-                "AAPL": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 97.0)],
-                "AMD": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 99.0)],
-            }
-            return mapping[symbol]
-
-        mock_get_daily_close_series_cached.side_effect = history_side_effect
+        mock_fetch_daily_close_series_batch.return_value = {
+            "NFLX": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 92.0)],
+            "AAPL": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 97.0)],
+            "AMD": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 99.0)],
+        }
 
         payload = asyncio.run(
             get_featured_mover(
@@ -441,6 +441,7 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertEqual(payload.mover.symbol, "NFLX")
         self.assertEqual(payload.mover.change_percent, "-8.00%")
         self.assertEqual(len(payload.historicalSeries), 2)
+        mock_fetch_daily_close_series_batch.assert_awaited_once()
 
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
     @patch("app.services.market_overview.get_dynamic_mover_universe_symbols_by_category", new_callable=AsyncMock)
@@ -539,6 +540,57 @@ class AlpacaBatchSnapshotFallbackTests(BaseAPITestCase):
         self.assertEqual(payload["ETH/USD"]["symbol"], "ETH/USD")
         mock_request_json.assert_awaited_once()
         mock_fetch_snapshot.assert_not_awaited()
+
+
+class AlpacaBatchHistoryTests(BaseAPITestCase):
+    @patch("app.integrations.alpaca.market_data._request_json", new_callable=AsyncMock)
+    def test_fetch_daily_close_series_batch_maps_crypto_and_follows_pagination(
+        self,
+        mock_request_json,
+    ):
+        async def request_side_effect(*, path, params, **kwargs):
+            if path == "/v1beta3/crypto/us/bars":
+                return {
+                    "bars": {
+                        "BTC/USD": [
+                            {"t": "2026-04-16T00:00:00Z", "c": 74500.0}
+                        ]
+                    },
+                    "next_page_token": None,
+                }
+            if params.get("page_token") == "stock-page-2":
+                return {
+                    "bars": {
+                        "AAPL": [
+                            {"t": "2026-04-17T00:00:00Z", "c": 202.0}
+                        ]
+                    },
+                    "next_page_token": None,
+                }
+            return {
+                "bars": {
+                    "AAPL": [{"t": "2026-04-16T00:00:00Z", "c": 200.0}]
+                },
+                "next_page_token": "stock-page-2",
+            }
+
+        mock_request_json.side_effect = request_side_effect
+
+        payload = asyncio.run(
+            fetch_daily_close_series_batch(
+                ["AAPL", "BTC/USD"],
+                start=date(2026, 4, 16),
+                end=date(2026, 4, 17),
+                asset_class_map={"AAPL": "us_equity", "BTC/USD": "crypto"},
+            )
+        )
+
+        self.assertEqual(
+            payload["AAPL"],
+            [(date(2026, 4, 16), 200.0), (date(2026, 4, 17), 202.0)],
+        )
+        self.assertEqual(payload["BTC/USD"], [(date(2026, 4, 16), 74500.0)])
+        self.assertEqual(mock_request_json.await_count, 3)
 
 
 class AlpacaTopMoversRankingTests(BaseAPITestCase):

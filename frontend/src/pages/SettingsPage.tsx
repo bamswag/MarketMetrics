@@ -7,6 +7,7 @@ import {
   marketTimeDisplayLabel,
   priceDisplayModeLabel,
   trackedSymbolsSortLabel,
+  type BackgroundTheme,
   type CurrencyPreference,
   type MarketAssetCategory,
   type NumberFormatPreference,
@@ -23,6 +24,22 @@ const DEFAULT_CHART_RANGE_OPTIONS: InstrumentRange[] = ['1W', '1M', '3M', '6M', 
 const TRACKED_SORT_OPTIONS = ['newest', 'biggest_gain', 'biggest_loss', 'alphabetical'] as const
 const PRICE_DISPLAY_OPTIONS = ['percent', 'change', 'both'] as const
 const MARKET_TIME_OPTIONS = ['local', 'exchange', 'utc'] as const
+const BACKGROUND_THEME_OPTIONS: Array<{
+  value: BackgroundTheme
+  label: string
+  description: string
+}> = [
+  {
+    value: 'crystal-dark',
+    label: 'Crystal Dark',
+    description: 'Rich black glass with soft white crystal highlights.',
+  },
+  {
+    value: 'diamond-light',
+    label: 'Diamond Light',
+    description: 'Clean white space with polished black-diamond edges.',
+  },
+]
 
 export function SettingsPage({ currentUser, onUpdateEmailNotifications }: SettingsPageProps) {
   const { preferences, togglePreferredAssetClass, updatePreferences } = useMarketPreferences()
@@ -59,6 +76,52 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
           Manage notifications, market defaults, and display preferences.
         </p>
       </div>
+
+      <section className="settings-section">
+        <div className="settings-section-header">
+          <h2 className="settings-section-title">Appearance</h2>
+          <span className="neutral-pill">Saved locally</span>
+        </div>
+        <p className="settings-section-note">
+          Choose the background finish used across MarketMetrics on this device.
+        </p>
+
+        <fieldset className="theme-choice-grid">
+          <legend className="sr-only">Website background theme</legend>
+          {BACKGROUND_THEME_OPTIONS.map((themeOption) => {
+            const isSelected = preferences.backgroundTheme === themeOption.value
+            return (
+              <label
+                className={isSelected ? 'theme-choice is-selected' : 'theme-choice'}
+                key={themeOption.value}
+              >
+                <input
+                  checked={isSelected}
+                  name="background-theme"
+                  onChange={() => updatePreferences({ backgroundTheme: themeOption.value })}
+                  type="radio"
+                  value={themeOption.value}
+                />
+                <span
+                  aria-hidden="true"
+                  className={`theme-choice-preview theme-choice-preview--${themeOption.value}`}
+                >
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span className="theme-choice-copy">
+                  <strong>{themeOption.label}</strong>
+                  <span>{themeOption.description}</span>
+                </span>
+                <span className="theme-choice-status">
+                  {isSelected ? 'Selected' : 'Choose'}
+                </span>
+              </label>
+            )
+          })}
+        </fieldset>
+      </section>
 
       {/* Notifications */}
       <section className="settings-section">

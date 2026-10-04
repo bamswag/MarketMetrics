@@ -14,7 +14,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at top left, rgba(29, 158, 117, 0.14), transparent 42%),
+    radial-gradient(circle at top left, rgb(from var(--green-chart) r g b / 0.14), transparent 42%),
     radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 42%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
@@ -153,11 +153,11 @@
 }
 
 .forecast-verdict-card--positive::before {
-  background: radial-gradient(circle at 100% 0%, rgba(15, 118, 110, 0.20), transparent 55%);
+  background: radial-gradient(circle at 100% 0%, rgb(from var(--brand-green) r g b / 0.20), transparent 55%);
 }
 
 .forecast-verdict-card--negative::before {
-  background: radial-gradient(circle at 100% 0%, rgba(192, 60, 50, 0.20), transparent 55%);
+  background: radial-gradient(circle at 100% 0%, rgb(from var(--red-error) r g b / 0.20), transparent 55%);
 }
 
 .forecast-verdict-card--neutral::before {
@@ -229,13 +229,13 @@
 }
 
 .forecast-confidence-meter--low .forecast-confidence-segment.is-active {
-  background: #ece7e3;
-  color: #7c5f51;
+  background: var(--red-surface-border);
+  color: var(--red-muted-text);
 }
 
 .forecast-confidence-meter--medium .forecast-confidence-segment.is-active {
-  background: rgba(29, 158, 117, 0.14);
-  color: #0f766e;
+  background: rgb(from var(--green-chart) r g b / 0.14);
+  color: var(--brand-green);
 }
 
 .forecast-confidence-meter--high .forecast-confidence-segment.is-active {
@@ -287,8 +287,8 @@
   line-height: 1.05;
 }
 
-.forecast-figure-value--positive { color: #0f766e; }
-.forecast-figure-value--negative { color: #b91c1c; }
+.forecast-figure-value--positive { color: var(--brand-green); }
+.forecast-figure-value--negative { color: var(--red-red-dark); }
 /* Forecast values always render in cobalt — direction is shown by the delta, not the price */
 .forecast-figure-value--forecast { color: #2563EB; }
 
@@ -298,8 +298,8 @@
   color: var(--muted);
 }
 
-.forecast-figure-delta--positive { color: #0f766e; }
-.forecast-figure-delta--negative { color: #b91c1c; }
+.forecast-figure-delta--positive { color: var(--brand-green); }
+.forecast-figure-delta--negative { color: var(--red-red-dark); }
 
 .forecast-figure-arrow {
   grid-column: 2;
@@ -308,7 +308,7 @@
   font-size: 2.35rem;
   font-weight: 900;
   line-height: 1;
-  color: #1D9E75;
+  color: var(--green-chart);
   flex-shrink: 0;
 }
 
@@ -337,7 +337,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 22px;
   background:
-    radial-gradient(circle at top right, rgba(29, 158, 117, 0.10), transparent 48%),
+    radial-gradient(circle at top right, rgb(from var(--green-chart) r g b / 0.10), transparent 48%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -397,7 +397,7 @@
 }
 
 .forecast-legend-swatch--actual {
-  background: #0f766e;
+  background: var(--brand-green);
 }
 
 .forecast-legend-swatch--forecast {
@@ -486,7 +486,7 @@
 }
 
 .forecast-metric-tile:hover {
-  border-color: rgba(29, 158, 117, 0.35);
+  border-color: rgb(from var(--green-chart) r g b / 0.35);
   transform: translateY(-1px);
 }
 
@@ -494,12 +494,12 @@
   grid-column: 1 / -1;
   padding: 18px;
   background:
-    linear-gradient(135deg, rgba(29, 158, 117, 0.10), rgba(37, 99, 235, 0.04)),
+    linear-gradient(135deg, rgb(from var(--green-chart) r g b / 0.10), rgba(37, 99, 235, 0.04)),
     var(--panel-bg);
 }
 
 .forecast-metric-tile--low-confidence {
-  background: #f0ece8;
+  background: var(--red-surface-muted);
   border-color: rgba(124, 95, 81, 0.16);
 }
 
@@ -541,7 +541,7 @@
 }
 
 .forecast-metric-value--positive {
-  color: #0f766e;
+  color: var(--brand-green);
 }
 
 .forecast-metric-sub {
@@ -551,7 +551,7 @@
 }
 
 .forecast-metric-explain {
-  color: #687487;
+  color: var(--chart-axis);
   font-size: 0.76rem;
   line-height: 1.45;
   margin-top: 4px;
@@ -563,7 +563,7 @@
   border: 1px solid var(--panel-border);
   border-radius: 22px;
   background:
-    radial-gradient(circle at top right, rgba(201, 106, 69, 0.10), transparent 46%),
+    radial-gradient(circle at top right, rgb(from var(--brand-red) r g b / 0.10), transparent 46%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
@@ -609,7 +609,7 @@
 
 .forecast-feature-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #1D9E75, #0f766e);
+  background: linear-gradient(90deg, var(--green-chart), var(--brand-green));
   border-radius: 999px;
   transition: width 500ms ease;
 }
@@ -662,8 +662,8 @@
   font-weight: 600;
 }
 
-.forecast-tooltip-change--up   { color: #4ade80; }
-.forecast-tooltip-change--down { color: #f87171; }
+.forecast-tooltip-change--up   { color: var(--green-status-light); }
+.forecast-tooltip-change--down { color: var(--red-red-light); }
 
 .forecast-tooltip-range {
   font-size: 0.74rem;
@@ -681,7 +681,7 @@
   line-height: 1.6;
   padding: 13px 16px;
   border: 1px solid #e2e8f0;
-  border-left: 4px solid #d99a2b;
+  border-left: 4px solid var(--red-gold-muted);
   border-radius: 14px;
   background: #f8fafc;
   margin: 0;
@@ -692,7 +692,7 @@
 }
 
 .forecast-disclaimer-icon {
-  color: #b7791f;
+  color: var(--red-gold-deep);
   flex: 0 0 auto;
   margin-top: 2px;
 }
@@ -763,14 +763,14 @@
   border: 1px solid var(--panel-border);
   border-radius: 22px;
   background:
-    radial-gradient(circle at 90% 50%, rgba(29, 158, 117, 0.14), transparent 55%),
+    radial-gradient(circle at 90% 50%, rgb(from var(--green-chart) r g b / 0.14), transparent 55%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
 }
 
 .forecast-page-cta-card--chart {
   background:
-    radial-gradient(circle at 90% 50%, rgba(201, 106, 69, 0.14), transparent 55%),
+    radial-gradient(circle at 90% 50%, rgb(from var(--brand-red) r g b / 0.14), transparent 55%),
     var(--panel-bg);
 }
 
@@ -802,11 +802,11 @@
 
 /* Teal primary button — used for Investment Simulator CTAs */
 .primary-action--teal {
-  background: linear-gradient(135deg, #1D9E75, #15875f);
+  background: linear-gradient(135deg, var(--green-chart), var(--green-medium));
 }
 
 .primary-action--teal:hover:not(:disabled) {
-  box-shadow: 0 8px 20px rgba(29, 158, 117, 0.28);
+  box-shadow: 0 8px 20px rgb(from var(--green-chart) r g b / 0.28);
 }
 
 /* ── Responsive ── */

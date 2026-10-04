@@ -1,0 +1,435 @@
+@property --theme-glare-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+html,
+body {
+  background: var(--page-background);
+}
+
+[data-theme-surface] {
+  position: relative;
+  isolation: isolate;
+  border-color: var(--panel-border) !important;
+  background: var(--surface-background) !important;
+  box-shadow: var(--panel-shadow) !important;
+}
+
+[data-theme-surface]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--theme-glare-angle),
+    transparent 0deg 238deg,
+    var(--surface-glare) 270deg,
+    transparent 304deg 360deg
+  );
+  opacity: var(--surface-glare-opacity);
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: theme-surface-glare 14s linear infinite paused;
+}
+
+[data-theme-surface][data-theme-surface-visible='true']::after {
+  animation-play-state: running;
+}
+
+.top-bar[data-theme-surface],
+.user-menu-dropdown[data-theme-surface],
+.global-search-dropdown[data-theme-surface],
+.admin-modal[data-theme-surface],
+.admin-detail-panel[data-theme-surface],
+.alert-toast[data-theme-surface] {
+  background: var(--surface-background-strong) !important;
+}
+
+:where(
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select,
+  .global-search-shell,
+  .password-input-shell,
+  .projection-input-wrapper
+) {
+  border-color: var(--panel-border) !important;
+  background: var(--input-bg) !important;
+  color: var(--text-main) !important;
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--muted) !important;
+}
+
+select option {
+  background: var(--bg-elevated);
+  color: var(--text-main);
+}
+
+:where(
+  .settings-row,
+  .settings-preference-card,
+  .alert-row,
+  .alert-history-panel,
+  .alerts-column,
+  .instrument-market-stat,
+  .forecast-stat,
+  .forecast-metric,
+  .projection-metric,
+  .sim-card-note,
+  .legal-section
+) {
+  border-color: var(--panel-border) !important;
+  background-color: var(--soft-bg) !important;
+}
+
+:where(
+  .hero-gainer-chart,
+  .instrument-chart-frame,
+  .prediction-chart-wrap,
+  .forecast-chart-wrap,
+  .projection-chart-wrap,
+  .top-result-chart,
+  .search-result-chart
+) {
+  border-color: var(--panel-border) !important;
+  background: var(--soft-bg) !important;
+}
+
+:where(
+  .user-menu-item,
+  .search-suggestion,
+  .search-view-all,
+  .dashboard-tag,
+  .panel-tag,
+  .neutral-pill,
+  .connected-chip,
+  .global-search-status,
+  .alert-toast-dismiss,
+  .admin-detail-close
+) {
+  color: var(--text-main);
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .auth-launcher,
+  .primary-action,
+  .search-button,
+  .ghost-action,
+  .secondary-link,
+  .watchlist-remove,
+  .google-auth-button,
+  .workspace-toggle:not(.is-active),
+  .range-pill:not(.is-active),
+  .settings-toggle-btn,
+  .alert-inline-button,
+  .admin-nav-button,
+  .admin-search-button,
+  .admin-page-btn:not(.admin-page-btn--active),
+  .admin-action-btn--neutral
+):not(.primary-action--teal):not(.admin-action-btn--danger):not(.admin-action-btn--warn):not(:disabled) {
+  border-color: var(--crystal-control-border) !important;
+  background: var(--crystal-control-bg) !important;
+  color: var(--crystal-control-text) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 8px 22px rgba(0, 0, 0, 0.28) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .auth-launcher,
+  .primary-action,
+  .search-button,
+  .ghost-action,
+  .secondary-link,
+  .watchlist-remove,
+  .google-auth-button,
+  .workspace-toggle:not(.is-active),
+  .range-pill:not(.is-active),
+  .settings-toggle-btn,
+  .alert-inline-button,
+  .admin-nav-button,
+  .admin-search-button,
+  .admin-page-btn:not(.admin-page-btn--active),
+  .admin-action-btn--neutral
+):not(.primary-action--teal):not(.admin-action-btn--danger):not(.admin-action-btn--warn):not(:disabled):hover {
+  border-color: #ffffff !important;
+  background: linear-gradient(145deg, #ffffff, #f4f5f7) !important;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 0 24px rgba(255, 255, 255, 0.16),
+    0 10px 26px rgba(0, 0, 0, 0.35) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .workspace-toggle.is-active,
+  .range-pill.is-active,
+  .admin-page-btn--active,
+  .primary-action--teal,
+  .positive-pill,
+  .admin-action-btn--primary
+) {
+  color: #ffffff !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-badge--accent,
+  .hero-gainer-change:not(.hero-gainer-change--loss),
+  .featured-mover-shell--positive .hero-gainer-link,
+  .positive-text,
+  .forecast-figure-value--positive,
+  .forecast-figure-delta--positive,
+  .projection-summary-value--positive,
+  .projection-summary-delta--positive,
+  .search-result-card-action.is-tracked
+) {
+  color: var(--positive-foreground) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .hero-gainer-change--loss,
+  .featured-mover-shell--negative .hero-gainer-link,
+  .negative-text,
+  .forecast-figure-value--negative,
+  .forecast-figure-delta--negative,
+  .projection-summary-value--negative,
+  .projection-summary-delta--negative,
+  .error-text
+) {
+  color: var(--negative-foreground) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .negative-pill,
+  .warning-pill,
+  .admin-action-btn--danger,
+  .admin-action-btn--warn,
+  .danger-action
+) {
+  color: #ffffff !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .admin-table th,
+  .admin-pagination-info,
+  .admin-modal-body,
+  .search-results-input-icon,
+  .chart-tooltip-label,
+  .instrument-market-stat-label
+) {
+  color: var(--muted) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .admin-table-card,
+  .admin-table th,
+  .admin-table td,
+  .admin-pagination,
+  .admin-detail-header
+) {
+  border-color: var(--panel-border) !important;
+}
+
+:root[data-background-theme='crystal-dark'] .admin-table th,
+:root[data-background-theme='crystal-dark'] .admin-table tr:hover td {
+  background: var(--soft-bg);
+}
+
+:root[data-background-theme='diamond-light'] :where(
+  .primary-action,
+  .search-button,
+  .range-pill.is-active,
+  .auth-launcher.is-active
+) {
+  color: #ffffff;
+}
+
+/* Public homepage controls deliberately stay dark in Crystal Dark. */
+:root[data-background-theme='crystal-dark'] #root .top-shell--landing .auth-launcher:not(:disabled),
+:root[data-background-theme='crystal-dark'] #root .landing-shell .ghost-action:not(:disabled),
+:root[data-background-theme='crystal-dark'] #root .landing-shell .secondary-link:not(:disabled),
+:root[data-background-theme='crystal-dark'] #root .landing-shell .insight-card-link:not(:disabled) {
+  border-color: var(--dark-control-border) !important;
+  background: var(--dark-control-bg) !important;
+  color: var(--dark-control-text) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 22px rgba(0, 0, 0, 0.32) !important;
+}
+
+:root[data-background-theme='crystal-dark'] #root .top-shell--landing .auth-launcher:not(:disabled):hover,
+:root[data-background-theme='crystal-dark'] #root .landing-shell .ghost-action:not(:disabled):hover,
+:root[data-background-theme='crystal-dark'] #root .landing-shell .secondary-link:not(:disabled):hover,
+:root[data-background-theme='crystal-dark'] #root .landing-shell .insight-card-link:not(:disabled):hover {
+  border-color: var(--dark-control-border-hover) !important;
+  background: var(--dark-control-bg-hover) !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 22px rgba(255, 255, 255, 0.07),
+    0 10px 26px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root[data-background-theme='crystal-dark'] #root .landing-shell .primary-action:not(:disabled) {
+  border-color: rgb(from var(--brand-red) r g b / 0.7) !important;
+  background: linear-gradient(135deg, var(--brand-red), var(--accent-strong)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 24px rgb(from var(--brand-red) r g b / 0.25) !important;
+}
+
+:root[data-background-theme='crystal-dark'] #root .landing-shell .primary-action:not(:disabled):hover {
+  border-color: rgb(from var(--red-bright) r g b / 0.8) !important;
+  background: linear-gradient(135deg, var(--red-strong), var(--brand-red)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 22px rgb(from var(--brand-red) r g b / 0.2),
+    0 12px 28px rgba(0, 0, 0, 0.38) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .top-shell--landing .global-search-shell,
+  .top-shell--landing .global-search-input,
+  .top-shell--landing .global-search-status,
+  .landing-shell .featured-mover-select,
+  .landing-shell .hero-gainer-chart,
+  .landing-shell .featured-mover-chart-empty,
+  .landing-shell .mover-category-empty
+) {
+  border-color: var(--dark-control-border) !important;
+  background: var(--dark-control-bg) !important;
+  color: var(--dark-control-text) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .top-shell--landing .global-search-input,
+  .landing-shell .featured-mover-select
+):hover {
+  border-color: var(--dark-control-border-hover) !important;
+  background: var(--dark-control-bg-hover) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .top-shell--landing .global-search-input,
+  .landing-shell .featured-mover-select,
+  .top-shell--landing .auth-launcher,
+  .landing-shell .primary-action,
+  .landing-shell .ghost-action,
+  .landing-shell .secondary-link,
+  .landing-shell .insight-card-link
+):focus-visible {
+  outline: 3px solid var(--focus-ring) !important;
+  outline-offset: 3px;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .top-shell--landing button,
+  .top-shell--landing input,
+  .landing-shell button,
+  .landing-shell input,
+  .landing-shell select
+):disabled {
+  border-color: var(--panel-border) !important;
+  background: var(--dark-control-bg-disabled) !important;
+  color: var(--dark-control-text-muted) !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .landing-guides-callout,
+  .landing-shell .landing-cta
+) {
+  border-color: var(--panel-border) !important;
+  background:
+    radial-gradient(circle at top right, rgb(from var(--brand-green) r g b / 0.11), transparent 42%),
+    var(--surface-background) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--panel-shadow) !important;
+}
+
+:root[data-background-theme='crystal-dark'] .landing-shell .landing-cta {
+  background:
+    radial-gradient(circle at center, rgb(from var(--brand-red) r g b / 0.14), transparent 62%),
+    var(--surface-background) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .landing-badge,
+  .landing-shell .panel-tag,
+  .landing-shell .mover-category-badge
+) {
+  border-color: var(--panel-border) !important;
+  background: var(--control-bg) !important;
+  color: var(--text-main) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .landing-badge--accent,
+  .landing-shell .positive-pill
+) {
+  border-color: rgb(from var(--brand-green) r g b / 0.48) !important;
+  background: rgb(from var(--brand-green) r g b / 0.24) !important;
+  color: var(--positive-foreground) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .negative-pill,
+  .landing-shell .warning-pill
+) {
+  border-color: rgb(from var(--brand-red) r g b / 0.5) !important;
+  background: rgb(from var(--brand-red) r g b / 0.24) !important;
+  color: var(--negative-foreground) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .mover-logo--image,
+  .landing-shell .mover-logo--fallback
+) {
+  border-color: var(--dark-control-border) !important;
+  background: var(--dark-control-bg) !important;
+  color: var(--dark-control-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+:root[data-background-theme='crystal-dark'] :where(
+  .landing-shell .skeleton-chart-placeholder,
+  .landing-shell .skeleton-logo,
+  .landing-shell .skeleton-line,
+  .landing-shell .hero-gainer-skeleton-change
+) {
+  background: var(--dark-skeleton-bg) !important;
+  background-size: 200% 100% !important;
+}
+
+@keyframes theme-surface-glare {
+  to {
+    --theme-glare-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme-surface]::after {
+    animation: none;
+  }
+
+  body,
+  [data-theme-surface] {
+    transition: none !important;
+  }
+}

@@ -60,8 +60,8 @@
 }
 
 .search-results-input:focus {
-  border-color: rgba(15, 118, 110, 0.4);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: rgb(from var(--brand-green) r g b / 0.4);
+  box-shadow: 0 0 0 3px rgb(from var(--brand-green) r g b / 0.08);
 }
 
 .search-results-input-status {
@@ -130,7 +130,7 @@
 }
 
 .search-results-tab.is-active .search-results-tab-count {
-  background: rgba(201, 106, 69, 0.12);
+  background: rgb(from var(--brand-red) r g b / 0.12);
   color: var(--accent);
 }
 
@@ -320,7 +320,7 @@
 .search-result-card-action.is-tracked {
   opacity: 1 !important;
   pointer-events: none;
-  color: #0f766e !important;
+  color: var(--brand-green) !important;
 }
 
 .search-result-card:hover .search-result-card-action:not(.is-tracked) {
@@ -448,7 +448,7 @@
   align-items: center;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(201, 106, 69, 0.1);
+  background: rgb(from var(--brand-red) r g b / 0.1);
   color: var(--accent);
   font-size: 0.72rem;
   font-weight: 800;

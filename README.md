@@ -36,7 +36,8 @@ Live site: **https://marketmetrics.dev**
 - SQLAlchemy + Alembic
 - Pydantic v2
 - SQLite (local development)
-- PostgreSQL (Render deployment)
+- PostgreSQL 18 (private Docker service in production)
+- Docker Compose + Caddy on an OVHcloud VPS
 - Argon2 password hashing
 - JWT access tokens with `sessionVersion` invalidation
 - Alpaca (market data: quotes, bars, snapshots, movers, asset metadata)
@@ -58,18 +59,18 @@ Live site: **https://marketmetrics.dev**
 
 ```
 Browser (React SPA)
-  └─ Vite build served by FastAPI (production) or Vite dev server (development)
-  └─ HTTP requests → FastAPI routes
-  └─ WebSocket connections → FastAPI WebSocket route (per-symbol quote polling)
+  └─ HTTPS / WebSocket → Caddy on the OVH VPS
+                           └─ private reverse proxy → FastAPI container
+                                                        ├─ serves the Vite production build
+                                                        ├─ API and WebSocket routes
+                                                        ├─ Alpaca, Brevo and Google OAuth
+                                                        └─ SQLAlchemy → private PostgreSQL 18 container
 
-FastAPI backend
-  ├─ API routes (auth, search, quotes, instruments, watchlists, alerts, simulate, forecast, project, admin)
-  ├─ Services (business logic, separated from route handlers)
-  ├─ Integrations (Alpaca client, email, Google OAuth)
-  ├─ Projections (assumptions derivation, deterministic engine, Monte Carlo)
-  ├─ Forecasting (Random Forest artifacts, lazy-loaded inference)
-  └─ ORM models + Alembic migrations → SQLite (local) / PostgreSQL (Render)
+Local development
+  └─ Vite dev server → FastAPI → SQLite by default
 ```
+
+The production services are managed by Docker Compose. Only Caddy publishes host ports; the application and PostgreSQL database remain on the private Docker network. PostgreSQL data persists in a named Docker volume.
 
 ---
 
@@ -162,7 +163,7 @@ FastAPI backend
 - Two-step email change: a verification link must be clicked before the new address is committed.
 - WebSocket auth via query param or `Authorization` header subprotocol.
 - Sensitive data (user emails, token hashes) is not included in operational server logs.
-- On Render deployments, the backend refuses to start if `JWT_SECRET` is missing or set to the default placeholder `"change-me"`.
+- In production, the backend refuses to start if `DATABASE_URL` is missing or `JWT_SECRET` is missing or set to a known placeholder.
 
 ---
 
@@ -211,7 +212,7 @@ frontend/src/
 
 migrations/versions/ Alembic migration history (11 revisions)
 tests/               Backend unittest suite
-scripts/             Training and symbol-catalog utilities
+scripts/             Deployment, admin, training and symbol-catalog utilities
 data/                Symbol catalog and training universe files
 artifacts/           Generated forecast model artifacts
 ```
@@ -278,12 +279,14 @@ npm run dev
 
 Vite dev server starts at http://127.0.0.1:5173.
 
-By default it points to http://127.0.0.1:8000. To point the frontend at the deployed test backend, set `frontend/.env.development`:
+By default it points to http://127.0.0.1:8000. A local frontend can target another explicitly allowed backend by setting `frontend/.env.development`:
 
 ```text
-VITE_API_BASE_URL=https://marketmetrics.onrender.com
+VITE_API_BASE_URL=https://marketmetrics.dev
 VITE_ALLOW_REMOTE_API_IN_DEV=true
 ```
+
+The remote origin must permit the local Vite origin through `ADDITIONAL_FRONTEND_ORIGINS`. Normal development should use the local backend.
 
 ---
 
@@ -312,7 +315,7 @@ python scripts/train_stock_model.py --symbols AAPL MSFT NVDA --version rf_demo
 
 Artifacts are written under `PREDICTION_MODEL_DIR` and the active version is tracked in `artifacts/prediction/latest.json`.
 
-The forecast route will return an error if artifacts do not exist. On Render, artifacts do not persist across deploys — this is a known limitation.
+The forecast route returns an error if artifacts do not exist. Tracked artifacts are included when the application image is built; artifacts produced inside a running container are lost when that container is replaced unless external storage is added.
 
 ## Symbol Catalog
 
@@ -332,8 +335,12 @@ Search, movers grouping, quote eligibility, and asset-class handling all depend 
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string (required on Render) |
-| `JWT_SECRET` | Must be a secure random value. The app refuses to start on Render if this is empty or `"change-me"`. |
+| `DATABASE_URL` | Database connection string. Production uses the private Compose host `db:5432`. |
+| `POSTGRES_DB` | Database created by the production PostgreSQL container. |
+| `POSTGRES_USER` | Private production database role. |
+| `POSTGRES_PASSWORD` | Strong database password; must match the credential in `DATABASE_URL`. |
+| `NEON_DATABASE_URL` | Optional temporary rollback source after the Neon-to-OVH migration; not used by the running app. |
+| `JWT_SECRET` | Independent secure random value. Production rejects missing or known placeholder values. |
 | `JWT_ALGORITHM` | HS256 (default) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | 60 (default) |
 | `FRONTEND_BASE_URL` | Must include scheme, e.g. `https://marketmetrics.dev`. Used for CORS, email links, OAuth redirects. |
@@ -396,16 +403,18 @@ Search, movers grouping, quote eligibility, and asset-class handling all depend 
 
 ## Deployment Notes
 
-The project is deployed on Render. See `DEPLOYMENT.md` for the full setup guide.
+The project is deployed on an OVHcloud VPS. See `DEPLOYMENT.md` for the full setup, operations, database and backup guide.
 
-Short summary:
+Production summary:
 
-- One Render web service for the full-stack app (`https://marketmetrics.dev`).
-- One Render web service as a deployed test backend (`https://marketmetrics.onrender.com`).
-- Shared PostgreSQL 18 database (Created on Render).
-- `JWT_SECRET` must be set to a secure random string. The backend will not start on Render if it is missing.
-- Run `alembic upgrade head` on first deploy to create the schema.
-- Forecast model artifacts are not persisted across Render deploys — this is a known limitation.
+- Caddy terminates HTTPS for `marketmetrics.dev` and `www.marketmetrics.dev`.
+- A Docker-built FastAPI container serves both the API and compiled React SPA.
+- PostgreSQL 18 runs as a private Compose service with a persistent named volume.
+- Alembic manages the production schema.
+- Alpaca, Brevo and Google OAuth remain external integrations.
+- Deployment is manual through `scripts/deploy_ovh.sh`.
+- The former Render services are not in the production request path.
+- The former Neon database is retained only temporarily as migration rollback.
 
 ---
 
@@ -420,13 +429,16 @@ These caches are not distributed — if multiple backend instances were running 
 ## Known Limitations
 
 - **No frontend automated tests.** The backend suite has 99 tests but there is no Jest/Vitest/RTL suite for the React frontend.
-- **No CI/CD pipeline.** Deploys are triggered manually by pushing to the GitHub remote that Render tracks.
+- **No CI/CD pipeline.** Production updates are pulled and deployed manually on the OVH VPS.
 - **No API rate limiting.** All endpoints are currently unthrottled. Routes like `/auth/register`, `/auth/login`, and `/project/long-term` should have rate limits before the app is opened to heavy public traffic.
 - **Single market data provider.** All market data comes from Alpaca. If Alpaca is unavailable or a symbol is unsupported, those features fail.
 - **In-memory caches are not distributed.** Caches are per-process. A second backend instance would start with cold caches.
 - **WebSocket quotes are polling-backed.** The backend polls Alpaca every 30 seconds — it is not a true streaming connection to an exchange.
 - **Alerts only evaluate during active WebSocket sessions.** If no browser session is open for a symbol, alerts for that symbol are not checked. There is no background monitoring process.
-- **Forecast artifacts are ephemeral on Render.** The free/hobby Render tier does not persist the local filesystem between deploys. Forecast artifacts must be rebuilt or mounted from persistent storage.
+- **Single-server deployment.** The application and primary database share one VPS, so server or disk failure affects both.
+- **No PostgreSQL failover.** The self-hosted database currently has no replica or automatic failover.
+- **Backups require operational automation.** Manual logical backups work, but scheduled encrypted off-server backups and restore drills still need to be established.
+- **Runtime-generated forecast artifacts are container-local.** Tracked artifacts are included in the image, but runtime replacements need dedicated persistent storage.
 - **Simulations omit real costs.** Tax, FX conversion, slippage, transaction fees, and dividend treatment are not modelled.
 - **Forecasts and projections are educational.** They are analytical estimates based on historical data and user-defined assumptions. They are not financial advice.
 
@@ -437,7 +449,9 @@ These caches are not distributed — if multiple backend instances were running 
 - Add API rate limiting (e.g. `slowapi`) on registration, login, forecast, and projection routes.
 - Build a frontend test suite (React Testing Library or Playwright for key user flows).
 - Set up CI/CD with GitHub Actions for lint, test, and deploy automation.
-- Persist forecast artifacts to Render Disk or S3 so they survive redeploys.
+- Automate encrypted PostgreSQL backups to storage outside the VPS and test restores regularly.
+- Add database monitoring and, if the project grows, a managed database or PostgreSQL replica.
+- Persist runtime-generated forecast artifacts to object storage so they survive container replacement.
 - Add cross-user isolation tests to the backend suite.
 - Enable logged-out access to forecast and projection routes in the frontend (with rate limiting in place first).
 - Extend simulation modelling to include basic cost assumptions (transaction fees, simple tax treatment).

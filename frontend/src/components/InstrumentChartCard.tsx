@@ -43,7 +43,7 @@ const RANGE_LABELS: Record<InstrumentRange, string> = {
   '5Y': '5Y',
   MAX: 'MAX',
 }
-const AXIS_TICK = { fill: '#8b95a3', fontSize: 11 } as const
+const AXIS_TICK = { fill: 'var(--chart-axis)', fontSize: 11 } as const
 
 /**
  * Format plain numbers (like volume) with compact notation when appropriate.
@@ -389,15 +389,15 @@ export function InstrumentChartCard({
             <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="chartLine" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0%" stopColor={isRangePositive ? '#0f766e' : '#b14f2b'} />
-                  <stop offset="100%" stopColor={isRangePositive ? '#10b981' : '#ef4444'} />
+                  <stop offset="0%" stopColor={isRangePositive ? 'var(--brand-green)' : 'var(--red-danger)'} />
+                  <stop offset="100%" stopColor={isRangePositive ? 'var(--green-bright)' : 'var(--red-red-bright)'} />
                 </linearGradient>
                 <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={isRangePositive ? '#0f766e' : '#b14f2b'} stopOpacity={0.15} />
-                  <stop offset="100%" stopColor={isRangePositive ? '#0f766e' : '#b14f2b'} stopOpacity={0.0} />
+                  <stop offset="0%" stopColor={isRangePositive ? 'var(--brand-green)' : 'var(--red-danger)'} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={isRangePositive ? 'var(--brand-green)' : 'var(--red-danger)'} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(25, 40, 62, 0.05)" strokeDasharray="3 5" vertical={false} />
+              <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" vertical={false} />
               <XAxis
                 axisLine={false}
                 dataKey="date"
@@ -443,14 +443,14 @@ export function InstrumentChartCard({
                     dataKey="ma30"
                     dot={false}
                     isAnimationActive={false}
-                    stroke="#f59e0b"
+                    stroke="var(--red-amber)"
                     strokeLinecap="round"
                     strokeOpacity={0.2}
                     strokeWidth={6}
                     type="monotone"
                   />
                   <Line
-                    activeDot={{ fill: '#3b82f6', r: 4.5, stroke: '#ffffff', strokeWidth: 2 }}
+                    activeDot={{ fill: '#3b82f6', r: 4.5, stroke: 'var(--bg-elevated)', strokeWidth: 2 }}
                     dataKey="ma50"
                     dot={false}
                     isAnimationActive={false}
@@ -460,11 +460,11 @@ export function InstrumentChartCard({
                     type="monotone"
                   />
                   <Line
-                    activeDot={{ fill: '#f59e0b', r: 4.5, stroke: '#ffffff', strokeWidth: 2 }}
+                    activeDot={{ fill: 'var(--red-amber)', r: 4.5, stroke: 'var(--bg-elevated)', strokeWidth: 2 }}
                     dataKey="ma30"
                     dot={false}
                     isAnimationActive={false}
-                    stroke="#f59e0b"
+                    stroke="var(--red-amber)"
                     strokeLinecap="round"
                     strokeWidth={2.15}
                     type="monotone"

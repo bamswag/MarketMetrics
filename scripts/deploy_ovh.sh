@@ -14,6 +14,18 @@ if [[ "$(stat -c '%a' .env.production)" != "600" ]]; then
     exit 1
 fi
 
+if grep -qE 'USER:PASSWORD|@HOST/|replace-with-a-random-secret' .env.production; then
+    echo ".env.production still contains template placeholder values." >&2
+    exit 1
+fi
+
+for required_variable in DATABASE_URL JWT_SECRET ALPACA_API_KEY ALPACA_SECRET_KEY; do
+    if ! grep -qE "^${required_variable}=.+" .env.production; then
+        echo ".env.production is missing ${required_variable}." >&2
+        exit 1
+    fi
+done
+
 docker compose --env-file .env.production config --quiet
 docker compose --env-file .env.production build --pull app
 docker compose --env-file .env.production run --rm app alembic upgrade head

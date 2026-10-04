@@ -6,6 +6,7 @@ export type PriceDisplayMode = 'percent' | 'change' | 'both'
 export type MarketTimeDisplay = 'local' | 'exchange' | 'utc'
 export type CurrencyPreference = 'USD' | 'GBP'
 export type NumberFormatPreference = 'locale' | 'compact'
+export type BackgroundTheme = 'crystal-dark' | 'diamond-light'
 
 export type MarketPreferences = {
   preferredAssetClasses: MarketAssetCategory[]
@@ -15,6 +16,7 @@ export type MarketPreferences = {
   marketTimeDisplay: MarketTimeDisplay
   currency: CurrencyPreference
   numberFormat: NumberFormatPreference
+  backgroundTheme: BackgroundTheme
 }
 
 export const MARKET_ASSET_CATEGORY_ORDER: MarketAssetCategory[] = ['stocks', 'etfs', 'crypto']
@@ -27,6 +29,7 @@ export const DEFAULT_MARKET_PREFERENCES: MarketPreferences = {
   marketTimeDisplay: 'local',
   currency: 'USD',
   numberFormat: 'locale',
+  backgroundTheme: 'crystal-dark',
 }
 
 export const MARKET_PREFERENCES_STORAGE_KEY = 'marketmetrics.marketPreferences'
@@ -109,6 +112,10 @@ export function normalizeMarketPreferences(value: unknown): MarketPreferences {
       rawValue.numberFormat === 'locale' || rawValue.numberFormat === 'compact'
         ? rawValue.numberFormat
         : DEFAULT_MARKET_PREFERENCES.numberFormat,
+    backgroundTheme:
+      rawValue.backgroundTheme === 'diamond-light' || rawValue.backgroundTheme === 'crystal-dark'
+        ? rawValue.backgroundTheme
+        : DEFAULT_MARKET_PREFERENCES.backgroundTheme,
   }
 }
 
@@ -134,10 +141,15 @@ export function saveStoredMarketPreferences(preferences: MarketPreferences) {
     return
   }
 
-  window.localStorage.setItem(
-    MARKET_PREFERENCES_STORAGE_KEY,
-    JSON.stringify(normalizeMarketPreferences(preferences)),
-  )
+  try {
+    window.localStorage.setItem(
+      MARKET_PREFERENCES_STORAGE_KEY,
+      JSON.stringify(normalizeMarketPreferences(preferences)),
+    )
+  } catch {
+    // Storage may be unavailable in privacy-restricted browser contexts.
+    // The in-memory preferences remain usable for the current page session.
+  }
 }
 
 export function isAssetCategoryEnabled(

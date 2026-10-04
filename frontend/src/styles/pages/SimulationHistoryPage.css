@@ -17,8 +17,8 @@
   border: 1px solid var(--panel-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at top left, rgba(201, 106, 69, 0.12), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.10), transparent 40%),
+    radial-gradient(circle at top left, rgb(from var(--brand-red) r g b / 0.12), transparent 40%),
+    radial-gradient(circle at bottom right, rgb(from var(--brand-green) r g b / 0.10), transparent 40%),
     var(--panel-bg);
   box-shadow: var(--panel-shadow);
   flex-wrap: wrap;
@@ -54,7 +54,7 @@
   align-self: flex-start;
   padding: 0.45rem 1.1rem;
   border-radius: 8px;
-  border: 1px solid rgba(177, 79, 43, 0.3);
+  border: 1px solid rgb(from var(--red-danger) r g b / 0.3);
   background: var(--danger-soft);
   color: var(--danger);
   font-size: 0.82rem;
@@ -65,8 +65,8 @@
 }
 
 .sim-history-clear-btn:hover:not(:disabled) {
-  background: rgba(177, 79, 43, 0.18);
-  border-color: rgba(177, 79, 43, 0.5);
+  background: rgb(from var(--red-danger) r g b / 0.18);
+  border-color: rgb(from var(--red-danger) r g b / 0.5);
 }
 
 .sim-history-clear-btn:disabled {

@@ -202,7 +202,7 @@ export function formatPriceChangeWithPreferences(
       return hasChange ? formatSignedCurrency(change, preferences) : '--'
     case 'both':
       if (hasChange && hasChangePercent) {
-        return `${formatSignedCurrency(change, preferences)} · ${changePercent}`
+        return `${formatSignedCurrency(change, preferences)} | ${changePercent}`
       }
       if (hasChange) {
         return formatSignedCurrency(change, preferences)

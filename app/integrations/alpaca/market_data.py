@@ -14,6 +14,7 @@ class AlpacaMarketDataError(Exception):
 
 
 _CRYPTO_SNAPSHOT_BATCH_SIZE = 50
+_HISTORICAL_BARS_BATCH_SIZE = 50
 
 
 def _require_credentials() -> Dict[str, str]:
@@ -183,6 +184,106 @@ async def fetch_daily_close_series(
 ) -> List[Tuple[date, float]]:
     rows = await fetch_daily_bar_rows(symbol, start=start, end=end, asset_class=asset_class)
     return [(row["date"], row["close"]) for row in rows]
+
+
+async def fetch_daily_close_series_batch(
+    symbols: Iterable[str],
+    *,
+    start: date,
+    end: date,
+    asset_class_map: Optional[Dict[str, str]] = None,
+) -> Dict[str, List[Tuple[date, float]]]:
+    """Fetch daily closes for many symbols with a small number of Alpaca calls.
+
+    Alpaca's bars endpoints accept multiple symbols. Using those endpoints here
+    avoids making one HTTP request per instrument when ranking weekly/monthly
+    movers.
+    """
+    normalized_symbols = list(
+        dict.fromkeys(_normalize_symbol(symbol) for symbol in symbols if symbol)
+    )
+    if not normalized_symbols:
+        return {}
+
+    ac_map = asset_class_map or {}
+    equity_symbols = [
+        symbol
+        for symbol in normalized_symbols
+        if ac_map.get(symbol, "us_equity") != "crypto"
+    ]
+    crypto_symbols = [
+        symbol for symbol in normalized_symbols if ac_map.get(symbol) == "crypto"
+    ]
+    result: Dict[str, List[Tuple[date, float]]] = {}
+
+    async def fetch_group(
+        batch: List[str],
+        *,
+        path: str,
+        crypto: bool,
+    ) -> None:
+        api_symbols = [
+            _to_crypto_data_symbol(symbol) if crypto else symbol for symbol in batch
+        ]
+        app_symbol_by_api_symbol = dict(zip(api_symbols, batch))
+        params: Dict[str, Any] = {
+            "symbols": ",".join(api_symbols),
+            "timeframe": "1Day",
+            "start": f"{start.isoformat()}T00:00:00Z",
+            "end": f"{end.isoformat()}T23:59:59Z",
+            "limit": 10000,
+            "sort": "asc",
+        }
+        if not crypto:
+            params.update(
+                {
+                    "adjustment": "all",
+                    "feed": settings.alpaca_data_feed,
+                }
+            )
+
+        while True:
+            data = await _request_json(
+                base_url=settings.alpaca_data_base_url,
+                path=path,
+                params=params,
+            )
+            bars_by_symbol = data.get("bars") or {}
+            for api_symbol, bars in bars_by_symbol.items():
+                app_symbol = app_symbol_by_api_symbol.get(api_symbol)
+                if not app_symbol:
+                    continue
+                points = result.setdefault(app_symbol, [])
+                for bar in bars or []:
+                    timestamp = bar.get("t")
+                    close = bar.get("c")
+                    if not timestamp or close is None:
+                        continue
+                    points.append(
+                        (
+                            datetime.fromisoformat(
+                                timestamp.replace("Z", "+00:00")
+                            ).date(),
+                            float(close),
+                        )
+                    )
+
+            next_page_token = data.get("next_page_token")
+            if not next_page_token:
+                break
+            params["page_token"] = next_page_token
+
+    tasks = []
+    for batch in _chunked(equity_symbols, _HISTORICAL_BARS_BATCH_SIZE):
+        tasks.append(fetch_group(batch, path="/v2/stocks/bars", crypto=False))
+    for batch in _chunked(crypto_symbols, _HISTORICAL_BARS_BATCH_SIZE):
+        tasks.append(
+            fetch_group(batch, path="/v1beta3/crypto/us/bars", crypto=True)
+        )
+    if tasks:
+        await asyncio.gather(*tasks)
+
+    return result
 
 
 async def fetch_earliest_daily_bar_date(

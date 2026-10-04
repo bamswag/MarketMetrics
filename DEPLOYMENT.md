@@ -1,512 +1,370 @@
-# Deployment Notes
+# MarketMetrics Production Deployment
 
-This document explains how MarketMetrics is deployed and configured on Render. It focuses mainly on the live full-stack deployment, because that is the version intended for assessment and demonstration.
+This document describes the current MarketMetrics production deployment on an OVHcloud VPS. Render was used earlier in the project but is no longer part of the production request path.
 
-MarketMetrics is deployed as a FastAPI backend serving a built React/Vite frontend, with PostgreSQL used for production persistence.
+Live site: **https://marketmetrics.dev**
 
----
+## 1. Production Architecture
 
-## 1. Deployment Overview
+```text
+Browser
+  │ HTTPS / WebSocket
+  ▼
+Caddy container
+  │ reverse proxy over the private Docker network
+  ▼
+FastAPI application container
+  ├─ serves the compiled React SPA
+  ├─ exposes the REST and WebSocket routes
+  ├─ calls Alpaca, Google OAuth and Brevo
+  └─ connects to PostgreSQL over the private Docker network
+                         │
+                         ▼
+                 PostgreSQL 18 container
+                 persistent Docker volume
+```
 
-The main deployed version of the system is https://marketmetrics.dev
- 
-This live service runs the FastAPI backend and serves the built React frontend from `frontend/dist`.
+The deployment consists of three Docker Compose services:
 
-Additional environments used during development are:
+| Service | Image | Purpose | Public ports |
+|---|---|---|---|
+| `caddy` | `caddy:2-alpine` | TLS termination, security headers and reverse proxy | `80`, `443` |
+| `app` | Built from `Dockerfile` | React production build and FastAPI application | None |
+| `db` | `postgres:18.6-alpine` | Production PostgreSQL database | None |
 
+Only Caddy is exposed to the internet. The application and database communicate through Docker's private network. PostgreSQL must never publish port `5432` on the host.
 
-Live full-stack site: https://marketmetrics.dev  
-Backend test service: https://marketmetrics.onrender.com  
-Local FastAPI server: http://127.0.0.1:8000  
-Local Vite dev server: http://127.0.0.1:5173
+Production data is stored in the named volume `marketmetrics_postgres_data`. Removing that volume destroys the production database.
 
+## 2. Repository and Server Layout
 
-The backend-only Render service is mainly used for testing the frontend against a deployed API during development. The full-stack service is the main deployment that should be used for marking and demonstration.
+The deployment source is the GitHub repository:
 
-Both Render services are configured from the same codebase and use the same managed PostgreSQL database.
+```text
+https://github.com/bamswag/MarketMetrics
+```
 
-### Repository Used for Deployment
+The production checkout is stored at `/opt/marketmetrics`. The secrets file exists only on the VPS at `/opt/marketmetrics/.env.production`. It must be owned by the deployment user, have mode `600`, and remain excluded from Git.
 
-The live Render deployment is connected to my GitHub repository: https://github.com/bamswag/MarketMetrics  
+Database dumps are stored outside the repository at `/opt/marketmetrics-backups`. Backups must also be copied off the VPS. A backup on the same disk is not sufficient protection against disk or server loss.
 
-I did not deploy directly from the University GitLab repository because the GitLab submission repository is private and was used as the official academic submission copy rather than the deployment source.
+## 3. Host Prerequisites
 
-The same final codebase is mirrored to the University GitLab repository for submission. GitLab should therefore be treated as the official submitted snapshot, while GitHub is the repository Render uses to build and deploy the live website.
-
-## 2. Render Services
-
-Two Render web services are currently configured.
-
-### Market Metrics Fullstack
-
-This is the main live deployment.
-
-It performs three jobs:
-
-1. Builds the React frontend.
-2. Runs the FastAPI backend.
-3. Serves the compiled frontend through FastAPI.
-
-Recommended build command:
+The current host runs Ubuntu with Docker Engine and Docker Compose. Before deployment, confirm:
 
 ```bash
-cd frontend && npm install && npm run build && cd .. && pip install -r requirements.txt && alembic upgrade head
+docker version
+docker compose version
+free -h
+df -h /
 ```
 
-Recommended start command:
+Host security requirements:
+
+- SSH key authentication only.
+- Root and password SSH login disabled.
+- UFW permits only SSH, HTTP and HTTPS.
+- Fail2ban enabled.
+- At least 2 GB swap available.
+- Docker enabled at boot.
+
+Example checks:
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
+sudo ufw status verbose
+sudo systemctl status fail2ban --no-pager
+sudo systemctl is-enabled docker
+swapon --show
 ```
 
-### Market Metrics Backend
+## 4. Production Configuration
 
-This is a backend-only test service.
-
-It is mainly useful when running the frontend locally while pointing it at a real deployed API. It uses the same backend code and database, but it does not need to build or serve the React frontend.
-
-This service is not the main assessment deployment.
-
----
-
-## 3. PostgreSQL Database
-
-MarketMetrics uses a managed PostgreSQL database on Render for deployed environments.
-
-The database connection is supplied through the `DATABASE_URL` environment variable.
-
-```text
-DATABASE_URL=<The Render PostgreSQL Internal Database URL>
-```
-
-Do not commit the real database URL to the repository. The actual value contains credentials and must only be stored in Render environment variables or in a local `.env` file that is not committed.
-
-A typical PostgreSQL connection string has this format:
-
-```text
-postgresql://user:password@host:port/database
-```
-
-The backend will fail to start on Render if `DATABASE_URL` is missing. This avoids accidentally running the deployed system without the intended production database.
-
-Database migrations are managed with Alembic and are run during deployment using:
+Create the environment file from the tracked example:
 
 ```bash
-alembic upgrade head
+cd /opt/marketmetrics
+cp .env.production.example .env.production
+chmod 600 .env.production
+nano .env.production
 ```
 
----
+The production database URL uses the Compose service name `db`:
 
-## 4. Required Environment Variables
-
-All sensitive values must be configured in the Render dashboard. They must not be committed to GitHub or GitLab.
-
-### Core and Security
-
-```text
-JWT_SECRET=<a secure random string>
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-APP_LOG_LEVEL=INFO
-PASSWORD_RESET_TOKEN_EXPIRE_MINUTES=60
-EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES=1440
+```env
+APP_ENV=production
+DATABASE_URL=postgresql://marketmetrics:STRONG_DATABASE_PASSWORD@db:5432/marketmetrics
+POSTGRES_DB=marketmetrics
+POSTGRES_USER=marketmetrics
+POSTGRES_PASSWORD=STRONG_DATABASE_PASSWORD
 ```
 
-### Database
+Generate independent secrets instead of reusing passwords:
 
-```text
-DATABASE_URL=<The Render PostgreSQL Internal Database URL>
+```bash
+openssl rand -hex 32
 ```
 
-Use Render's internal database URL for the deployed Render service where possible. Use the external database URL only when connecting from your own machine with tools such as `psql` or a database GUI.
+Required application values include:
 
-
----
-
-### Frontend and CORS
-
-```text
+```env
+JWT_SECRET=AN_INDEPENDENT_RANDOM_SECRET
 FRONTEND_BASE_URL=https://marketmetrics.dev
-ADDITIONAL_FRONTEND_ORIGINS=http://127.0.0.1:8000,http://127.0.0.1:5173,http://localhost:5173
+GOOGLE_OAUTH_REDIRECT_URI=https://marketmetrics.dev/auth/google/callback
+ALPACA_API_KEY=...
+ALPACA_SECRET_KEY=...
+BREVO_API_KEY=...
+EMAIL_FROM_ADDRESS=...
 ```
 
-`FRONTEND_BASE_URL` is used to build links for:
+Never commit real database URLs, passwords, OAuth secrets, email-provider keys or market-data keys.
 
-- password reset emails
-- email verification emails
-- Google OAuth redirects
-- default CORS configuration
+## 5. First Deployment
 
-The value must include the scheme, for example:
+Clone the repository and create the protected environment file before starting the stack. Start PostgreSQL first and wait for it to become healthy:
 
-```text
-https://marketmetrics.dev
+```bash
+cd /opt/marketmetrics
+docker compose --env-file .env.production up -d db
+docker compose --env-file .env.production ps db
 ```
 
-`ADDITIONAL_FRONTEND_ORIGINS` is a comma-separated list of extra origins that should be allowed to call the backend. This is useful for local development.
+Apply migrations, build the application and start the complete stack:
 
----
+```bash
+docker compose --env-file .env.production run --rm app alembic upgrade head
+docker compose --env-file .env.production build --pull app
+docker compose --env-file .env.production up -d --remove-orphans
+```
+
+The helper script performs configuration validation, builds the application, applies migrations, starts the services and waits for the application health check:
+
+```bash
+./scripts/deploy_ovh.sh
+```
+
+On a completely new server, start `db` before running the helper script.
+
+## 6. Regular Deployment
+
+From the VPS checkout:
+
+```bash
+cd /opt/marketmetrics
+git pull --ff-only
+./scripts/deploy_ovh.sh
+```
+
+After deployment, verify:
+
+```bash
+docker compose --env-file .env.production ps
+curl -fsS https://marketmetrics.dev/health
+```
+
+Expected response:
+
+```json
+{"status":"ok","database":true}
+```
+
+The application refuses to start in production if `DATABASE_URL` is missing or `JWT_SECRET` is missing, insecure or still a template value.
+
+## 7. DNS and HTTPS
+
+Namecheap DNS points the domain to the OVH VPS:
+
+| Type | Host | Target |
+|---|---|---|
+| A | `@` | OVH VPS IPv4 address |
+| CNAME | `www` | `marketmetrics.dev` |
+
+Brevo DKIM and domain-verification records must remain in place.
+
+`Caddyfile` declares both `marketmetrics.dev` and `www.marketmetrics.dev`. Caddy obtains and renews TLS certificates automatically, adds security headers and proxies requests to `app:8000`.
+
+Useful checks:
+
+```bash
+dig marketmetrics.dev A +short
+dig www.marketmetrics.dev CNAME +short
+curl -I https://marketmetrics.dev
+curl -I https://www.marketmetrics.dev
+docker compose --env-file .env.production logs --tail=100 caddy
+```
+
+## 8. Database Operations
+
+### Migrations
+
+Alembic owns the schema:
+
+```bash
+docker compose --env-file .env.production run --rm app alembic current
+docker compose --env-file .env.production run --rm app alembic upgrade head
+```
+
+The current production revision is `20260425_0011`.
+
+### Database access
+
+Access PostgreSQL from inside its container:
+
+```bash
+docker compose --env-file .env.production exec db \
+  sh -ec 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Do not add a Compose `ports` mapping for PostgreSQL. Administrative access should use `docker compose exec` or an SSH tunnel.
+
+### Manual backup
+
+Create a custom-format logical backup:
+
+```bash
+sudo install -d -m 700 -o ubuntu -g ubuntu /opt/marketmetrics-backups
+umask 077
+
+docker compose --env-file .env.production exec -T db \
+  sh -ec 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom --no-owner --no-acl' \
+  > /opt/marketmetrics-backups/marketmetrics-$(date +%F-%H%M%S).dump
+
+chmod 600 /opt/marketmetrics-backups/*.dump
+```
+
+Validate a dump before relying on it:
+
+```bash
+docker run --rm \
+  -v /opt/marketmetrics-backups:/backups:ro \
+  postgres:18.6-alpine \
+  pg_restore --list /backups/NAME_OF_BACKUP.dump
+```
+
+### Restore
+
+Restoring overwrites database state and should only be performed during a planned maintenance window. First stop application writes and take a new backup of the current database. Then replace the database and restore the selected archive:
+
+```bash
+docker compose --env-file .env.production stop app
+
+docker compose --env-file .env.production exec db \
+  sh -ec 'dropdb -U "$POSTGRES_USER" --if-exists "$POSTGRES_DB"'
+
+docker compose --env-file .env.production exec db \
+  sh -ec 'createdb -U "$POSTGRES_USER" -T template0 "$POSTGRES_DB"'
+
+docker compose --env-file .env.production exec -T db \
+  sh -ec 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-acl --exit-on-error' \
+  < /opt/marketmetrics-backups/NAME_OF_BACKUP.dump
+
+docker compose --env-file .env.production exec db \
+  sh -ec 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ANALYZE;"'
+
+docker compose --env-file .env.production up -d --force-recreate app
+```
+
+Verify the Alembic revision, important row counts, `/health`, authentication and a database write before declaring the restore complete.
+
+Keep at least one encrypted off-server copy of recent backups. Automated backup scheduling and restore testing are required operational improvements.
+
+## 9. Migration from Neon
+
+Production PostgreSQL was migrated from Neon to the private OVH PostgreSQL 18 service using:
+
+1. A custom-format `pg_dump` from Neon's direct, non-pooled connection.
+2. A rehearsal restore while the application continued using Neon.
+3. Schema revision and row-count verification.
+4. A short write freeze.
+5. A final dump and restore with `pg_restore`.
+6. A `DATABASE_URL` change from Neon to `db:5432`.
+7. Health, authentication, admin and database-write checks.
+
+Neon is not in the current production request path. It should be retained temporarily after migration as a rollback source, then retired only after OVH backups and restore procedures have been proven.
+
+## 10. Authentication and External Services
 
 ### Google OAuth
 
-```text
-GOOGLE_CLIENT_ID=<your Google OAuth client ID>
-GOOGLE_CLIENT_SECRET=<your Google OAuth client secret>
-GOOGLE_OAUTH_REDIRECT_URI=https://marketmetrics.dev/auth/google/callback
-```
-
-For the live full-stack site, the Google Cloud Console redirect URI should include:
+The authorised redirect URI in Google Cloud must be:
 
 ```text
 https://marketmetrics.dev/auth/google/callback
 ```
 
-If the backend test service is also being used for OAuth testing, add this as an additional redirect URI:
+### Brevo
 
-```text
-https://marketmetrics.onrender.com/auth/google/callback
-```
+Brevo sends verification and password-reset email. The sender must be verified, and its DNS verification and DKIM records must remain configured.
 
-The redirect URI configured in Google Cloud Console must exactly match the value used by the backend.
+### Alpaca
 
----
+Alpaca provides quotes, historical bars, snapshots, movers and asset metadata. The default production feed is IEX.
 
-### Email with Brevo
+## 11. Administrator Provisioning
 
-```text
-BREVO_API_KEY=<your Brevo API key>
-BREVO_TRANSACTIONAL_EMAIL_URL=https://api.brevo.com/v3/smtp/email
-BREVO_TIMEOUT_SECONDS=20
-EMAIL_FROM_NAME=MarketMetrics
-EMAIL_FROM_ADDRESS=<your verified Brevo sender address>
-```
-
-Brevo is used for transactional email features such as password reset and email verification.
-
-The sender email address must be verified in Brevo. If `BREVO_API_KEY` is not configured locally, the backend logs email content instead of sending real emails. This is useful during development, but the deployed version should have Brevo configured properly.
-
----
-
-### Market Data with Alpaca
-
-```text
-ALPACA_API_KEY=<your Alpaca API key>
-ALPACA_SECRET_KEY=<your Alpaca secret key>
-ALPACA_DATA_FEED=iex
-ALPACA_DATA_BASE_URL=https://data.alpaca.markets
-ALPACA_TRADING_BASE_URL=https://paper-api.alpaca.markets
-MARKET_DATA_DEFAULT_HISTORY_DAYS=3650
-```
-
-MarketMetrics currently uses Alpaca as the market data provider. The IEX feed is used by default because it is suitable for free-tier Alpaca accounts.
-
-If market data routes fail after deployment, check that:
-
-- the Alpaca API key is correct
-- the Alpaca secret key is correct
-- the data feed is set correctly
-- the account has access to the requested data
-
----
-
-### Forecasting and Symbol Data
-
-```text
-SYMBOL_CATALOG_PATH=data/symbol_catalog.json
-PREDICTION_MODEL_DIR=artifacts/prediction
-PREDICTION_TRAINING_LOOKBACK_DAYS=1825
-PREDICTION_FETCH_CONCURRENCY=5
-PREDICTION_TRAINING_UNIVERSE_PATH=data/training_universe.json
-PREDICTION_TRAINING_UNIVERSE=
-```
-
-`SYMBOL_CATALOG_PATH` points to the local symbol catalogue used by search and market features.
-
-`PREDICTION_MODEL_DIR` points to the directory containing forecasting model artifacts.
-
-`PREDICTION_TRAINING_UNIVERSE` can optionally override the file-based training universe with a comma-separated list of symbols.
-
----
-
-## 5. Frontend Build and Static Serving
-
-The React frontend is built during the Render build step:
+Administrator credentials are not stored in source control. A user must first register normally, after which the existing account can be promoted from the application container:
 
 ```bash
-cd frontend && npm install && npm run build
+docker compose --env-file .env.production exec app \
+  python scripts/create_admin.py --email your-admin-email@example.com
 ```
 
-The output is written to:
+The script does not create accounts or passwords. Promotion invalidates existing sessions, so the user must sign in again.
 
-```text
-frontend/dist
-```
+## 12. Monitoring and Troubleshooting
 
-When `frontend/dist` exists, FastAPI serves the compiled frontend and static assets. Unknown routes fall back to `index.html`, allowing React Router to handle client-side routes such as:
-
-```text
-/dashboard
-/account
-/admin/users
-/admin/audit-logs
-```
-
-For local development, the frontend can also be run separately with Vite:
+Check service status and recent logs:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose --env-file .env.production ps
+docker compose --env-file .env.production logs --tail=100 app
+docker compose --env-file .env.production logs --tail=100 caddy
+docker compose --env-file .env.production logs --tail=100 db
 ```
 
-This starts the frontend at:
-
-```text
-http://127.0.0.1:5173
-```
-
----
-
-## 6. Running Migrations
-
-Migrations are run automatically during the Render build command:
+Confirm the application is using the private database without printing credentials:
 
 ```bash
-alembic upgrade head
+docker compose --env-file .env.production exec app python -c \
+'import os; from sqlalchemy.engine import make_url; print(make_url(os.environ["DATABASE_URL"]).host)'
 ```
 
-To run migrations manually:
-
-```bash
-alembic upgrade head
-```
-
-To create a new migration:
-
-```bash
-alembic revision -m "describe the change"
-```
-
-Alembic is the main source of truth for database schema changes. SQLite compatibility is also supported for local development and testing.
-
----
-
-## 7. Admin Account Setup
-
-Admin access is controlled by the `isAdmin` field on the `users` table.
-
-Normal users cannot register themselves as admins. Admin access must be provisioned manually.
-
-### Promoting an Existing User
-
-Administrator credentials must not be stored in source control. First create
-the account through the application's normal signup or Google OAuth flow. From
-a trusted environment configured with the intended `DATABASE_URL`, run:
-
-```bash
-python scripts/create_admin.py --email your-admin-email@example.com
-```
-
-The script only promotes an existing user; it does not create an account or set
-a password. It also activates the account and invalidates existing sessions
-when permissions change, so the administrator must sign in again.
-
-### Manually Promoting a User
-
-A user can also be promoted manually through PostgreSQL:
-
-```sql
-UPDATE users
-SET "isAdmin" = true
-WHERE email = 'your-admin-email@example.com';
-```
-
-Admin routes:
-
-```text
-/admin/users
-/admin/audit-logs
-```
-
-Normal users should not be able to access these pages.
-
----
-
-## 8. Google OAuth Flow
-
-The Google OAuth flow works as follows:
-
-1. The frontend sends the user to `GET /auth/google/login`.
-2. The backend validates the frontend origin against the allowed origins.
-3. The backend creates a short-lived signed OAuth state token.
-4. The user signs in with Google.
-5. Google redirects the user back to the configured callback URL.
-6. The backend exchanges the code for Google user information.
-7. The backend logs in or creates the user.
-8. The user is redirected back to the frontend with an authentication token.
-
-If Google login fails after deployment, check:
-
-- `FRONTEND_BASE_URL` includes `https://`
-- `GOOGLE_OAUTH_REDIRECT_URI` exactly matches Google Cloud Console
-- `ADDITIONAL_FRONTEND_ORIGINS` includes local origins if testing locally
-- Google OAuth client credentials are correctly configured
-- the Google OAuth app is not restricted to unapproved test users
-
----
-
-## 9. Email Links
-
-Password reset and email verification links are generated from `FRONTEND_BASE_URL`.
-
-Expected live formats:
-
-```text
-https://marketmetrics.dev/reset-password/<token>
-https://marketmetrics.dev/verify-email/<token>
-```
-
-If email links are broken, missing `https://`, or pointing to the wrong domain, check the `FRONTEND_BASE_URL` environment variable.
-
----
-
-## 10. Forecast Artifacts
-
-Forecast model artifacts are stored under:
-
-```text
-artifacts/prediction/
-```
-
-The current repository includes forecast artifacts so that the forecast feature can run without retraining immediately after cloning or deployment.
-
-However, Render's free/starter filesystem can be ephemeral. If the model artifacts are generated or updated at runtime, they may be lost after a redeploy or restart unless persistent storage is configured.
-
-More robust future options include:
-
-- attaching a Render Disk
-- storing artifacts in S3 or another object store
-- adding a formal model retraining and deployment pipeline
-
-This is a known deployment limitation rather than a core feature failure.
-
----
-
-## 11. Render Memory Notes
-
-The backend uses in-memory caches for performance, including:
-
-- quote data
-- price history
-- market movers
-- featured mover data
-- forecasting model artifacts
-
-These caches are bounded, but they are still process-local. This is acceptable for the current final-year project deployment, but it would need redesigning for a larger multi-instance production system.
-
-The most memory-sensitive areas are:
-
-- forecasting inference
-- pandas/scikit-learn model loading
-- historical price history retrieval
-- movers and sparkline generation
-- Monte Carlo long-term projections
-
-If memory pressure becomes a problem, the likely improvements would be:
-
-- reducing cache sizes
-- using a larger Render instance
-- moving caches to Redis
-- moving model artifacts to persistent storage
-- adding rate limiting around expensive routes
-
----
-
-## 12. Security Checklist
-
-Before deployment, check:
-
-- [ ] `JWT_SECRET` is set and is not `"change-me"`
-- [ ] `DATABASE_URL` is only stored in backend environment variables
-- [ ] Alpaca keys are only stored in backend environment variables
-- [ ] Brevo keys are only stored in backend environment variables
-- [ ] Google client secret is only stored in backend environment variables
-- [ ] `FRONTEND_BASE_URL` includes `https://`
-- [ ] Google OAuth redirect URIs match the deployed backend
-- [ ] Brevo sender address is verified
-- [ ] no real secrets are committed to the repository
-- [ ] admin access is restricted to users with `isAdmin = true`
-
----
-
-## 13. Testing the Deployment
-
-After deployment, the following checks should be performed manually:
-
-1. Open the live site:
-
-```text
-https://marketmetrics.dev
-```
-
-2. Confirm the home page loads.
-
-3. Register or log in.
-
-4. Check dashboard market data.
-
-5. Open an instrument page.
-
-6. Test watchlist and alert features.
-
-7. Test password reset or email verification if needed.
-
-8. Log in as the admin account and check:
-
-```text
-/admin/users
-/admin/audit-logs
-```
-
-9. Check the health endpoint:
-
-```text
-/health
-```
-
-10. Check Render logs for any startup errors.
-
----
-
-## 14. Known Deployment Limitations
-
-This deployment is suitable for a final-year project, but it is not commercially hardened.
-
-Known limitations include:
-
-- no formal API rate limiting yet
-- no CI/CD pipeline
-- no Docker-based deployment
-- no production monitoring or alerting system
-- in-memory caches are not shared across multiple instances
-- WebSocket quote updates are polling-backed rather than true exchange streaming
-- alerts are not evaluated by a fully independent background worker
-- forecast artifacts require more robust persistence for long-term production use
-- expensive routes such as forecasting and projections would need stricter limits before public commercial use
-- the system depends on Alpaca as a single market data provider
-
-These limitations are acceptable for the current academic scope, but they are important future work items.
-
----
-
-## 15. Final Notes
-
-The main deployment path for assessment is the full-stack Render service at:
-
-```text
-https://marketmetrics.dev
-```
-
-The backend-only Render service exists for development and testing, but the full-stack deployment is the version that best represents the completed system.
-
-No real credentials should ever be committed to the repository. All secrets must be configured through Render environment variables or local `.env` files excluded by `.gitignore`.
+Expected output: `db`.
+
+Common failure categories:
+
+- **Caddy is restarting:** validate `Caddyfile` and inspect Caddy logs.
+- **Database health is false:** check `db` health, PostgreSQL logs and `DATABASE_URL`.
+- **OAuth callback fails:** verify the exact Google redirect URI and production base URL.
+- **Email is not sent:** verify the Brevo key, sender address and DNS records.
+- **Market data fails:** verify Alpaca credentials, feed and provider status.
+- **Forecast route fails:** verify that the active model artifacts exist inside the application image.
+
+## 13. Security and Operational Limitations
+
+Current protections include TLS, security headers, UFW, Fail2ban, SSH keys, Argon2 password hashing, JWT session invalidation, role-based admin access and a non-public database.
+
+The deployment is appropriate for a final-year project, but it is not a highly available commercial platform:
+
+- The VPS is a single point of failure.
+- PostgreSQL has no replica or automatic failover.
+- Automated off-server backups and restore drills still need to be established.
+- Application monitoring and alerting are limited.
+- Deployments are manual; there is no CI/CD pipeline.
+- API rate limiting is not implemented.
+- In-memory caches are local to the single application process.
+- Alert evaluation depends on active WebSocket sessions.
+- Runtime-generated forecast artifacts are not stored in a dedicated persistent artifact store.
+
+## 14. Production Checklist
+
+Before and after each deployment:
+
+- [ ] `.env.production` exists, has mode `600` and contains no template values.
+- [ ] PostgreSQL is healthy and exposes only `5432/tcp` internally.
+- [ ] Alembic reports the expected head revision.
+- [ ] App and Caddy containers are healthy/running.
+- [ ] `https://marketmetrics.dev/health` returns HTTP 200 and `database: true`.
+- [ ] Root and `www` domains have valid HTTPS.
+- [ ] Login, Google OAuth, admin access and a database write work.
+- [ ] A recent database backup exists and has been copied off the VPS.
+- [ ] No secrets have been printed, committed or included in screenshots.

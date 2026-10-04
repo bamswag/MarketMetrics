@@ -38,7 +38,7 @@ const HORIZON_OPTIONS = [
   { label: '90 days', value: 90 },
 ]
 
-const AXIS_TICK = { fill: '#687487', fontSize: 11 } as const
+const AXIS_TICK = { fill: 'var(--chart-axis)', fontSize: 11 } as const
 const HISTORY_BARS = 60
 
 type ConfidenceLevel = 'low' | 'medium' | 'high'
@@ -405,10 +405,10 @@ function TodayLabel(props: { viewBox?: { x: number; y: number; height: number } 
   return (
     <g>
       <rect
-        fill="rgba(104,116,135,0.10)"
+        fill="var(--soft-bg)"
         height={18}
         rx={5}
-        stroke="rgba(104,116,135,0.22)"
+        stroke="var(--panel-border)"
         strokeWidth={0.5}
         width={46}
         x={x - 23}
@@ -416,7 +416,7 @@ function TodayLabel(props: { viewBox?: { x: number; y: number; height: number } 
       />
       <text
         dominantBaseline="middle"
-        fill="#687487"
+        fill="var(--chart-axis)"
         fontSize={9}
         fontWeight={700}
         letterSpacing={0.8}
@@ -751,7 +751,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
               <div className="forecast-chart-legend">
                 <span className="forecast-legend-item">
                   <svg aria-hidden fill="none" height="12" viewBox="0 0 28 12" width="28">
-                    <line stroke="#0f766e" strokeWidth="2.5" x1="0" x2="28" y1="6" y2="6" />
+                    <line stroke="var(--brand-green)" strokeWidth="2.5" x1="0" x2="28" y1="6" y2="6" />
                   </svg>
                   Actual
                 </span>
@@ -798,7 +798,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid
-                  stroke="rgba(25,40,62,0.06)"
+                  stroke="var(--chart-grid)"
                   strokeDasharray="4 4"
                   vertical={false}
                 />
@@ -839,7 +839,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 {/* ── Today boundary ── */}
                 {todayDate && (
                   <ReferenceLine
-                    stroke="rgba(104,116,135,0.35)"
+                    stroke="var(--chart-axis)"
                     strokeDasharray="2 4"
                     strokeWidth={1}
                     x={todayDate}
@@ -855,7 +855,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   dataKey="close"
                   dot={false}
                   isAnimationActive={false}
-                  stroke="#0f766e"
+                  stroke="var(--brand-green)"
                   strokeWidth={2.5}
                   type="monotone"
                 />
@@ -870,7 +870,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                   strokeDasharray="3 4"
                   strokeWidth={1.5}
                   type="monotone"
-                  activeDot={{ r: 4, fill: '#2563EB', stroke: '#ffffff', strokeWidth: 1.5 }}
+                  activeDot={{ r: 4, fill: '#2563EB', stroke: 'var(--bg-elevated)', strokeWidth: 1.5 }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   dot={(dotProps: any) => {
                     if (dotProps.payload?.date !== todayDate) return <g key={dotProps.key} />
@@ -881,7 +881,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
                         cy={dotProps.cy}
                         fill="#2563EB"
                         r={4}
-                        stroke="#ffffff"
+                        stroke="var(--bg-elevated)"
                         strokeWidth={1.5}
                       />
                     )

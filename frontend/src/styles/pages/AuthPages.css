@@ -26,7 +26,7 @@
 .auth-support-panel {
   align-content: start;
   background:
-    radial-gradient(circle at top left, rgba(15, 118, 110, 0.2), transparent 30%),
+    radial-gradient(circle at top left, rgb(from var(--brand-green) r g b / 0.2), transparent 30%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 249, 252, 0.92));
 }
 
@@ -147,7 +147,7 @@
   margin-bottom: 10px;
   border-radius: 999px;
   padding: 0.45rem 0.75rem;
-  background: rgba(15, 118, 110, 0.09);
+  background: rgb(from var(--brand-green) r g b / 0.09);
   color: var(--text-main);
   font-size: 0.8rem;
   font-weight: 700;

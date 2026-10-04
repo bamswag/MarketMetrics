@@ -32,6 +32,10 @@ export function MarketPreferencesProvider({ children }: MarketPreferencesProvide
   }, [preferences])
 
   useEffect(() => {
+    document.documentElement.dataset.backgroundTheme = preferences.backgroundTheme
+  }, [preferences.backgroundTheme])
+
+  useEffect(() => {
     function handleStorage(event: StorageEvent) {
       if (event.key !== MARKET_PREFERENCES_STORAGE_KEY) {
         return

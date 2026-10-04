@@ -22,12 +22,14 @@ npm run dev
 
 The dev server starts at [http://127.0.0.1:5173](http://127.0.0.1:5173).
 
-By default it expects a local backend at `http://127.0.0.1:8000`. To point it at the deployed test backend, create or update `.env.development`:
+By default it expects a local backend at `http://127.0.0.1:8000`. To point it at another explicitly allowed backend, create or update `.env.development`:
 
 ```text
-VITE_API_BASE_URL=https://marketmetrics.onrender.com
+VITE_API_BASE_URL=https://marketmetrics.dev
 VITE_ALLOW_REMOTE_API_IN_DEV=true
 ```
+
+The remote backend must include the local Vite origin in `ADDITIONAL_FRONTEND_ORIGINS`. Using the local FastAPI backend is recommended during normal development.
 
 ---
 

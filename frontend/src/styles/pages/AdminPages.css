@@ -24,8 +24,8 @@
   align-items: center;
   padding: 0.3rem 0.75rem;
   border-radius: 999px;
-  background: rgba(201, 106, 69, 0.12);
-  color: #c96a45;
+  background: rgb(from var(--brand-red) r g b / 0.12);
+  color: var(--brand-red);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -38,7 +38,7 @@
   height: 44px;
   padding: 0 20px;
   border-radius: 12px;
-  background: #0f766e;
+  background: var(--brand-green);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -51,7 +51,7 @@
 }
 
 .admin-nav-button:hover {
-  background: #0d6560;
+  background: var(--green-admin-dark);
   transform: translateY(-1px);
 }
 
@@ -79,14 +79,14 @@
 }
 
 .admin-search-input:focus {
-  border-color: #0f766e;
+  border-color: var(--brand-green);
 }
 
 .admin-search-button {
   height: 44px;
   padding: 0 18px;
   border-radius: 12px;
-  background: #0f766e;
+  background: var(--brand-green);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -97,7 +97,7 @@
 }
 
 .admin-search-button:hover {
-  background: #0d6560;
+  background: var(--green-admin-dark);
   transform: translateY(-1px);
 }
 
@@ -148,7 +148,7 @@
 }
 
 .admin-table tr:hover td {
-  background: rgba(15, 118, 110, 0.03);
+  background: rgb(from var(--brand-green) r g b / 0.03);
 }
 
 /* Badges */
@@ -163,18 +163,18 @@
 }
 
 .admin-pill--active {
-  background: rgba(22, 163, 74, 0.1);
-  color: #16a34a;
+  background: rgb(from var(--green-status) r g b / 0.1);
+  color: var(--green-status);
 }
 
 .admin-pill--inactive {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background: rgb(from var(--red-red-bright) r g b / 0.1);
+  color: var(--red-red);
 }
 
 .admin-pill--admin {
-  background: rgba(201, 106, 69, 0.12);
-  color: #c96a45;
+  background: rgb(from var(--brand-red) r g b / 0.12);
+  color: var(--brand-red);
 }
 
 .admin-pill--user {
@@ -183,13 +183,13 @@
 }
 
 .admin-pill--verified {
-  background: rgba(15, 118, 110, 0.1);
-  color: #0f766e;
+  background: rgb(from var(--brand-green) r g b / 0.1);
+  color: var(--brand-green);
 }
 
 .admin-pill--unverified {
-  background: rgba(234, 179, 8, 0.1);
-  color: #ca8a04;
+  background: rgb(from var(--red-warning-bright) r g b / 0.1);
+  color: var(--red-gold);
 }
 
 /* Row actions */
@@ -224,23 +224,23 @@
 }
 
 .admin-action-btn--primary {
-  background: rgba(15, 118, 110, 0.1);
-  color: #0f766e;
-  border-color: rgba(15, 118, 110, 0.2);
+  background: rgb(from var(--brand-green) r g b / 0.1);
+  color: var(--brand-green);
+  border-color: rgb(from var(--brand-green) r g b / 0.2);
 }
 
 .admin-action-btn--primary:hover:not(:disabled) {
-  background: rgba(15, 118, 110, 0.18);
+  background: rgb(from var(--brand-green) r g b / 0.18);
 }
 
 .admin-action-btn--danger {
-  background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.18);
+  background: rgb(from var(--red-red-bright) r g b / 0.08);
+  color: var(--red-red);
+  border-color: rgb(from var(--red-red-bright) r g b / 0.18);
 }
 
 .admin-action-btn--danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgb(from var(--red-red-bright) r g b / 0.15);
 }
 
 .admin-action-btn--neutral {
@@ -254,13 +254,13 @@
 }
 
 .admin-action-btn--warn {
-  background: rgba(234, 179, 8, 0.08);
-  color: #ca8a04;
-  border-color: rgba(234, 179, 8, 0.2);
+  background: rgb(from var(--red-warning-bright) r g b / 0.08);
+  color: var(--red-gold);
+  border-color: rgb(from var(--red-warning-bright) r g b / 0.2);
 }
 
 .admin-action-btn--warn:hover:not(:disabled) {
-  background: rgba(234, 179, 8, 0.15);
+  background: rgb(from var(--red-warning-bright) r g b / 0.15);
 }
 
 /* Pagination */
@@ -303,8 +303,8 @@
 }
 
 .admin-page-btn:hover:not(:disabled) {
-  background: rgba(15, 118, 110, 0.06);
-  border-color: rgba(15, 118, 110, 0.3);
+  background: rgb(from var(--brand-green) r g b / 0.06);
+  border-color: rgb(from var(--brand-green) r g b / 0.3);
 }
 
 .admin-page-btn:disabled {
@@ -313,8 +313,8 @@
 }
 
 .admin-page-btn--active {
-  background: #0f766e;
-  border-color: #0f766e;
+  background: var(--brand-green);
+  border-color: var(--brand-green);
   color: #fff;
 }
 
@@ -328,15 +328,15 @@
 }
 
 .admin-status-bar--success {
-  background: rgba(22, 163, 74, 0.1);
-  color: #16a34a;
-  border: 1px solid rgba(22, 163, 74, 0.2);
+  background: rgb(from var(--green-status) r g b / 0.1);
+  color: var(--green-status);
+  border: 1px solid rgb(from var(--green-status) r g b / 0.2);
 }
 
 .admin-status-bar--error {
-  background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: rgb(from var(--red-red-bright) r g b / 0.08);
+  color: var(--red-red);
+  border: 1px solid rgb(from var(--red-red-bright) r g b / 0.18);
 }
 
 /* Confirmation modal overlay */
@@ -442,7 +442,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #0f766e;
+  color: var(--brand-green);
 }
 
 .admin-detail-row {

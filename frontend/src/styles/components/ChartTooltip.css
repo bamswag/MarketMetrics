@@ -4,20 +4,21 @@
   gap: 2px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(20, 32, 51, 0.92);
+  border: 1px solid var(--panel-border);
+  background: var(--chart-tooltip-bg);
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .instrument-tooltip-date {
   font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--muted);
   font-weight: 500;
 }
 
 .instrument-tooltip-price {
   font-size: 1.05rem;
-  color: #fff;
+  color: var(--text-main);
   font-weight: 700;
 }
 
@@ -27,8 +28,8 @@
   gap: 4px 12px;
   padding-top: 6px;
   margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.68);
+  border-top: 1px solid var(--panel-border);
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -40,7 +41,7 @@
 }
 
 .instrument-tooltip-grid strong {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-main);
   font-size: 0.76rem;
 }
 
@@ -51,7 +52,7 @@
 }
 
 .instrument-tooltip-ma--30 {
-  color: #f59e0b;
+  color: var(--red-amber);
 }
 
 .instrument-tooltip-ma--50 {

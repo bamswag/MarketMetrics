@@ -5,11 +5,12 @@ type AppHeaderProps = {
   center?: ReactNode
   actions?: ReactNode
   bannerMessage?: string
+  className?: string
 }
 
-export function AppHeader({ center, actions, bannerMessage }: AppHeaderProps) {
+export function AppHeader({ center, actions, bannerMessage, className }: AppHeaderProps) {
   return (
-    <div className="top-shell">
+    <div className={className ? `top-shell ${className}` : 'top-shell'}>
       <header className="top-bar">
         <div className="top-brand">
           <Link className="top-brand-link" to="/">
