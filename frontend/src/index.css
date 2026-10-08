@@ -79,15 +79,31 @@
   --panel-bg: rgba(18, 18, 21, 0.88);
   --soft-bg: rgba(255, 255, 255, 0.065);
   --panel-border: rgba(255, 255, 255, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.28);
   --panel-shadow:
     0 30px 78px rgba(0, 0, 0, 0.56),
     0 8px 24px rgba(0, 0, 0, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --subtle-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  --surface-card: var(--surface-background);
+  --surface-card-strong: var(--surface-background-strong);
+  --surface-quiet: var(--soft-bg);
+  --shadow-card: var(--subtle-shadow);
+  --shadow-elevated: var(--panel-shadow);
+  --radius-control: 14px;
+  --radius-card: 22px;
+  --radius-surface: 28px;
+  --radius-pill: 999px;
   --text-main: #f7f7f8;
   --muted: #a8adb7;
   --text-subtle: #7f8794;
   --text-inverse: #09090b;
+  --text-body: var(--text-main);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--text-subtle);
+  --inline-link: color-mix(in srgb, var(--brand-red) 28%, white);
+  --inline-link-hover: #ffffff;
   --accent: var(--brand-red);
   --accent-strong: var(--red-strong);
   --accent-soft: rgb(from var(--brand-red) r g b / 12%);
@@ -113,6 +129,8 @@
   --input-bg-hover: rgba(255, 255, 255, 0.1);
   --control-bg: rgba(255, 255, 255, 0.09);
   --control-border-hover: rgba(255, 255, 255, 0.32);
+  --control-disabled-bg: rgba(255, 255, 255, 0.045);
+  --control-disabled-text: #8d949f;
   --dark-control-bg:
     linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
     #0a0a0c;
@@ -141,6 +159,10 @@
   --chart-axis: #a8adb7;
   --chart-neutral: #c4c8cf;
   --chart-tooltip-bg: rgba(15, 15, 18, 0.96);
+  --tooltip-text: rgba(255, 255, 255, 0.9);
+  --tooltip-muted: rgba(255, 255, 255, 0.68);
+  --tooltip-subtle: rgba(255, 255, 255, 0.52);
+  --tooltip-border: rgba(255, 255, 255, 0.12);
   --sans:
     'Avenir Next',
     'Aptos',
@@ -165,17 +187,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-:root[data-background-theme='crystal-dark'] {
+:root[data-background-theme='dark'] {
   color-scheme: dark;
 }
 
-:root[data-background-theme='diamond-light'] {
+:root[data-background-theme='light'] {
   color-scheme: light;
   --bg: #ffffff;
   --bg-elevated: #fbfbfc;
   --panel-bg: rgba(255, 255, 255, 0.92);
   --soft-bg: rgba(8, 10, 14, 0.045);
   --panel-border: rgba(0, 0, 0, 0.22);
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.34);
   --panel-shadow:
     0 28px 70px rgba(0, 0, 0, 0.1),
     0 8px 22px rgba(0, 0, 0, 0.065),
@@ -183,8 +207,10 @@
   --subtle-shadow: 0 14px 30px rgba(0, 0, 0, 0.075);
   --text-main: #101216;
   --muted: #626976;
-  --text-subtle: #7b818b;
+  --text-subtle: #666d78;
   --text-inverse: #ffffff;
+  --inline-link: var(--brand-red);
+  --inline-link-hover: var(--red-strong);
   --success: var(--brand-green);
   --positive-foreground: var(--brand-green);
   --negative-foreground: var(--brand-red);
@@ -204,6 +230,8 @@
   --input-bg-hover: rgba(0, 0, 0, 0.065);
   --control-bg: rgba(255, 255, 255, 0.9);
   --control-border-hover: rgba(0, 0, 0, 0.38);
+  --control-disabled-bg: rgba(0, 0, 0, 0.055);
+  --control-disabled-text: #737983;
   --focus-ring: rgba(0, 0, 0, 0.28);
   --surface-glare: rgba(0, 0, 0, 0.68);
   --surface-glare-opacity: 0.5;
@@ -214,6 +242,10 @@
   --chart-axis: #687487;
   --chart-neutral: #687487;
   --chart-tooltip-bg: rgba(255, 255, 255, 0.97);
+  --tooltip-text: #20242a;
+  --tooltip-muted: #555d69;
+  --tooltip-subtle: #68717d;
+  --tooltip-border: rgba(0, 0, 0, 0.12);
 }
 
 *,

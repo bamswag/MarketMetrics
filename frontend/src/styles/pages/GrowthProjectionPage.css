@@ -150,7 +150,7 @@
 }
 
 .projection-params-card--secondary {
-  background: rgba(244, 248, 252, 0.7);
+  background: var(--surface-quiet);
   box-shadow: none;
 }
 
@@ -209,8 +209,8 @@
     to right,
     var(--green-chart) 0%,
     var(--green-chart) var(--slider-fill, 18%),
-    #d1d5db var(--slider-fill, 18%),
-    #d1d5db 100%
+    var(--border-strong) var(--slider-fill, 18%),
+    var(--border-strong) 100%
   );
   border-radius: 3px;
   outline: none;
@@ -234,7 +234,7 @@
 
 .projection-slider::-moz-range-track {
   height: 5px;
-  background: #d1d5db;
+  background: var(--border-strong);
   border-radius: 3px;
   border: none;
 }
@@ -263,7 +263,7 @@
   border: 1.5px solid var(--panel-border);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(244, 248, 252, 0.9);
+  background: var(--input-bg);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -316,7 +316,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  background: #d1d5db;
+  background: var(--border-strong);
   transition: background 200ms ease;
   outline: none;
   flex-shrink: 0;
@@ -459,7 +459,7 @@
 .projection-tooltip-row {
   font-size: 0.82rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--tooltip-muted);
   display: block;
   padding: 2px 0;
 }
@@ -481,10 +481,10 @@
 .projection-tooltip-row--loss { color: var(--red-red-pale); }
 
 .projection-tooltip-row--invested {
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--tooltip-subtle);
   font-size: 0.76rem;
   font-weight: 500;
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid var(--tooltip-border);
   padding-top: 5px;
   margin-top: 4px;
 }

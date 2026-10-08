@@ -240,12 +240,12 @@
 
 /* ── Tooltip ── */
 .prediction-tooltip {
-  background: #fff;
+  background: var(--chart-tooltip-bg);
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 0.78rem;
-  box-shadow: 0 4px 16px rgba(13, 27, 45, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .prediction-tooltip-date {

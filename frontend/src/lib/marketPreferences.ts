@@ -6,7 +6,7 @@ export type PriceDisplayMode = 'percent' | 'change' | 'both'
 export type MarketTimeDisplay = 'local' | 'exchange' | 'utc'
 export type CurrencyPreference = 'USD' | 'GBP'
 export type NumberFormatPreference = 'locale' | 'compact'
-export type BackgroundTheme = 'crystal-dark' | 'diamond-light'
+export type BackgroundTheme = 'dark' | 'light'
 
 export type MarketPreferences = {
   preferredAssetClasses: MarketAssetCategory[]
@@ -29,7 +29,7 @@ export const DEFAULT_MARKET_PREFERENCES: MarketPreferences = {
   marketTimeDisplay: 'local',
   currency: 'USD',
   numberFormat: 'locale',
-  backgroundTheme: 'crystal-dark',
+  backgroundTheme: 'dark',
 }
 
 export const MARKET_PREFERENCES_STORAGE_KEY = 'marketmetrics.marketPreferences'
@@ -89,6 +89,7 @@ export function normalizeMarketPreferences(value: unknown): MarketPreferences {
     value && typeof value === 'object'
       ? (value as Partial<MarketPreferences>)
       : {}
+  const storedBackgroundTheme = (rawValue as { backgroundTheme?: unknown }).backgroundTheme
 
   return {
     preferredAssetClasses: normalizePreferredAssetClasses(rawValue.preferredAssetClasses),
@@ -113,9 +114,11 @@ export function normalizeMarketPreferences(value: unknown): MarketPreferences {
         ? rawValue.numberFormat
         : DEFAULT_MARKET_PREFERENCES.numberFormat,
     backgroundTheme:
-      rawValue.backgroundTheme === 'diamond-light' || rawValue.backgroundTheme === 'crystal-dark'
-        ? rawValue.backgroundTheme
-        : DEFAULT_MARKET_PREFERENCES.backgroundTheme,
+      storedBackgroundTheme === 'light' || storedBackgroundTheme === 'diamond-light'
+        ? 'light'
+        : storedBackgroundTheme === 'dark' || storedBackgroundTheme === 'crystal-dark'
+          ? 'dark'
+          : DEFAULT_MARKET_PREFERENCES.backgroundTheme,
   }
 }
 

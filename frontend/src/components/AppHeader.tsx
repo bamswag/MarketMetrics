@@ -13,8 +13,17 @@ export function AppHeader({ center, actions, bannerMessage, className }: AppHead
     <div className={className ? `top-shell ${className}` : 'top-shell'}>
       <header className="top-bar">
         <div className="top-brand">
-          <Link className="top-brand-link" to="/">
-            MarketMetrics
+          <Link aria-label="MarketMetrics home" className="top-brand-link" to="/">
+            <img
+              alt=""
+              className="top-brand-logo top-brand-logo--light-text"
+              src="/marketmetrics-logo-light-text.png"
+            />
+            <img
+              alt=""
+              className="top-brand-logo top-brand-logo--dark-text"
+              src="/marketmetrics-logo-dark-text.png"
+            />
           </Link>
         </div>
 

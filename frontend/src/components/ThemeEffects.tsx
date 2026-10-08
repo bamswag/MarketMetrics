@@ -14,7 +14,6 @@ const THEME_SURFACE_SELECTOR = [
   '.auth-support-panel',
   '.login-auth-card',
   '.instrument-surface',
-  '.daily-mover-panel',
   '.mover-card',
   '.tracked-symbol-card',
   '.tracked-symbols-preview',

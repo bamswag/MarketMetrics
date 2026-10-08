@@ -81,9 +81,9 @@
   gap: 8px;
   min-height: 42px;
   border-radius: 999px;
-  border: 1px solid rgba(20, 32, 51, 0.1);
+  border: 1px solid var(--panel-border);
   padding: 0.72rem 1rem;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--control-bg);
   color: var(--insight-accent);
   font-weight: 800;
   text-decoration: none;
@@ -96,7 +96,7 @@
 .insight-card-link:hover {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--insight-accent) 30%, transparent);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--input-bg-hover);
 }
 
 .insight-card-link span {

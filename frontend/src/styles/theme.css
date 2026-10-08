@@ -47,6 +47,36 @@ body {
   animation-play-state: running;
 }
 
+/* Structural layout wrappers must not become a second visible card. */
+.daily-mover-panel[data-theme-surface] {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.daily-mover-panel[data-theme-surface]::after {
+  display: none;
+}
+
+:where(
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex='-1'])
+):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+:where(button, input, select, textarea):disabled {
+  border-color: var(--border-subtle);
+  background-color: var(--control-disabled-bg);
+  color: var(--control-disabled-text);
+  cursor: not-allowed;
+}
+
 .top-bar[data-theme-surface],
 .user-menu-dropdown[data-theme-surface],
 .global-search-dropdown[data-theme-surface],
@@ -88,6 +118,10 @@ select option {
   .forecast-stat,
   .forecast-metric,
   .projection-metric,
+  .prediction-metric-tile,
+  .prediction-idle,
+  .forecast-last-check,
+  .forecast-disclaimer,
   .sim-card-note,
   .legal-section
 ) {
@@ -109,6 +143,18 @@ select option {
 }
 
 :where(
+  .prediction-tooltip,
+  .forecast-tooltip,
+  .projection-tooltip,
+  .chart-tooltip
+) {
+  border-color: var(--tooltip-border) !important;
+  background: var(--chart-tooltip-bg) !important;
+  color: var(--tooltip-text);
+  box-shadow: var(--shadow-card);
+}
+
+:where(
   .user-menu-item,
   .search-suggestion,
   .search-view-all,
@@ -123,7 +169,7 @@ select option {
   color: var(--text-main);
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .auth-launcher,
   .primary-action,
   .search-button,
@@ -148,7 +194,7 @@ select option {
     0 8px 22px rgba(0, 0, 0, 0.28) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .auth-launcher,
   .primary-action,
   .search-button,
@@ -173,7 +219,7 @@ select option {
     0 10px 26px rgba(0, 0, 0, 0.35) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .workspace-toggle.is-active,
   .range-pill.is-active,
   .admin-page-btn--active,
@@ -184,7 +230,7 @@ select option {
   color: #ffffff !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-badge--accent,
   .hero-gainer-change:not(.hero-gainer-change--loss),
   .featured-mover-shell--positive .hero-gainer-link,
@@ -198,7 +244,7 @@ select option {
   color: var(--positive-foreground) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .hero-gainer-change--loss,
   .featured-mover-shell--negative .hero-gainer-link,
   .negative-text,
@@ -211,7 +257,7 @@ select option {
   color: var(--negative-foreground) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .negative-pill,
   .warning-pill,
   .admin-action-btn--danger,
@@ -221,7 +267,7 @@ select option {
   color: #ffffff !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .admin-table th,
   .admin-pagination-info,
   .admin-modal-body,
@@ -232,7 +278,7 @@ select option {
   color: var(--muted) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .admin-table-card,
   .admin-table th,
   .admin-table td,
@@ -242,12 +288,12 @@ select option {
   border-color: var(--panel-border) !important;
 }
 
-:root[data-background-theme='crystal-dark'] .admin-table th,
-:root[data-background-theme='crystal-dark'] .admin-table tr:hover td {
+:root[data-background-theme='dark'] .admin-table th,
+:root[data-background-theme='dark'] .admin-table tr:hover td {
   background: var(--soft-bg);
 }
 
-:root[data-background-theme='diamond-light'] :where(
+:root[data-background-theme='light'] :where(
   .primary-action,
   .search-button,
   .range-pill.is-active,
@@ -256,11 +302,11 @@ select option {
   color: #ffffff;
 }
 
-/* Public homepage controls deliberately stay dark in Crystal Dark. */
-:root[data-background-theme='crystal-dark'] #root .top-shell--landing .auth-launcher:not(:disabled),
-:root[data-background-theme='crystal-dark'] #root .landing-shell .ghost-action:not(:disabled),
-:root[data-background-theme='crystal-dark'] #root .landing-shell .secondary-link:not(:disabled),
-:root[data-background-theme='crystal-dark'] #root .landing-shell .insight-card-link:not(:disabled) {
+/* Public homepage controls deliberately stay dark in Dark mode. */
+:root[data-background-theme='dark'] #root .top-shell--landing .auth-launcher:not(:disabled),
+:root[data-background-theme='dark'] #root .landing-shell .ghost-action:not(:disabled),
+:root[data-background-theme='dark'] #root .landing-shell .secondary-link:not(:disabled),
+:root[data-background-theme='dark'] #root .landing-shell .insight-card-link:not(:disabled) {
   border-color: var(--dark-control-border) !important;
   background: var(--dark-control-bg) !important;
   color: var(--dark-control-text) !important;
@@ -269,10 +315,10 @@ select option {
     0 8px 22px rgba(0, 0, 0, 0.32) !important;
 }
 
-:root[data-background-theme='crystal-dark'] #root .top-shell--landing .auth-launcher:not(:disabled):hover,
-:root[data-background-theme='crystal-dark'] #root .landing-shell .ghost-action:not(:disabled):hover,
-:root[data-background-theme='crystal-dark'] #root .landing-shell .secondary-link:not(:disabled):hover,
-:root[data-background-theme='crystal-dark'] #root .landing-shell .insight-card-link:not(:disabled):hover {
+:root[data-background-theme='dark'] #root .top-shell--landing .auth-launcher:not(:disabled):hover,
+:root[data-background-theme='dark'] #root .landing-shell .ghost-action:not(:disabled):hover,
+:root[data-background-theme='dark'] #root .landing-shell .secondary-link:not(:disabled):hover,
+:root[data-background-theme='dark'] #root .landing-shell .insight-card-link:not(:disabled):hover {
   border-color: var(--dark-control-border-hover) !important;
   background: var(--dark-control-bg-hover) !important;
   color: #ffffff !important;
@@ -282,7 +328,7 @@ select option {
     0 10px 26px rgba(0, 0, 0, 0.4) !important;
 }
 
-:root[data-background-theme='crystal-dark'] #root .landing-shell .primary-action:not(:disabled) {
+:root[data-background-theme='dark'] #root .landing-shell .primary-action:not(:disabled) {
   border-color: rgb(from var(--brand-red) r g b / 0.7) !important;
   background: linear-gradient(135deg, var(--brand-red), var(--accent-strong)) !important;
   color: #ffffff !important;
@@ -291,7 +337,7 @@ select option {
     0 10px 24px rgb(from var(--brand-red) r g b / 0.25) !important;
 }
 
-:root[data-background-theme='crystal-dark'] #root .landing-shell .primary-action:not(:disabled):hover {
+:root[data-background-theme='dark'] #root .landing-shell .primary-action:not(:disabled):hover {
   border-color: rgb(from var(--red-bright) r g b / 0.8) !important;
   background: linear-gradient(135deg, var(--red-strong), var(--brand-red)) !important;
   color: #ffffff !important;
@@ -301,7 +347,7 @@ select option {
     0 12px 28px rgba(0, 0, 0, 0.38) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .top-shell--landing .global-search-shell,
   .top-shell--landing .global-search-input,
   .top-shell--landing .global-search-status,
@@ -315,7 +361,7 @@ select option {
   color: var(--dark-control-text) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .top-shell--landing .global-search-input,
   .landing-shell .featured-mover-select
 ):hover {
@@ -323,7 +369,7 @@ select option {
   background: var(--dark-control-bg-hover) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .top-shell--landing .global-search-input,
   .landing-shell .featured-mover-select,
   .top-shell--landing .auth-launcher,
@@ -336,7 +382,7 @@ select option {
   outline-offset: 3px;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .top-shell--landing button,
   .top-shell--landing input,
   .landing-shell button,
@@ -351,7 +397,7 @@ select option {
   opacity: 0.68;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .landing-guides-callout,
   .landing-shell .landing-cta
 ) {
@@ -363,13 +409,13 @@ select option {
   box-shadow: var(--panel-shadow) !important;
 }
 
-:root[data-background-theme='crystal-dark'] .landing-shell .landing-cta {
+:root[data-background-theme='dark'] .landing-shell .landing-cta {
   background:
     radial-gradient(circle at center, rgb(from var(--brand-red) r g b / 0.14), transparent 62%),
     var(--surface-background) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .landing-badge,
   .landing-shell .panel-tag,
   .landing-shell .mover-category-badge
@@ -379,7 +425,7 @@ select option {
   color: var(--text-main) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .landing-badge--accent,
   .landing-shell .positive-pill
 ) {
@@ -388,7 +434,7 @@ select option {
   color: var(--positive-foreground) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .negative-pill,
   .landing-shell .warning-pill
 ) {
@@ -397,7 +443,7 @@ select option {
   color: var(--negative-foreground) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .mover-logo--image,
   .landing-shell .mover-logo--fallback
 ) {
@@ -407,7 +453,7 @@ select option {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-:root[data-background-theme='crystal-dark'] :where(
+:root[data-background-theme='dark'] :where(
   .landing-shell .skeleton-chart-placeholder,
   .landing-shell .skeleton-logo,
   .landing-shell .skeleton-line,

@@ -30,14 +30,14 @@ const BACKGROUND_THEME_OPTIONS: Array<{
   description: string
 }> = [
   {
-    value: 'crystal-dark',
-    label: 'Crystal Dark',
-    description: 'Rich black glass with soft white crystal highlights.',
+    value: 'dark',
+    label: 'Dark mode',
+    description: 'A rich black background with subtle glass highlights.',
   },
   {
-    value: 'diamond-light',
-    label: 'Diamond Light',
-    description: 'Clean white space with polished black-diamond edges.',
+    value: 'light',
+    label: 'Light mode',
+    description: 'A clean white background with polished dark edges.',
   },
 ]
 

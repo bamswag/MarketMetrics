@@ -110,9 +110,9 @@
   gap: 18px;
   min-height: 58px;
   padding: 12px 16px;
-  border: 1px solid rgba(128, 143, 163, 0.18);
+  border: 1px solid var(--panel-border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--surface-quiet);
 }
 
 .guides-hero-metric strong {
@@ -234,8 +234,7 @@
   padding: 24px;
   border-left: 3px solid rgb(from var(--brand-green) r g b / 0.36);
   border-radius: 0 22px 22px 0;
-  background:
-    linear-gradient(180deg, rgba(244, 248, 252, 0.72), rgba(255, 255, 255, 0.48));
+  background: var(--surface-quiet);
 }
 
 .guides-chip-row {
@@ -249,9 +248,9 @@
   align-items: center;
   min-height: 32px;
   padding: 0 12px;
-  border: 1px solid rgba(128, 143, 163, 0.2);
+  border: 1px solid var(--panel-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--control-bg);
   color: var(--text-main);
   font-size: 0.82rem;
   font-weight: 780;
@@ -259,7 +258,7 @@
 
 .guides-article-notes p {
   margin: 0;
-  color: rgba(20, 32, 51, 0.72);
+  color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.65;
 }

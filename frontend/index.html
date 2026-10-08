@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-background-theme="crystal-dark">
+<html lang="en" data-background-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,9 +9,11 @@
         try {
           const stored = JSON.parse(localStorage.getItem('marketmetrics.marketPreferences') || '{}')
           document.documentElement.dataset.backgroundTheme =
-            stored.backgroundTheme === 'diamond-light' ? 'diamond-light' : 'crystal-dark'
+            stored.backgroundTheme === 'light' || stored.backgroundTheme === 'diamond-light'
+              ? 'light'
+              : 'dark'
         } catch {
-          document.documentElement.dataset.backgroundTheme = 'crystal-dark'
+          document.documentElement.dataset.backgroundTheme = 'dark'
         }
       })()
     </script>

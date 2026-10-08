@@ -34,24 +34,42 @@
 .top-brand {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .top-brand-link {
   display: inline-flex;
   align-items: center;
+  width: min(100%, 220px);
   min-height: 56px;
-  color: var(--text-main);
-  font-size: 1.38rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
   text-decoration: none;
-  text-transform: uppercase;
-  transition: color 160ms ease, transform 160ms ease;
+  transition: transform 160ms ease, filter 160ms ease;
 }
 
 .top-brand-link:hover {
-  color: var(--accent);
   transform: translateY(-1px);
+  filter: drop-shadow(0 5px 10px rgb(from var(--brand-green) r g b / 0.22));
+}
+
+.top-brand-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 44px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.top-brand-logo--dark-text {
+  display: none;
+}
+
+:root[data-background-theme='light'] .top-brand-logo--light-text {
+  display: none;
+}
+
+:root[data-background-theme='light'] .top-brand-logo--dark-text {
+  display: block;
 }
 
 .top-bar-center {
@@ -960,6 +978,9 @@
 .daily-mover-panel {
   display: grid;
   gap: 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .daily-movers-between {
@@ -1041,18 +1062,19 @@
   margin: 0;
   text-align: center;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--text-main);
+  opacity: 1;
 }
 
 .movers-guest-cta-link {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--inline-link);
+  font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .movers-guest-cta-link:hover {
-  color: var(--accent-strong);
+  color: var(--inline-link-hover);
 }
 
 .mover-group--positive {

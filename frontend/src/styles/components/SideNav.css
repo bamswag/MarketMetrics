@@ -81,7 +81,7 @@
 }
 
 .sidenav-link:hover {
-  background: rgba(20, 32, 51, 0.05);
+  background: var(--input-bg-hover);
   color: var(--text-main);
 }
 
