@@ -61,16 +61,16 @@ export function LoginPage({
   return (
     <section className="auth-page login-page page-section">
       <div className="auth-layout login-layout login-layout--single">
-        <article className="auth-panel login-panel login-panel--full">
+        <article className="auth-panel login-panel login-panel--full" data-scroll-reveal="scale" data-scroll-tone="neutral">
           <div className="login-auth-card">
             <div className="login-auth-card-grid">
-              <div className="login-card-copy">
-                <p className="section-label">Simulator sign-in</p>
-                <h1 className="login-card-title">Access your market simulator.</h1>
-                <p className="login-card-intro">
+              <div className="login-card-copy" data-scroll-stagger>
+                <p className="section-label" data-scroll-item>Simulator sign-in</p>
+                <h1 className="login-card-title" data-scroll-item>Access your market simulator.</h1>
+                <p className="login-card-intro" data-scroll-item>
                   Sign in to continue with your simulator dashboard, saved symbols, alerts, and chart views.
                 </p>
-                <p className="auth-caption login-panel-caption">
+                <p className="auth-caption login-panel-caption" data-scroll-item>
                   New to MarketMetrics?{' '}
                   <Link className="auth-switch-link" to="/signup">
                     Create account
@@ -85,7 +85,7 @@ export function LoginPage({
                     <h2 className="auth-panel-title">Sign in to continue</h2>
                   </div>
                   <p className="auth-panel-intro">
-                    Use your MarketMetrics account to enter the simulator dashboard.
+                    Sign in to your existing account, or create one instantly with Google.
                   </p>
                 </div>
 
@@ -93,6 +93,12 @@ export function LoginPage({
                   <GoogleLogoIcon />
                   Continue with Google
                 </a>
+
+                <p className="auth-helper-text">
+                  Continuing with Google signs you in or creates your account and agrees to the{' '}
+                  <Link className="auth-inline-link" to="/terms">Terms</Link> and{' '}
+                  <Link className="auth-inline-link" to="/privacy">Privacy Policy</Link>.
+                </p>
 
                 <div className="auth-divider">
                   <span>or use email</span>

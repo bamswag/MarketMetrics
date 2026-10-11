@@ -29,12 +29,39 @@ type GrowthProjectionPageProps = {
   token?: string
 }
 
+type OutcomeTone = 'positive' | 'negative' | 'neutral'
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sampleData<T>(arr: T[], maxPoints: number): T[] {
   if (arr.length <= maxPoints) return arr
   const step = (arr.length - 1) / (maxPoints - 1)
   return Array.from({ length: maxPoints }, (_, i) => arr[Math.round(i * step)])
+}
+
+function outcomeTone(value: number | null | undefined, reference: number | null | undefined): OutcomeTone {
+  if (value == null || reference == null || !Number.isFinite(value) || !Number.isFinite(reference)) {
+    return 'neutral'
+  }
+  const differenceInCents = Math.round(value * 100) - Math.round(reference * 100)
+  if (differenceInCents > 0) return 'positive'
+  if (differenceInCents < 0) return 'negative'
+  return 'neutral'
+}
+
+function useChartMotionAllowed(): boolean {
+  const [motionAllowed, setMotionAllowed] = useState(() => (
+    typeof window !== 'undefined'
+      && !window.matchMedia('(prefers-reduced-motion: reduce), (max-width: 1024px)').matches
+  ))
+
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-reduced-motion: reduce), (max-width: 1024px)')
+    const handleChange = () => setMotionAllowed(!query.matches)
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
+  }, [])
+  return motionAllowed
 }
 
 function formatYAxisValue(value: number): string {
@@ -207,18 +234,18 @@ function ProjectionTooltip(props: any) {
   const pnlPct = pnl != null && invested != null && invested > 0
     ? (pnl / invested) * 100
     : null
-  const isGain = pnl != null ? pnl >= 0 : true
+  const tone = outcomeTone(p50, invested)
 
   return (
     <div className="instrument-tooltip projection-tooltip">
       <span className="instrument-tooltip-date">{year}</span>
       {p50 != null && (
-        <span className={`projection-tooltip-row ${isGain ? 'projection-tooltip-row--main' : 'projection-tooltip-row--main-loss'}`}>
+        <span className={`projection-tooltip-row projection-tooltip-row--main-${tone}`}>
           Most likely: {formatCompact(p50)}
         </span>
       )}
       {pnl != null && (
-        <span className={`projection-tooltip-row ${isGain ? 'projection-tooltip-row--gain' : 'projection-tooltip-row--loss'}`}>
+        <span className={`projection-tooltip-row projection-tooltip-row--${tone}`}>
           P&amp;L: {pnl >= 0 ? '+' : ''}{formatCompact(pnl)}
           {pnlPct != null ? ` (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)` : ''}
         </span>
@@ -275,6 +302,8 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const [error, setError] = useState('')
   const [instrument, setInstrument] = useState<InstrumentDetailResponse | null>(null)
   const [simulationVersion, setSimulationVersion] = useState(0)
+  const [hasAnimatedProjectionChart, setHasAnimatedProjectionChart] = useState(false)
+  const chartMotionAllowed = useChartMotionAllowed()
 
   const abortRef = useRef<AbortController | null>(null)
   // Gate: auto-run only fires after the first simulation has returned results
@@ -427,7 +456,13 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const assumptions = result?.assumptionsUsed ?? null
 
   // Outcome direction — used to colour cards and rewrite copy consistently
-  const isGain = result ? result.monteCarloSummary.p50EndValue >= result.totalInvested : true
+  const resultTone = result
+    ? outcomeTone(result.monteCarloSummary.p50EndValue, result.totalInvested)
+    : 'neutral'
+  const isGain = resultTone !== 'negative'
+  const profitTone = result
+    ? outcomeTone(result.nominalProfitGain.monteCarloP50, 0)
+    : 'neutral'
   const pctChange = result && result.totalInvested > 0
     ? ((result.monteCarloSummary.p50EndValue - result.totalInvested) / result.totalInvested) * 100
     : 0
@@ -438,6 +473,10 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   // Distinguish between a fresh first load (no data yet) and a background update
   const isFirstLoad = isLoading && !result
   const isUpdating = isLoading && Boolean(result)
+  const animateProjectionChart = chartMotionAllowed
+    && hasResults
+    && chartData.length > 0
+    && !hasAnimatedProjectionChart
 
   // Auto-generated plain-English summary sentence
   const summaryLine = useMemo(() => {
@@ -460,7 +499,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
     <section className="projection-page page-section">
 
       {/* ── Hero ── */}
-      <div className="projection-hero">
+      <div className="projection-hero" data-scroll-reveal="rise">
         <div className="projection-hero-nav">
           <Link className="forecast-back-link" to={`/instrument/${encodeURIComponent(symbol)}`}>
             ← Back to {symbol}
@@ -486,7 +525,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Declining-trend warning ── */}
       {hasResults && isDeclineTrend && (
-        <div className="proj-decline-warning">
+        <div className="proj-decline-warning" data-scroll-reveal="fade" data-scroll-tone="negative">
           <span className="proj-decline-warning-icon" aria-hidden>⚠</span>
           <p>
             This asset has historically declined in value. Simulations based on past performance will project losses.
@@ -497,15 +536,19 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
       {/* ── Summary cards (above the fold once results arrive) ── */}
       {hasResults && result && (
         <>
-          <div className={`projection-summary-grid${isUpdating ? ' projection-summary-grid--updating' : ''}`}>
+          <div className={`projection-summary-grid${isUpdating ? ' projection-summary-grid--updating' : ''}`} data-scroll-stagger>
 
             {/* Card 1: Most likely outcome — colour reflects gain vs loss */}
-            <div className={`projection-summary-card ${isGain ? 'projection-summary-card--main' : 'projection-summary-card--main-loss'}`}>
+            <div
+              className={`projection-summary-card projection-summary-card--main-${resultTone}`}
+              data-scroll-item
+              data-scroll-tone={resultTone}
+            >
               <span className="projection-summary-label">Most likely outcome</span>
-              <span className={`projection-summary-value ${isGain ? 'projection-summary-value--positive' : 'projection-summary-value--negative'}`}>
+              <span className={`projection-summary-value projection-summary-value--${resultTone}`}>
                 {formatCompact(result.monteCarloSummary.p50EndValue)}
               </span>
-              <span className={`projection-summary-delta ${isGain ? 'projection-summary-delta--positive' : 'projection-summary-delta--negative'}`}>
+              <span className={`projection-summary-delta projection-summary-delta--${resultTone}`}>
                 {pctChange >= 0 ? '+' : ''}{pctChange.toFixed(1)}% from invested
               </span>
               <span className="projection-summary-sub">
@@ -514,7 +557,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             </div>
 
             {/* Card 2: Chance of profit */}
-            <div className="projection-summary-card">
+            <div className="projection-summary-card" data-scroll-item data-scroll-tone={result.monteCarloSummary.probabilityOfProfit >= 0.5 ? 'positive' : 'negative'}>
               <span className="projection-summary-label">
                 Chance of profit
                 <span
@@ -539,14 +582,10 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             </div>
 
             {/* Card 3: Estimated profit */}
-            <div className="projection-summary-card">
+            <div className="projection-summary-card" data-scroll-item data-scroll-tone={profitTone}>
               <span className="projection-summary-label">Estimated profit</span>
               <span
-                className={`projection-summary-value ${
-                  result.nominalProfitGain.monteCarloP50 >= 0
-                    ? 'projection-summary-value--positive'
-                    : 'projection-summary-value--negative'
-                }`}
+                className={`projection-summary-value projection-summary-value--${profitTone}`}
               >
                 {result.nominalProfitGain.monteCarloP50 >= 0 ? '+' : ''}
                 {formatCompact(result.nominalProfitGain.monteCarloP50)}
@@ -558,7 +597,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
             </div>
 
             {/* Card 4: Total you'll invest */}
-            <div className="projection-summary-card">
+            <div className="projection-summary-card" data-scroll-item>
               <span className="projection-summary-label">Total you'll invest</span>
               <span className="projection-summary-value">
                 {formatCompact(result.totalInvested)}
@@ -579,7 +618,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
       )}
 
       {/* ── Parameters card ── */}
-      <div className={`projection-params-card${hasResults ? ' projection-params-card--secondary' : ''}`}>
+      <div className={`projection-params-card${hasResults ? ' projection-params-card--secondary' : ''}`} data-scroll-reveal="rise">
         <p className="projection-params-heading">
           {hasResults ? 'Adjust parameters' : 'Simulation parameters'}
         </p>
@@ -662,7 +701,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Error ── */}
       {token && !isLoading && error && (
-        <div className="forecast-error-card">
+        <div className="forecast-error-card" data-scroll-reveal="scale" data-scroll-tone="negative">
           <span className="forecast-error-icon">⚠️</span>
           <h2 className="forecast-error-title">Simulation unavailable</h2>
           <p className="forecast-error-sub">{error}</p>
@@ -680,7 +719,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Fan chart ── */}
       {hasResults && chartData.length > 0 && (
-        <div className={`projection-chart-card${isUpdating ? ' projection-chart-card--updating' : ''}`}>
+        <div className={`projection-chart-card${isUpdating ? ' projection-chart-card--updating' : ''}`} data-scroll-reveal="chart" data-scroll-tone={resultTone}>
           <div className="projection-chart-header">
             <div className="projection-chart-header-top">
               <h2 className="projection-chart-title">
@@ -723,7 +762,13 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
           </div>
 
           <div className="projection-chart-wrap">
-            <ResponsiveContainer height="100%" width="100%">
+            <ResponsiveContainer
+              height="100%"
+              initialDimension={{ width: 1, height: 380 }}
+              minHeight={0}
+              minWidth={0}
+              width="100%"
+            >
               <ComposedChart
                 key={simulationVersion}
                 data={chartData}
@@ -771,7 +816,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
                 {/* P90 upper band fill */}
                 <Area
-                  animationDuration={800}
+                  animationDuration={420}
                   animationEasing="ease-out"
                   baseValue={0}
                   connectNulls
@@ -779,13 +824,14 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dot={false}
                   fill="url(#proj-band)"
                   fillOpacity={1}
-                  isAnimationActive
+                  isAnimationActive={animateProjectionChart}
+                  onAnimationEnd={() => setHasAnimatedProjectionChart(true)}
                   stroke="none"
                   type="monotone"
                 />
                 {/* P10 cutout — paints out the area below the lower bound */}
                 <Area
-                  animationDuration={800}
+                  animationDuration={420}
                   animationEasing="ease-out"
                   baseValue={0}
                   connectNulls
@@ -793,19 +839,19 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
                   dot={false}
                   fill="var(--bg-elevated)"
                   fillOpacity={1}
-                  isAnimationActive
+                  isAnimationActive={animateProjectionChart}
                   stroke="none"
                   type="monotone"
                 />
 
                 {/* Invested capital — medium gray, slightly heavier so it reads at a glance */}
                 <Line
-                  animationDuration={1000}
+                  animationDuration={480}
                   animationEasing="ease-out"
                   connectNulls
                   dataKey="investedCapital"
                   dot={false}
-                  isAnimationActive
+                  isAnimationActive={animateProjectionChart}
                   stroke="var(--chart-axis)"
                   strokeWidth={1.5}
                   type="monotone"
@@ -813,12 +859,12 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
                 {/* Average growth (baseline fixed rate) — dark navy dashed, clearly distinct from teal band */}
                 <Line
-                  animationDuration={1000}
+                  animationDuration={480}
                   animationEasing="ease-out"
                   connectNulls
                   dataKey="baselineValue"
                   dot={false}
-                  isAnimationActive
+                  isAnimationActive={animateProjectionChart}
                   stroke="var(--chart-neutral)"
                   strokeDasharray="6 4"
                   strokeWidth={2.5}
@@ -827,12 +873,12 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
                 {/* Most likely outcome (median) — thick teal, dominant line on the chart */}
                 <Line
-                  animationDuration={1000}
+                  animationDuration={480}
                   animationEasing="ease-out"
                   connectNulls
                   dataKey="monteCarloP50"
                   dot={false}
-                  isAnimationActive
+                  isAnimationActive={animateProjectionChart}
                   stroke="var(--green-chart)"
                   strokeWidth={3.5}
                   type="monotone"
@@ -845,10 +891,10 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Bottom grid ── */}
       {hasResults && scenarios && assumptions && (
-        <div className={`forecast-bottom-grid${isUpdating ? ' forecast-bottom-grid--updating' : ''}`}>
+        <div className={`forecast-bottom-grid${isUpdating ? ' forecast-bottom-grid--updating' : ''}`} data-scroll-stagger>
 
           {/* Fixed-rate estimates */}
-          <div className="forecast-accuracy-card">
+          <div className="forecast-accuracy-card" data-scroll-item>
             <div className="forecast-card-heading">
               <p className="forecast-card-title">Fixed-rate estimates</p>
               <p className="forecast-card-subtitle">
@@ -923,7 +969,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
           </div>
 
           {/* Model assumptions */}
-          <div className="forecast-features-card">
+          <div className="forecast-features-card" data-scroll-item>
             <div className="forecast-card-heading">
               <p className="forecast-card-title">Model assumptions</p>
               <p className="forecast-card-subtitle">
@@ -982,8 +1028,8 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Related tools ── */}
       {hasResults && (
-        <div className="forecast-page-cta-group">
-          <div className="forecast-page-cta-card forecast-page-cta-card--chart">
+        <div className="forecast-page-cta-group" data-scroll-stagger>
+          <div className="forecast-page-cta-card forecast-page-cta-card--chart" data-scroll-item data-scroll-tone="positive">
             <div className="forecast-page-cta-info">
               <h3 className="forecast-page-cta-heading">AI Price Forecast</h3>
               <p className="forecast-page-cta-sub">
@@ -997,7 +1043,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
               Run forecast
             </Link>
           </div>
-          <div className="forecast-page-cta-card">
+          <div className="forecast-page-cta-card" data-scroll-item data-scroll-tone="dual">
             <div className="forecast-page-cta-info">
               <h3 className="forecast-page-cta-heading">Price chart</h3>
               <p className="forecast-page-cta-sub">
@@ -1016,7 +1062,7 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
       {/* ── Disclaimer ── */}
       {hasResults && (
-        <div className="projection-disclaimer">
+        <div className="projection-disclaimer" data-scroll-reveal="fade">
           <svg
             aria-hidden
             className="projection-disclaimer-icon"

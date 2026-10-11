@@ -90,17 +90,17 @@ export function SignupPage({
   return (
     <section className="auth-page signup-page page-section">
       <div className="auth-layout login-layout login-layout--single">
-        <article className="auth-panel login-panel login-panel--full">
+        <article className="auth-panel login-panel login-panel--full" data-scroll-reveal="scale" data-scroll-tone="neutral">
           <div className="login-auth-card">
             <div className="login-auth-card-grid">
-              <div className="login-card-copy">
-                <p className="section-label">Create simulator access</p>
-                <h1 className="login-card-title">Build your Market Metrics account.</h1>
-                <p className="login-card-intro">
+              <div className="login-card-copy" data-scroll-stagger>
+                <p className="section-label" data-scroll-item>Create simulator access</p>
+                <h1 className="login-card-title" data-scroll-item>Build your Market Metrics account.</h1>
+                <p className="login-card-intro" data-scroll-item>
                   Create an account to unlock your simulator dashboard, saved symbols, alerts, and
                   chart-led instrument pages.
                 </p>
-                <p className="auth-caption login-panel-caption">
+                <p className="auth-caption login-panel-caption" data-scroll-item>
                   Already have a MarketMetrics account?{' '}
                   <Link className="auth-switch-link" to="/login">
                     Log in

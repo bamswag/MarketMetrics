@@ -68,14 +68,14 @@ export function VerifyEmailPage({ isAuthenticated = false, onVerify }: VerifyEma
   return (
     <section className="auth-page page-section">
       <div className="auth-layout login-layout login-layout--single">
-        <article className="auth-panel login-panel login-panel--full">
+        <article className="auth-panel login-panel login-panel--full" data-scroll-reveal="scale" data-scroll-tone="neutral">
           <div className="login-auth-card login-auth-card--narrow">
-            <div className="login-panel-top">
-              <div className="panel-header-copy">
+            <div className="login-panel-top" data-scroll-stagger>
+              <div className="panel-header-copy" data-scroll-item>
                 <p className="section-label">Account verification</p>
                 <h1 className="auth-panel-title">Verifying your MarketMetrics email</h1>
               </div>
-              <p className="auth-panel-intro">
+              <p className="auth-panel-intro" data-scroll-item>
                 This secure link can confirm a new account or complete an email change for your
                 MarketMetrics profile.
               </p>

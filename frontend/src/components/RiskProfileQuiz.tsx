@@ -135,7 +135,7 @@ export function RiskProfileQuiz({ isSaving, onComplete, onDismiss }: RiskProfile
 
   if (step === 'result' && result) {
     return (
-      <div className="rq-card">
+      <div className="rq-card" data-scroll-reveal="scale" data-scroll-tone="positive">
         <div className="rq-result-header">
           <span className={`rq-profile-pill ${PROFILE_PILL[result]}`}>
             {PROFILE_LABELS[result]} investor
@@ -170,7 +170,7 @@ export function RiskProfileQuiz({ isSaving, onComplete, onDismiss }: RiskProfile
   const progress = (currentQuestionIndex / questions.length) * 100
 
   return (
-    <div className="rq-card">
+    <div className="rq-card" data-scroll-reveal="scale" data-scroll-tone="neutral">
       <div className="rq-progress-bar">
         <div className="rq-progress-fill" style={{ width: `${progress}%` }} />
       </div>

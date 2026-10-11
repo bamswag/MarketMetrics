@@ -181,7 +181,7 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
   const is503 = error.includes('not available') || error.includes('503') || error.includes('model')
 
   return (
-    <div className="prediction-panel instrument-surface">
+    <div className="prediction-panel instrument-surface" data-scroll-reveal="rise" data-scroll-tone="neutral">
       {/* Header */}
       <div className="prediction-header">
         <div className="prediction-header-left">
@@ -264,8 +264,14 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
 
           {/* Chart */}
           {chartData.length > 0 && (
-            <div className="prediction-chart-wrap">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="prediction-chart-wrap" data-scroll-reveal="chart">
+              <ResponsiveContainer
+                height="100%"
+                initialDimension={{ width: 1, height: 220 }}
+                minHeight={0}
+                minWidth={0}
+                width="100%"
+              >
                 <ComposedChart data={chartData} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="pred-conf-band" x1="0" y1="0" x2="0" y2="1">

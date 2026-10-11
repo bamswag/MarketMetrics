@@ -131,7 +131,11 @@ export function SimilarInstrumentsSection({
   }, [symbol])
 
   return (
-    <section className="similar-instruments-section" aria-labelledby="similar-instruments-title">
+    <section
+      className="similar-instruments-section"
+      aria-labelledby="similar-instruments-title"
+      data-scroll-reveal="rise"
+    >
       <div className="similar-instruments-header">
         <div>
           <p className="section-label">Explore nearby markets</p>
@@ -145,9 +149,9 @@ export function SimilarInstrumentsSection({
       </div>
 
       {isLoading ? (
-        <div className="similar-instruments-grid" aria-label="Loading similar instruments">
+        <div className="similar-instruments-grid" aria-label="Loading similar instruments" data-scroll-stagger>
           {Array.from({ length: 4 }).map((_, index) => (
-            <div className="similar-instrument-card similar-instrument-card--skeleton" key={index}>
+            <div className="similar-instrument-card similar-instrument-card--skeleton" data-scroll-item key={index}>
               <span className="similar-instrument-skeleton similar-instrument-skeleton--logo" />
               <span className="similar-instrument-skeleton similar-instrument-skeleton--title" />
               <span className="similar-instrument-skeleton similar-instrument-skeleton--meta" />
@@ -163,13 +167,15 @@ export function SimilarInstrumentsSection({
           No similar instruments found yet.
         </p>
       ) : (
-        <div className="similar-instruments-grid">
+        <div className="similar-instruments-grid" data-scroll-stagger>
           {items.map((item) => {
             const quote = item.latestQuote
             const tone = getTone(quote?.changePercent)
             return (
               <Link
                 className={`similar-instrument-card similar-instrument-card--${tone}`}
+                data-scroll-item
+                data-scroll-tone={tone}
                 key={item.symbol}
                 to={`/instrument/${encodeURIComponent(item.symbol)}`}
               >

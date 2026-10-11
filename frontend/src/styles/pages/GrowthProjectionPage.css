@@ -54,19 +54,20 @@
 }
 
 /* "Most likely outcome" primary card — teal accent (gain) */
-.projection-summary-card--main {
+.projection-summary-card--main-positive {
   border-color: rgb(from var(--green-chart) r g b / 0.22);
-  background:
-    radial-gradient(circle at top right, rgb(from var(--green-chart) r g b / 0.12), transparent 55%),
-    var(--panel-bg);
+  background: var(--surface-positive-tint);
 }
 
 /* "Most likely outcome" primary card — red accent (loss) */
-.projection-summary-card--main-loss {
+.projection-summary-card--main-negative {
   border-color: rgb(from var(--red-muted) r g b / 0.22);
-  background:
-    radial-gradient(circle at top right, rgb(from var(--red-muted) r g b / 0.12), transparent 55%),
-    var(--panel-bg);
+  background: var(--surface-negative-tint);
+}
+
+.projection-summary-card--main-neutral {
+  border-color: var(--panel-border);
+  background: var(--surface-card);
 }
 
 .projection-summary-label {
@@ -84,8 +85,9 @@
 }
 
 /* One teal accent for all positive financial values */
-.projection-summary-value--positive { color: var(--green-chart); }
-.projection-summary-value--negative { color: var(--red-muted); }
+.projection-summary-value--positive { color: var(--positive-foreground); }
+.projection-summary-value--negative { color: var(--negative-foreground); }
+.projection-summary-value--neutral { color: var(--text-main); }
 
 /* Percentage change shown below card-1 value */
 .projection-summary-delta {
@@ -94,8 +96,9 @@
   line-height: 1;
 }
 
-.projection-summary-delta--positive { color: var(--green-chart); }
-.projection-summary-delta--negative { color: var(--red-muted); }
+.projection-summary-delta--positive { color: var(--positive-foreground); }
+.projection-summary-delta--negative { color: var(--negative-foreground); }
+.projection-summary-delta--neutral { color: var(--text-secondary); }
 
 .projection-summary-sub {
   font-size: 0.72rem;
@@ -464,21 +467,19 @@
   padding: 2px 0;
 }
 
-.projection-tooltip-row--main {
+.projection-tooltip-row--main-positive,
+.projection-tooltip-row--main-negative,
+.projection-tooltip-row--main-neutral {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--green-tooltip); /* teal — most likely outcome is a gain */
 }
 
-.projection-tooltip-row--main-loss {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--red-red-pale); /* soft red — most likely outcome is a loss */
-}
-
-/* P&L row colours */
-.projection-tooltip-row--gain { color: var(--green-tooltip); }
-.projection-tooltip-row--loss { color: var(--red-red-pale); }
+.projection-tooltip-row--main-positive,
+.projection-tooltip-row--positive { color: var(--positive-foreground); }
+.projection-tooltip-row--main-negative,
+.projection-tooltip-row--negative { color: var(--negative-foreground); }
+.projection-tooltip-row--main-neutral,
+.projection-tooltip-row--neutral { color: var(--tooltip-text); }
 
 .projection-tooltip-row--invested {
   color: var(--tooltip-subtle);
@@ -540,8 +541,8 @@
   color: var(--text-main);
 }
 
-.positive-text { color: var(--green-chart); }
-.negative-text { color: var(--red-muted); }
+.positive-text { color: var(--positive-foreground); }
+.negative-text { color: var(--negative-foreground); }
 /* neutral-text overrides .projection-scenario-col--baseline teal for zero values */
 .neutral-text  { color: var(--text-main); }
 

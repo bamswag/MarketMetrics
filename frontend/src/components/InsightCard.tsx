@@ -89,16 +89,27 @@ type InsightCardProps = {
 
 export function InsightCard({ id }: InsightCardProps) {
   const card = INSIGHT_CARD_CONTENT[id]
+  const revealVariant =
+    id === 'live-market-data'
+      ? 'slide-right'
+      : id === 'forecast-vs-projection'
+        ? 'slide-left'
+        : 'rise'
 
   return (
-    <article className={`insight-card insight-card--${card.tone}`}>
-      <div className="insight-card-copy">
+    <article
+      className={`insight-card insight-card--${card.tone}`}
+      data-scroll-reveal={revealVariant}
+      data-scroll-stagger
+      data-scroll-tone="neutral"
+    >
+      <div className="insight-card-copy" data-scroll-item>
         <h2 className="insight-card-title">{card.title}</h2>
         <p className="insight-card-body">{card.body}</p>
         {card.secondaryBody ? <p className="insight-card-body">{card.secondaryBody}</p> : null}
         <p className="insight-card-caveat">{card.caveat}</p>
       </div>
-      <Link className="insight-card-link" to={card.ctaTo}>
+      <Link className="insight-card-link" data-scroll-item to={card.ctaTo}>
         {card.ctaLabel}
       </Link>
     </article>

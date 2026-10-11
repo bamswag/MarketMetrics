@@ -67,7 +67,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
 
   return (
     <section className="settings-page page-section">
-      <div className="settings-page-header">
+      <div className="settings-page-header" data-scroll-reveal="fade">
         <div>
           <p className="section-label">Settings</p>
           <h1 className="settings-page-title">Preferences</h1>
@@ -77,7 +77,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
         </p>
       </div>
 
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="neutral">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Appearance</h2>
           <span className="neutral-pill">Saved locally</span>
@@ -124,7 +124,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
       </section>
 
       {/* Notifications */}
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="positive">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Notifications</h2>
           <span className={emailEnabled ? 'positive-pill' : 'neutral-pill'}>
@@ -153,7 +153,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
       </section>
 
       {/* Asset classes */}
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="neutral">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Preferred asset classes</h2>
           <span className="neutral-pill">Saved locally</span>
@@ -182,7 +182,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
       </section>
 
       {/* Market defaults */}
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="neutral">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Market defaults</h2>
         </div>
@@ -262,7 +262,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
       </section>
 
       {/* Currency and formatting */}
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="neutral">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Currency and formatting</h2>
         </div>
@@ -302,7 +302,7 @@ export function SettingsPage({ currentUser, onUpdateEmailNotifications }: Settin
       </section>
 
       {/* Account status */}
-      <section className="settings-section">
+      <section className="settings-section" data-scroll-reveal="rise" data-scroll-tone="positive">
         <div className="settings-section-header">
           <h2 className="settings-section-title">Account</h2>
         </div>

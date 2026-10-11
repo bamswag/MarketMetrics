@@ -587,7 +587,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
   return (
     <section className="forecast-page page-section">
       {/* ── Hero ── */}
-      <div className="forecast-hero">
+      <div className="forecast-hero" data-scroll-reveal="rise">
         <Link className="forecast-back-link" to={`/instrument/${encodeURIComponent(symbol)}`}>
           ← Back to {symbol}
         </Link>
@@ -613,7 +613,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Error ── */}
       {token && !isLoading && error && (
-        <div className="forecast-error-card">
+        <div className="forecast-error-card" data-scroll-reveal="scale" data-scroll-tone="negative">
           <span className="forecast-error-icon">{is503 ? '🤖' : '⚠️'}</span>
           <h2 className="forecast-error-title">
             {is503 ? 'Model not available yet' : 'Forecast unavailable'}
@@ -640,7 +640,11 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Verdict / summary card ── */}
       {token && !isLoading && !error && result && verdict && (
-        <div className={`forecast-verdict-card forecast-verdict-card--${verdict.tone}`}>
+        <div
+          className={`forecast-verdict-card forecast-verdict-card--${verdict.tone}`}
+          data-scroll-reveal="illuminate"
+          data-scroll-tone={verdict.tone}
+        >
           <div className="forecast-verdict-main">
             <span className="forecast-verdict-eyebrow">
               In the next {horizon} days
@@ -694,7 +698,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
       )}
 
       {token && !isLoading && !error && result && (
-        <div className="forecast-last-check">
+        <div className="forecast-last-check" data-scroll-reveal="fade">
           <span className="forecast-last-check-title">How did the last forecast do?</span>
           {lastForecastReview ? (
             <>
@@ -732,7 +736,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Chart ── */}
       {token && !isLoading && !error && result && chartData.length > 0 && (
-        <div className="forecast-chart-card">
+        <div className="forecast-chart-card" data-scroll-reveal="chart" data-scroll-tone={verdict?.tone ?? 'neutral'}>
           <div className="forecast-chart-header">
             <div className="forecast-chart-header-top">
               <div className="forecast-horizon-row">
@@ -782,7 +786,13 @@ export function ForecastPage({ token }: ForecastPageProps) {
           </div>
 
           <div className="forecast-chart-wrap">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer
+              height="100%"
+              initialDimension={{ width: 1, height: 340 }}
+              minHeight={0}
+              minWidth={0}
+              width="100%"
+            >
               <ComposedChart data={chartData} margin={{ top: 6, right: 16, bottom: 0, left: 0 }}>
                 <defs>
                   {/* Confidence band fill: transparent at Today, pale blue at horizon */}
@@ -895,9 +905,9 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Bottom grid: accuracy + signals ── */}
       {token && !isLoading && !error && result && (
-        <div className="forecast-bottom-grid">
+        <div className="forecast-bottom-grid" data-scroll-stagger>
           {/* Accuracy */}
-          <div className="forecast-accuracy-card">
+          <div className="forecast-accuracy-card" data-scroll-item>
             <div className="forecast-card-heading">
               <p className="forecast-card-title">How much should I trust this forecast?</p>
               <p className="forecast-card-subtitle">
@@ -971,7 +981,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
           {/* Feature importances */}
           {topFeatures.length > 0 && (
-            <div className="forecast-features-card">
+            <div className="forecast-features-card" data-scroll-item data-scroll-tone="positive">
               <div className="forecast-card-heading">
                 <p className="forecast-card-title">What influenced the forecast?</p>
                 <p className="forecast-card-subtitle">
@@ -1008,7 +1018,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
       )}
 
       {token && !isLoading && !error && result && (
-        <div className="forecast-page-note" style={{ marginTop: '24px', padding: '16px 20px', borderRadius: '20px', background: 'rgba(148, 163, 184, 0.08)', border: '1px solid rgba(148, 163, 184, 0.16)' }}>
+        <div className="forecast-page-note" data-scroll-reveal="fade" style={{ marginTop: '24px', padding: '16px 20px', borderRadius: '20px', background: 'rgba(148, 163, 184, 0.08)', border: '1px solid rgba(148, 163, 184, 0.16)' }}>
           <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--muted)', lineHeight: '1.5' }}>
             Forecasts are estimates, not guarantees. Use them as learning support, not financial advice.
           </p>
@@ -1025,8 +1035,8 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Related tools ── */}
       {token && !isLoading && !error && result && (
-        <div className="forecast-page-cta-group">
-          <div className="forecast-page-cta-card">
+        <div className="forecast-page-cta-group" data-scroll-stagger>
+          <div className="forecast-page-cta-card" data-scroll-item data-scroll-tone="dual">
             <div className="forecast-page-cta-info">
               <h3 className="forecast-page-cta-heading">Investment Simulator</h3>
               <p className="forecast-page-cta-sub">
@@ -1040,7 +1050,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
               Simulate
             </Link>
           </div>
-          <div className="forecast-page-cta-card forecast-page-cta-card--chart">
+          <div className="forecast-page-cta-card forecast-page-cta-card--chart" data-scroll-item data-scroll-tone="positive">
             <div className="forecast-page-cta-info">
               <h3 className="forecast-page-cta-heading">Price chart</h3>
               <p className="forecast-page-cta-sub">
@@ -1059,7 +1069,7 @@ export function ForecastPage({ token }: ForecastPageProps) {
 
       {/* ── Disclaimer ── */}
       {token && !isLoading && !error && result && (
-        <div className="forecast-disclaimer">
+        <div className="forecast-disclaimer" data-scroll-reveal="fade">
           <WarningIcon />
           <p>
             Forecasts are generated by a machine learning model trained on historical price data.

@@ -183,7 +183,7 @@ export function AccountPage({
   if (!currentUser) {
     return (
       <section className="profile-page page-section">
-        <div className="profile-page-head">
+        <div className="profile-page-head" data-scroll-reveal="fade">
           <div className="panel-header-copy">
             <p className="section-label">Account</p>
             <h1 className="profile-page-title">Your account center is loading.</h1>
@@ -198,7 +198,7 @@ export function AccountPage({
 
   return (
     <section className="profile-page page-section account-page">
-      <div className="profile-page-head account-page-head">
+      <div className="profile-page-head account-page-head" data-scroll-reveal="fade">
         <div className="panel-header-copy">
           <p className="section-label">Account</p>
           <h1 className="profile-page-title">Manage identity, sign-in, and account security from one calm workspace.</h1>
@@ -210,7 +210,7 @@ export function AccountPage({
       </div>
 
       <div className="account-grid">
-        <article className="panel account-card account-card--accent">
+        <article className="panel account-card account-card--accent" data-scroll-reveal="rise" data-scroll-tone="positive">
           <div className="panel-header">
             <div className="panel-header-copy">
               <p className="section-label">Profile details</p>
@@ -291,7 +291,7 @@ export function AccountPage({
           </div>
         </article>
 
-        <article className="panel account-card account-card--side">
+        <article className="panel account-card account-card--side" data-scroll-reveal="rise" data-scroll-tone="neutral">
           <div className="panel-header-copy">
             <p className="section-label">Account status</p>
             <h2 className="panel-title">Read-only account snapshot</h2>
@@ -315,7 +315,7 @@ export function AccountPage({
           </div>
         </article>
 
-        <article className="panel account-card account-card--full">
+        <article className="panel account-card account-card--full" data-scroll-reveal="rise" data-scroll-tone="neutral">
           <div className="panel-header">
             <div className="panel-header-copy">
               <p className="section-label">Authentication</p>
@@ -441,7 +441,7 @@ export function AccountPage({
           </div>
         </article>
 
-        <article className="panel account-card account-card--full">
+        <article className="panel account-card account-card--full" data-scroll-reveal="rise" data-scroll-tone="positive">
           <div className="panel-header">
             <div className="panel-header-copy">
               <p className="section-label">Risk profile</p>
@@ -476,7 +476,7 @@ export function AccountPage({
           )}
         </article>
 
-        <article className="panel account-card account-card--full account-card--danger">
+        <article className="panel account-card account-card--full account-card--danger" data-scroll-reveal="illuminate" data-scroll-tone="negative">
           <div className="panel-header">
             <div className="panel-header-copy">
               <p className="section-label">Danger zone</p>

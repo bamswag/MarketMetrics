@@ -5,6 +5,7 @@ import { AlertToastStack } from '../components/AlertToastStack'
 import type { AlertToast } from '../components/AlertToastStack'
 import { AppHeader } from '../components/AppHeader'
 import { ScrollToTop } from '../components/ScrollToTop'
+import { ThemeEffects } from '../components/ThemeEffects'
 import { SideNav } from '../components/SideNav'
 import '../styles/components/SideNav.css'
 import { AuthActions } from '../components/AuthActions'
@@ -210,6 +211,18 @@ function readAuthRedirectPayload(): AuthRedirectPayload {
   }
 }
 
+function normalizeAuthReturnTo(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return '/dashboard'
+  }
+  return value
+}
+
+function buildLoginRedirect(returnTo: string): string {
+  const normalizedReturnTo = normalizeAuthReturnTo(returnTo)
+  return `/login?returnTo=${encodeURIComponent(normalizedReturnTo)}`
+}
+
 function RouteLoadingState() {
   return <div className="empty-state page-loader">Loading interface...</div>
 }
@@ -264,12 +277,16 @@ function AppContent() {
   const isSearchResultsPage = location.pathname.startsWith('/search-results/')
   const apiUrl = getApiUrl()
   const frontendOrigin = typeof window === 'undefined' ? '' : window.location.origin
+  const requestedAuthReturnTo = normalizeAuthReturnTo(
+    new URLSearchParams(location.search).get('returnTo'),
+  )
   const loginGoogleParams = new URLSearchParams({
-    returnTo: '/dashboard',
+    returnTo: requestedAuthReturnTo,
     intent: 'login',
+    acceptedTerms: 'true',
   })
   const signupGoogleParams = new URLSearchParams({
-    returnTo: '/dashboard',
+    returnTo: requestedAuthReturnTo,
     intent: 'signup',
     acceptedTerms: 'true',
   })
@@ -299,6 +316,7 @@ function AppContent() {
   const [dashboardData, setDashboardData] = useState<DashboardData>(initialDashboardData)
   const [dashboardError, setDashboardError] = useState('')
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState(() => Boolean(token))
   const [landingMovers, setLandingMovers] = useState<MoversResponse | null>(null)
   const [landingMoversError, setLandingMoversError] = useState('')
   const [isLoadingLandingMovers, setIsLoadingLandingMovers] = useState(false)
@@ -463,6 +481,7 @@ function AppContent() {
     if (!token) {
       setDashboardData(initialDashboardData)
       setCurrentUser(null)
+      setIsLoadingCurrentUser(false)
       dashboardCache = null
       return
     }
@@ -477,6 +496,7 @@ function AppContent() {
       setDashboardData(dashboardCache.data)
       setDashboardError('')
       setIsLoadingDashboard(false)
+      setIsLoadingCurrentUser(false)
       return
     }
 
@@ -485,11 +505,19 @@ function AppContent() {
 
     async function loadDashboard() {
       setIsLoadingDashboard(true)
+      setIsLoadingCurrentUser(true)
       setDashboardError('')
 
       try {
+        const currentUserRequest = fetchCurrentUser(token, abortController.signal).then((userProfile) => {
+          if (!cancelled) {
+            setCurrentUser(userProfile)
+            setIsLoadingCurrentUser(false)
+          }
+          return userProfile
+        })
         const [userProfile, movers, watchlist, alerts] = await Promise.all([
-          fetchCurrentUser(token, abortController.signal),
+          currentUserRequest,
           fetchMovers(token, 3, abortController.signal),
           fetchWatchlist(token, abortController.signal),
           fetchAlerts(token, abortController.signal),
@@ -506,7 +534,6 @@ function AppContent() {
           data: nextData,
           user: userProfile,
         }
-        setCurrentUser(userProfile)
         setDashboardData(nextData)
       } catch (error) {
         if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) {
@@ -525,6 +552,7 @@ function AppContent() {
       } finally {
         if (!cancelled) {
           setIsLoadingDashboard(false)
+          setIsLoadingCurrentUser(false)
         }
       }
     }
@@ -608,7 +636,7 @@ function AppContent() {
     setFlashMessage(successMessage)
     setAuthRedirectError('')
     setDashboardError('')
-    navigate('/dashboard')
+    navigate(requestedAuthReturnTo)
   }
 
   async function handleEmailLogin(email: string, password: string) {
@@ -1358,6 +1386,7 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+      <ThemeEffects />
       {token ? (
         <AlertToastStack onDismiss={dismissAlertToast} toasts={alertToasts} />
       ) : null}
@@ -1536,7 +1565,7 @@ function AppContent() {
                 ) : null}
               </>
             ) : (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
             )
           }
           path="/dashboard"
@@ -1553,7 +1582,7 @@ function AppContent() {
                 />
               </>
             ) : (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
             )
           }
           path="/tracked-symbols"
@@ -1572,7 +1601,7 @@ function AppContent() {
                 />
               </>
             ) : (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
             )
           }
           path="/account"
@@ -1588,7 +1617,7 @@ function AppContent() {
                 />
               </>
             ) : (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
             )
           }
           path="/settings"
@@ -1604,7 +1633,7 @@ function AppContent() {
                 />
               </>
             ) : (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
             )
           }
           path="/simulation-history"
@@ -1695,7 +1724,9 @@ function AppContent() {
         <Route
           element={
             !token ? (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
+            ) : isLoadingCurrentUser ? (
+              <RouteLoadingState />
             ) : !currentUser?.isAdmin ? (
               <Navigate replace to="/dashboard" />
             ) : (
@@ -1712,7 +1743,9 @@ function AppContent() {
         <Route
           element={
             !token ? (
-              <Navigate replace to="/login" />
+              <Navigate replace to={buildLoginRedirect(location.pathname + location.search)} />
+            ) : isLoadingCurrentUser ? (
+              <RouteLoadingState />
             ) : !currentUser?.isAdmin ? (
               <Navigate replace to="/dashboard" />
             ) : (

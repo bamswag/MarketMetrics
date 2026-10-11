@@ -56,19 +56,23 @@ type LandingPageProps = {
 export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPageProps) {
   return (
     <div className="landing-shell">
-      <section className="landing-hero page-section">
-        <div className="landing-copy">
-          <div className="landing-badge-row">
+      <section
+        className="landing-hero page-section"
+        data-scroll-reveal="illuminate"
+        data-scroll-tone="neutral"
+      >
+        <div className="landing-copy" data-scroll-stagger data-theme-glare>
+          <div className="landing-badge-row" data-scroll-item>
             <span className="landing-badge">Market Simulator</span>
             <span className="landing-badge landing-badge--accent">Live Data</span>
           </div>
-          <h1>Simulate the market with clarity and confidence.</h1>
-          <p className="landing-text">
+          <h1 data-scroll-item>Simulate the market with clarity and confidence.</h1>
+          <p className="landing-text" data-scroll-item>
             Search instruments, build watchlists, set price alerts, and read chart-driven
             analysis — all inside one focused interface.
           </p>
 
-          <div className="landing-actions">
+          <div className="landing-actions" data-scroll-item>
             <Link className="primary-action" to="/signup">
               Get started free
             </Link>
@@ -77,7 +81,7 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
             </Link>
           </div>
 
-          <div className="landing-stats-row">
+          <div className="landing-stats-row" data-scroll-item>
             <div className="landing-stat">
               <strong className="landing-stat-value">500+</strong>
               <span className="landing-stat-label">Instruments</span>
@@ -95,14 +99,22 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
           </div>
         </div>
 
-        <div className="landing-display">
+        <div
+          className="landing-display"
+          data-scroll-reveal="scale"
+          data-scroll-tone="positive"
+        >
           <article className="display-card">
             <FeaturedMoverCard />
           </article>
         </div>
       </section>
 
-      <section className="landing-insight-mosaic page-section">
+      <section
+        className="landing-insight-mosaic page-section"
+        data-scroll-reveal="fade"
+        data-scroll-tone="neutral"
+      >
         <DailyMoversSection
           betweenPanels={(
             <>
@@ -116,13 +128,21 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
           variant="landing"
         />
 
-        <div className="landing-financial-advice-card">
+        <div
+          className="landing-financial-advice-card"
+          data-scroll-reveal="rise"
+          data-scroll-tone="neutral"
+        >
           <InsightCard id="not-financial-advice" />
         </div>
       </section>
 
-      <section className="landing-feature-section page-section">
-        <div className="landing-feature-header">
+      <section
+        className="landing-feature-section page-section"
+        data-scroll-reveal="illuminate"
+        data-scroll-tone="neutral"
+      >
+        <div className="landing-feature-header" data-scroll-reveal="blur-rise">
           <p className="section-label">Platform features</p>
           <h2 className="landing-section-heading">Everything you need to read the market</h2>
           <p className="landing-section-subtext">
@@ -130,9 +150,14 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
           </p>
         </div>
 
-        <div className="feature-grid">
+        <div className="feature-grid" data-scroll-stagger>
           {FEATURE_CARDS.map((feature) => (
-            <article className="feature-card" key={feature.title}>
+            <article
+              className="feature-card"
+              data-scroll-item
+              data-scroll-tone="neutral"
+              key={feature.title}
+            >
               <span className="feature-icon">{ICON_MAP[feature.icon]}</span>
               <h3 className="feature-card-heading">{feature.title}</h3>
               <p className="feature-card-copy">{feature.description}</p>
@@ -141,8 +166,14 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
         </div>
       </section>
 
-      <section className="landing-guides-callout page-section">
-        <div className="landing-guides-copy">
+      <section
+        className="landing-guides-callout page-section"
+        data-scroll-reveal="slide-right"
+        data-scroll-stagger
+        data-scroll-tone="neutral"
+        data-theme-glare
+      >
+        <div className="landing-guides-copy" data-scroll-item>
           <p className="section-label">Guides</p>
           <h2 className="landing-section-heading">Understand the results before you act on them</h2>
           <p className="landing-section-subtext">
@@ -150,20 +181,29 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
             alerts, and responsible research workflows in plain language.
           </p>
         </div>
-        <Link className="primary-action" to="/guides">
+        <Link className="primary-action" data-scroll-item to="/guides">
           Open Guides
         </Link>
       </section>
 
-      <section className="landing-process page-section">
-        <div className="landing-feature-header">
+      <section
+        className="landing-process page-section"
+        data-scroll-reveal="rise"
+        data-scroll-tone="neutral"
+      >
+        <div className="landing-feature-header" data-scroll-reveal="blur-rise">
           <p className="section-label">How it works</p>
           <h2 className="landing-section-heading">Three steps to market clarity</h2>
         </div>
 
-        <div className="process-grid">
+        <div className="process-grid" data-scroll-stagger>
           {PROCESS_STEPS.map((item, index) => (
-            <article className="process-card" key={item.step}>
+            <article
+              className="process-card"
+              data-scroll-item
+              data-scroll-tone="neutral"
+              key={item.step}
+            >
               <span className="process-number">{String(index + 1).padStart(2, '0')}</span>
               <h3 className="process-step-title">{item.step}</h3>
               <p>{item.detail}</p>
@@ -172,13 +212,20 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
         </div>
       </section>
 
-      <section className="landing-cta page-section">
-        <div className="landing-cta-inner">
-          <h2 className="landing-cta-heading">Ready to start tracking?</h2>
-          <p className="landing-cta-text">
+      <section
+        className="landing-cta page-section"
+        data-scroll-reveal="illuminate"
+        data-scroll-tone="dual"
+        data-theme-glare
+      >
+        <div className="landing-cta-inner" data-scroll-stagger>
+          <h2 className="landing-cta-heading" data-scroll-item>
+            Ready to start tracking?
+          </h2>
+          <p className="landing-cta-text" data-scroll-item>
             Create your free account and explore the market in under a minute.
           </p>
-          <div className="landing-actions">
+          <div className="landing-actions" data-scroll-item>
             <Link className="primary-action" to="/signup">
               Create free account
             </Link>
@@ -189,7 +236,11 @@ export function LandingPage({ isLoadingMovers, movers, moversError }: LandingPag
         </div>
       </section>
 
-      <footer className="landing-footer page-section">
+      <footer
+        className="landing-footer page-section"
+        data-scroll-reveal="fade"
+        data-scroll-tone="neutral"
+      >
         <p>MarketMetrics — a market simulator for exploring instruments, managing watchlists, and reading price action with clarity.</p>
       </footer>
     </div>

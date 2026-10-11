@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import httpx
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import app.orm_models  # noqa: F401
@@ -23,6 +24,7 @@ from app.core.auth import (
 from app.core.config import settings
 from app.core.database import ensure_local_sqlite_schema
 from app.orm_models.user import UserDB
+from app.orm_models.google_oauth_state import GoogleOAuthStateDB
 from app.services.email import (
     send_email_change_verification_email,
     send_password_reset_email,
@@ -162,6 +164,9 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[UserDB
 
     user = db.query(UserDB).filter(UserDB.email == normalize_email(email)).first()
     if not user:
+        return None
+
+    if not user.isActive:
         return None
 
     if not user.passwordAuthEnabled:
@@ -409,6 +414,7 @@ def _normalize_return_to(return_to: Optional[str]) -> str:
 
 
 def _build_google_state_token(
+    db: Session,
     return_to: Optional[str],
     *,
     intent: str = "login",
@@ -418,9 +424,24 @@ def _build_google_state_token(
     _require_google_oauth_config()
     resolved_frontend_origin = _resolve_frontend_origin(frontend_origin)
     secret, algorithm, _ = _jwt_settings()
+    nonce = token_urlsafe(32)
+    now = datetime.utcnow()
+    expires_at = now + timedelta(minutes=10)
+    db.query(GoogleOAuthStateDB).filter(
+        GoogleOAuthStateDB.expiresAt < now,
+    ).delete(synchronize_session=False)
+    db.add(
+        GoogleOAuthStateDB(
+            nonceHash=_hash_one_time_token(nonce),
+            expiresAt=expires_at,
+            createdAt=now,
+        ),
+    )
+    db.commit()
     return create_access_token(
         data={
             "purpose": "google_oauth",
+            "nonce": nonce,
             "returnTo": _normalize_return_to(return_to),
             "intent": "signup" if intent == "signup" else "login",
             "acceptedTerms": bool(accepted_terms),
@@ -433,6 +454,7 @@ def _build_google_state_token(
 
 
 def build_google_authorization_url(
+    db: Session,
     return_to: Optional[str] = "/",
     *,
     intent: str = "login",
@@ -442,6 +464,7 @@ def build_google_authorization_url(
 ) -> str:
     redirect_uri = resolve_google_redirect_uri(request_origin)
     state_token = _build_google_state_token(
+        db,
         return_to,
         intent=intent,
         accepted_terms=accepted_terms,
@@ -492,10 +515,15 @@ def _decode_google_state_token(state_token: str) -> dict[str, object]:
     if payload.get("purpose") != "google_oauth":
         raise GoogleAuthError("Google login request is invalid. Please try again.")
 
+    nonce = payload.get("nonce")
+    if not isinstance(nonce, str) or not nonce.strip():
+        raise GoogleAuthError("Google login request is invalid. Please try again.")
+
     intent = "signup" if payload.get("intent") == "signup" else "login"
     accepted_terms = payload.get("acceptedTerms") in (True, "true", "True", 1, "1")
     return {
         "returnTo": _normalize_return_to(payload.get("returnTo")),
+        "nonce": nonce,
         "intent": intent,
         "acceptedTerms": accepted_terms,
         "frontendOrigin": _resolve_frontend_origin(payload.get("frontendOrigin"))
@@ -504,13 +532,31 @@ def _decode_google_state_token(state_token: str) -> dict[str, object]:
     }
 
 
+def consume_google_oauth_state(db: Session, google_state: dict[str, object]) -> None:
+    now = datetime.utcnow()
+    consumed_count = (
+        db.query(GoogleOAuthStateDB)
+        .filter(
+            GoogleOAuthStateDB.nonceHash
+            == _hash_one_time_token(str(google_state["nonce"])),
+            GoogleOAuthStateDB.expiresAt >= now,
+        )
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    if consumed_count != 1:
+        raise GoogleAuthError("Google login request expired or was already used. Please try again.")
+
+
 async def exchange_google_code_for_userinfo(
     code: str,
     state_token: str,
+    db: Session,
     request_origin: Optional[str] = None,
 ) -> tuple[dict, dict[str, object]]:
     _require_google_oauth_config()
     google_state = _decode_google_state_token(state_token)
+    consume_google_oauth_state(db, google_state)
     redirect_uri = resolve_google_redirect_uri(request_origin)
 
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -577,6 +623,8 @@ def get_or_create_google_user(
 
     user = db.query(UserDB).filter(UserDB.googleSubject == normalized_google_subject).first()
     if user:
+        if not user.isActive:
+            raise GoogleAuthError("This MarketMetrics account is currently unavailable.")
         user.lastLoginAt = now
         if display_name and not user.displayName:
             user.displayName = display_name
@@ -586,20 +634,33 @@ def get_or_create_google_user(
 
     user = db.query(UserDB).filter(UserDB.email == normalized_email).first()
     if user:
+        if not user.isActive:
+            raise GoogleAuthError("This MarketMetrics account is currently unavailable.")
         if user.googleSubject and user.googleSubject != normalized_google_subject:
             raise GoogleAuthError("This MarketMetrics account is already linked to a different Google account.")
+        # Policy: a provider-verified Google email may link to an existing
+        # password account with the same normalized email. Password access and
+        # the account's existing role are deliberately preserved.
         user.googleSubject = normalized_google_subject
         user.lastLoginAt = now
         if not user.passwordAuthEnabled:
             user.primaryAuthProvider = "google"
         if display_name and not user.displayName:
             user.displayName = display_name
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            concurrent_user = db.query(UserDB).filter(
+                UserDB.googleSubject == normalized_google_subject,
+            ).first()
+            if concurrent_user and concurrent_user.email == normalized_email:
+                if not concurrent_user.isActive:
+                    raise GoogleAuthError("This MarketMetrics account is currently unavailable.")
+                return concurrent_user, False
+            raise GoogleAuthError("Unable to link this Google account. Please try again.")
         db.refresh(user)
         return user, False
-
-    if intent != "signup":
-        raise GoogleAuthError("No MarketMetrics account is linked to this Google login. Start from Sign up.")
 
     if not accepted_terms:
         raise GoogleAuthError("Agree to the Terms and Privacy Policy before creating your account.")
@@ -612,18 +673,27 @@ def get_or_create_google_user(
         primaryAuthProvider="google",
         passwordAuthEnabled=False,
         googleSubject=normalized_google_subject,
-        emailVerifiedAt=None,
+        emailVerifiedAt=now,
         sessionVersion=1,
+        isAdmin=False,
+        isActive=True,
         createdAt=now,
         lastLoginAt=now,
     )
-    verification_token = _assign_signup_verification_token(user)
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        # Unique email and Google-subject constraints make concurrent callbacks
+        # idempotent. Re-entering the existing-user path resolves the winner.
+        return get_or_create_google_user(
+            db,
+            google_subject=normalized_google_subject,
+            email=normalized_email,
+            display_name=display_name,
+            intent=intent,
+            accepted_terms=accepted_terms,
+        )
     db.refresh(user)
-    send_signup_verification_email(
-        user.email,
-        user.displayName,
-        _verification_url(verification_token),
-    )
     return user, True

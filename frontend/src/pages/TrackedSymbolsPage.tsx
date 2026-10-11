@@ -98,8 +98,8 @@ export function TrackedSymbolsPage({
 
   return (
     <section className="profile-page page-section tracked-symbols-page">
-      <div className="tracked-symbols-page-hero">
-        <div className="tracked-symbols-page-head">
+      <div className="tracked-symbols-page-hero" data-scroll-stagger>
+        <div className="tracked-symbols-page-head" data-scroll-item>
           <div className="panel-header-copy">
             <p className="section-label">Tracked symbols</p>
             <h1 className="tracked-symbols-page-title">
@@ -117,7 +117,7 @@ export function TrackedSymbolsPage({
           </div>
         </div>
 
-        <article className="panel tracked-symbols-side-panel">
+        <article className="panel tracked-symbols-side-panel" data-scroll-item data-scroll-tone="neutral">
           <div className="panel-header">
             <div className="panel-header-copy">
               <p className="section-label">Tracked now</p>
@@ -168,7 +168,7 @@ export function TrackedSymbolsPage({
           ) : null}
 
           {sortedTrackedSymbols.length > 0 ? (
-            <div className="tracked-symbols-side-grid">
+            <div className="tracked-symbols-side-grid" data-scroll-stagger>
               {sortedTrackedSymbols.map((item) => (
                 <TrackedSymbolCard
                   actionLabel="Untrack"
@@ -184,7 +184,11 @@ export function TrackedSymbolsPage({
         </article>
       </div>
 
-      <article className="panel panel-wide tracked-symbols-page-panel">
+      <article
+        className="panel panel-wide tracked-symbols-page-panel"
+        data-scroll-reveal="rise"
+        data-scroll-tone="neutral"
+      >
         <div className="panel-header">
           <div className="panel-header-copy">
             <p className="section-label">Tracking data</p>
@@ -203,23 +207,23 @@ export function TrackedSymbolsPage({
           A quick read on how your tracked symbols are behaving today.
         </p>
 
-        <div className="tracked-symbols-summary-grid">
-          <article className="tracked-symbols-summary-card tracked-symbols-summary-card--accent">
+        <div className="tracked-symbols-summary-grid" data-scroll-stagger>
+          <article className="tracked-symbols-summary-card tracked-symbols-summary-card--accent" data-scroll-item data-scroll-tone="positive">
             <span className="metric-label">Total tracked</span>
             <strong className="metric-value">{sortedTrackedSymbols.length}</strong>
             <p>Names pinned for quick return visits.</p>
           </article>
-          <article className="tracked-symbols-summary-card">
+          <article className="tracked-symbols-summary-card" data-scroll-item data-scroll-tone="positive">
             <span className="metric-label">Positive today</span>
             <strong className="metric-value">{positiveCount}</strong>
             <p>Tracked names currently in green.</p>
           </article>
-          <article className="tracked-symbols-summary-card">
+          <article className="tracked-symbols-summary-card" data-scroll-item data-scroll-tone="negative">
             <span className="metric-label">Negative today</span>
             <strong className="metric-value">{negativeCount}</strong>
             <p>Tracked names currently in red.</p>
           </article>
-          <article className="tracked-symbols-summary-card">
+          <article className="tracked-symbols-summary-card" data-scroll-item>
             <span className="metric-label">Newest tracked</span>
             <strong className="metric-value">
               {newestTrackedSymbol ? newestTrackedSymbol.symbol : '--'}

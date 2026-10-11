@@ -195,9 +195,11 @@ def google_login(
     intent: str = Query(default="login"),
     accepted_terms: bool = Query(default=False, alias="acceptedTerms"),
     frontend_origin: Optional[str] = Query(default=None, alias="frontendOrigin"),
+    db: Session = Depends(get_db),
 ):
     try:
         redirect_url = build_google_authorization_url(
+            db,
             return_to,
             intent=intent,
             accepted_terms=accepted_terms,
@@ -230,6 +232,7 @@ async def google_callback(
         google_userinfo, google_state = await exchange_google_code_for_userinfo(
             code,
             state,
+            db,
             request_origin=_request_origin(request),
         )
         fallback_path = "/signup" if google_state["intent"] == "signup" else "/login"
@@ -264,7 +267,7 @@ async def google_callback(
             str(google_state["returnTo"]),
             access_token=token,
             success_message=(
-                "Account created and signed in. Check your email to verify your account."
+                "Account created and signed in with Google."
                 if created
                 else None
             ),

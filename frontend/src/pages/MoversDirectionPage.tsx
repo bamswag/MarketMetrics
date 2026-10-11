@@ -217,7 +217,11 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
 
   return (
     <div className={`movers-direction-shell movers-direction-shell--${config.tone}`}>
-      <section className={`movers-direction-hero movers-direction-hero--${config.tone} page-section`}>
+      <section
+        className={`movers-direction-hero movers-direction-hero--${config.tone} page-section`}
+        data-scroll-reveal="rise"
+        data-scroll-tone={config.tone}
+      >
         <div className="movers-direction-head">
           <p className="section-label">{config.eyebrow}</p>
           <h1 className="movers-direction-title">{config.pageTitle}</h1>
@@ -241,18 +245,18 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
       </section>
 
       <section className="movers-direction-content page-section">
-        <div className="movers-direction-summary-grid">
-          <article className="movers-direction-summary-card movers-direction-summary-card--accent">
+        <div className="movers-direction-summary-grid" data-scroll-stagger>
+          <article className="movers-direction-summary-card movers-direction-summary-card--accent" data-scroll-item>
             <span className="metric-label">Loaded now</span>
             <strong className="metric-value">{totalLoadedItems}</strong>
             <p>Public mover entries currently shown across the board.</p>
           </article>
-          <article className="movers-direction-summary-card">
+          <article className="movers-direction-summary-card" data-scroll-item>
             <span className="metric-label">Asset classes</span>
             <strong className="metric-value">{categoryCount}</strong>
             <p>Separate market groups ranked side by side.</p>
           </article>
-          <article className="movers-direction-summary-card">
+          <article className="movers-direction-summary-card" data-scroll-item>
             <span className="metric-label">Lead symbol</span>
             <strong className="metric-value">{strongestMover?.symbol ?? '--'}</strong>
             <p>
@@ -263,7 +267,7 @@ export function MoversDirectionPage({ direction, token }: MoversDirectionPagePro
           </article>
         </div>
 
-        <div className="movers-direction-toolbar">
+        <div className="movers-direction-toolbar" data-scroll-reveal="fade">
           <div className="movers-direction-filter-group" role="tablist" aria-label="Mover category focus">
             <button
               aria-selected={activeCategory === 'all'}

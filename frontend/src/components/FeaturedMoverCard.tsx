@@ -111,7 +111,7 @@ function CompactSelect<T extends string>({
   value,
 }: SegmentedControlProps<T>) {
   return (
-    <label className="featured-mover-select-shell">
+    <label className="featured-mover-select-shell" data-scroll-item>
       <select
         aria-label={ariaLabel}
         className="featured-mover-select"
@@ -257,10 +257,15 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
       className={`featured-mover-shell ${
         isLoser ? 'featured-mover-shell--negative' : 'featured-mover-shell--positive'
       }`}
+      data-scroll-reveal="illuminate"
+      data-scroll-tone={isLoser ? 'negative' : 'positive'}
+      data-theme-glare
     >
-      <p className="section-label">{title}</p>
+      <p className="section-label" data-scroll-reveal="rise">
+        {title}
+      </p>
 
-      <div className="featured-mover-controls">
+      <div className="featured-mover-controls" data-scroll-stagger>
         <CompactSelect
           ariaLabel="Featured mover time range"
           onChange={(period) => setSelection((current) => ({ ...current, period }))}
@@ -289,8 +294,8 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
       ) : null}
 
       {!isLoading && !error && activeFeatured && mover ? (
-        <div className="hero-gainer-card">
-          <div className="hero-gainer-topline">
+        <div className="hero-gainer-card" data-scroll-stagger>
+          <div className="hero-gainer-topline" data-scroll-item>
             <div className="hero-gainer-identity">
               <MoverLogo name={mover.name} symbol={mover.symbol} />
               <div className="hero-gainer-info">
@@ -308,8 +313,14 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
           </div>
 
           {chartData.length > 0 ? (
-            <div className="hero-gainer-chart">
-              <ResponsiveContainer height={240} width="100%">
+            <div className="hero-gainer-chart" data-scroll-reveal="chart">
+              <ResponsiveContainer
+                height={240}
+                initialDimension={{ width: 1, height: 240 }}
+                minHeight={0}
+                minWidth={0}
+                width="100%"
+              >
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid
                     stroke={isLoser ? 'rgb(from var(--brand-red) r g b / 0.14)' : 'rgb(from var(--brand-green) r g b / 0.1)'}
@@ -371,12 +382,12 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="featured-mover-chart-empty">
+            <div className="featured-mover-chart-empty" data-scroll-item>
               <p className="empty-state">Chart data is unavailable for this selection.</p>
             </div>
           )}
 
-          <div className="hero-gainer-footer">
+          <div className="hero-gainer-footer" data-scroll-item>
             <div className="hero-gainer-price-block">
               <span className="hero-gainer-price-label">Current price</span>
               <strong className="hero-gainer-price">

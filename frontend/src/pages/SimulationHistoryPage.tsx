@@ -181,7 +181,11 @@ function HistoryCard({
   const isGain = item.baselineGrowthPct >= 0
 
   return (
-    <article className="sim-card">
+    <article
+      className="sim-card"
+      data-scroll-item
+      data-scroll-tone={isGain ? 'positive' : 'negative'}
+    >
       {/* Identity row */}
       <div className="sim-card-top">
         <div className="sim-card-identity">
@@ -396,7 +400,7 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
     <section className="sim-history-page page-section">
 
       {/* Hero header */}
-      <div className="sim-history-hero">
+      <div className="sim-history-hero" data-scroll-reveal="rise">
         <div className="sim-history-hero-left">
           <Link className="forecast-back-link" to="/dashboard">← Dashboard</Link>
           <div className="sim-history-hero-text">
@@ -422,18 +426,18 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
       {clearError ? <p className="sim-history-inline-error">{clearError}</p> : null}
 
       {isLoading ? (
-        <div className="sim-history-state-box">
+        <div className="sim-history-state-box" data-scroll-reveal="fade">
           <p className="sim-history-state-text">Loading history…</p>
         </div>
       ) : error ? (
-        <div className="sim-history-state-box">
+        <div className="sim-history-state-box" data-scroll-reveal="fade" data-scroll-tone="negative">
           <p className="sim-history-state-text sim-history-state-text--error">{error}</p>
           <button className="sim-history-retry-btn" onClick={loadHistory} type="button">
             Try again
           </button>
         </div>
       ) : history.length === 0 ? (
-        <div className="sim-history-state-box sim-history-state-box--empty">
+        <div className="sim-history-state-box sim-history-state-box--empty" data-scroll-reveal="scale">
           <div className="sim-history-empty-icon">📊</div>
           <p className="sim-history-empty-heading">No simulations yet</p>
           <p className="sim-history-empty-sub">
@@ -443,7 +447,7 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
       ) : (
         <>
           {/* Controls */}
-          <div className="sim-history-controls">
+          <div className="sim-history-controls" data-scroll-reveal="fade">
             <input
               className="sim-history-filter"
               onChange={(e) => { setSymbolFilter(e.target.value); setPage(0) }}
@@ -468,7 +472,7 @@ export function SimulationHistoryPage({ token, onUnauthorized }: SimulationHisto
               <p className="sim-history-state-text">No results match your filter.</p>
             </div>
           ) : (
-            <div className="sim-history-list">
+            <div className="sim-history-list" data-scroll-stagger>
               {pageItems.map((item) => (
                 <HistoryCard
                   isDeleting={deletingId === item.simulationId}

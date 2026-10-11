@@ -65,7 +65,11 @@ export function SearchResultCard({
   ].filter(Boolean)
 
   return (
-    <div className={`search-result-card instrument-surface instrument-surface--${tone}`}>
+    <div
+      className={`search-result-card instrument-surface instrument-surface--${tone}`}
+      data-scroll-item
+      data-scroll-tone={tone}
+    >
       {/* Top: identity */}
       <Link
         className="search-result-card-link"

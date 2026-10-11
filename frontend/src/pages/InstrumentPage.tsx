@@ -520,7 +520,7 @@ export function InstrumentPage({
 
   return (
     <section className="instrument-page page-section">
-      <div className="instrument-hero">
+      <div className="instrument-hero" data-scroll-reveal="rise" data-scroll-tone={isPositive ? 'positive' : 'negative'}>
         <div className="instrument-hero-left">
           <Link className="instrument-back-link" to={token ? '/dashboard' : '/'}>
             <span className="instrument-back-arrow">&larr;</span>
@@ -601,7 +601,11 @@ export function InstrumentPage({
       ) : null}
 
       {advisory ? (
-        <div className={`instrument-advisory ${advisory.variant === 'caution' ? 'instrument-advisory--caution' : advisory.variant === 'info' ? 'instrument-advisory--info' : ''}`}>
+        <div
+          className={`instrument-advisory ${advisory.variant === 'caution' ? 'instrument-advisory--caution' : advisory.variant === 'info' ? 'instrument-advisory--info' : ''}`}
+          data-scroll-reveal="fade"
+          data-scroll-tone={advisory.variant === 'caution' ? 'negative' : 'neutral'}
+        >
           <span className="instrument-advisory-icon" aria-hidden="true">{advisory.icon}</span>
           <div className="instrument-advisory-body">
             <span className="instrument-advisory-title">{advisory.title}</span>
@@ -610,7 +614,7 @@ export function InstrumentPage({
         </div>
       ) : null}
 
-      <section className="instrument-alert-card">
+      <section className="instrument-alert-card" data-scroll-reveal="rise" data-scroll-tone="neutral">
         <div className="panel-header">
           <div className="panel-header-copy">
             <p className="section-label">Price alert</p>
@@ -692,7 +696,7 @@ export function InstrumentPage({
         )}
 
         {token && symbolAlerts.length > 0 ? (
-          <div className="instrument-existing-alerts">
+          <div className="instrument-existing-alerts" data-scroll-stagger>
             <div className="panel-header-copy">
               <p className="section-label">Your alerts for {symbol}</p>
             </div>
@@ -706,7 +710,7 @@ export function InstrumentPage({
                 const isPercentEdit = editState.condition === 'percent_change'
 
                 return (
-                  <article className="instrument-alert-row instrument-alert-row--editing" key={alert.id}>
+                  <article className="instrument-alert-row instrument-alert-row--editing" data-scroll-item key={alert.id}>
                     <div className="alert-edit-form">
                       <label className="alert-edit-field">
                         <span className="alert-edit-label">Condition</span>
@@ -769,7 +773,7 @@ export function InstrumentPage({
               }
 
               return (
-                <article className="instrument-alert-row" key={alert.id}>
+                <article className="instrument-alert-row" data-scroll-item key={alert.id}>
                   <div className="instrument-alert-row-info">
                     <strong>{formatInstrumentAlertTarget(alert)}</strong>
                     <span className={alertStatusPill(alert)}>{formatAlertStatus(alert)}</span>
@@ -827,8 +831,8 @@ export function InstrumentPage({
       ) : null}
 
       {instrumentDetail && !isLoadingInstrument ? (
-        <div className="instrument-cta-group">
-          <div className="instrument-forecast-cta">
+        <div className="instrument-cta-group" data-scroll-stagger>
+          <div className="instrument-forecast-cta" data-scroll-item data-scroll-tone="positive">
             <div className="instrument-forecast-cta-info">
               <h3 className="instrument-forecast-cta-heading">AI Price Forecast</h3>
               <p className="instrument-forecast-cta-sub">
@@ -846,7 +850,7 @@ export function InstrumentPage({
               <span className="instrument-forecast-cta-lock">Sign in to run forecasts</span>
             )}
           </div>
-          <div className="instrument-forecast-cta instrument-forecast-cta--simulator">
+          <div className="instrument-forecast-cta instrument-forecast-cta--simulator" data-scroll-item data-scroll-tone="dual">
             <div className="instrument-forecast-cta-info">
               <h3 className="instrument-forecast-cta-heading">Investment Simulator</h3>
               <p className="instrument-forecast-cta-sub">

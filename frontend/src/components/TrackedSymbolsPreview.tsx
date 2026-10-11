@@ -30,6 +30,8 @@ export function TrackedSymbolsPreview({
       className={`tracked-symbols-preview tracked-symbols-preview--${variant}${
         isEmpty ? ' tracked-symbols-preview--empty' : ''
       }`}
+      data-scroll-reveal="rise"
+      data-scroll-tone="neutral"
     >
       <div className="panel-header">
         <div className="panel-header-copy">
@@ -84,7 +86,7 @@ export function TrackedSymbolsPreview({
       ) : null}
 
       {previewSymbols.length > 0 ? (
-        <div className="tracked-symbols-preview-list">
+        <div className="tracked-symbols-preview-list" data-scroll-stagger>
           {previewSymbols.map((item) => (
             <TrackedSymbolCard item={item} key={item.id} />
           ))}

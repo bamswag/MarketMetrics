@@ -65,16 +65,16 @@ export function ResetPasswordPage({ onResetPassword }: ResetPasswordPageProps) {
   return (
     <section className="auth-page page-section">
       <div className="auth-layout login-layout login-layout--single">
-        <article className="auth-panel login-panel login-panel--full">
+        <article className="auth-panel login-panel login-panel--full" data-scroll-reveal="scale" data-scroll-tone="neutral">
           <div className="login-auth-card">
             <div className="login-auth-card-grid">
-              <div className="login-card-copy">
-                <p className="section-label">Reset password</p>
-                <h1 className="login-card-title">Choose a fresh password and get back in.</h1>
-                <p className="login-card-intro">
+              <div className="login-card-copy" data-scroll-stagger>
+                <p className="section-label" data-scroll-item>Reset password</p>
+                <h1 className="login-card-title" data-scroll-item>Choose a fresh password and get back in.</h1>
+                <p className="login-card-intro" data-scroll-item>
                   This link updates the password on your MarketMetrics account and invalidates older sessions.
                 </p>
-                <p className="auth-caption login-panel-caption">
+                <p className="auth-caption login-panel-caption" data-scroll-item>
                   Need a new link?{' '}
                   <Link className="auth-switch-link" to="/forgot-password">
                     Request another reset email

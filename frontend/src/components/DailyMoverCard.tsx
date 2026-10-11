@@ -55,7 +55,11 @@ export function DailyMoverCard({
   const activeCategories = visibleCategories.filter(({ key }) => itemsByCategory[key].length > 0)
 
   return (
-    <article className={`daily-mover-card mover-group mover-group--${tone} ${className}`.trim()}>
+    <article
+      className={`daily-mover-card mover-group mover-group--${tone} ${className}`.trim()}
+      data-scroll-reveal="illuminate"
+      data-scroll-tone={tone}
+    >
       {hasCardHeader ? (
         <div
           className={`panel-header daily-mover-card-header${
@@ -79,13 +83,14 @@ export function DailyMoverCard({
 
       <div
         className="mover-category-columns"
+        data-scroll-stagger
         style={{ gridTemplateColumns: `repeat(${activeCategories.length}, minmax(0, 1fr))` }}
       >
         {activeCategories.map(({ key, label }) => {
           const items = itemsByCategory[key]
 
           return (
-            <div className="mover-category-column" key={key}>
+            <div className="mover-category-column" data-scroll-item key={key}>
               <div className="mover-category-header">
                 <span className="mover-category-badge">
                   {label}
@@ -93,7 +98,7 @@ export function DailyMoverCard({
                 </span>
               </div>
 
-              <div className="mover-card-list">
+              <div className="mover-card-list" data-scroll-stagger>
                 {items.map((item) => (
                   <MoverSparklineCard item={item} key={item.symbol} tone={tone} />
                 ))}

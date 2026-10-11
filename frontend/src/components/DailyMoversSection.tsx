@@ -120,7 +120,11 @@ export function DailyMoversSection({
     : 'Ranked by the sharpest daily move percentage drops so you can compare the weakest names across stocks, crypto, and ETFs.'
 
   return (
-    <section className={sectionClassName}>
+    <section
+      className={sectionClassName}
+      data-scroll-reveal="fade"
+      data-scroll-tone="neutral"
+    >
       {error ? <p className="error-text">{error}</p> : null}
       {isLoading && !movers ? (
         <p className="empty-state">
@@ -134,15 +138,24 @@ export function DailyMoversSection({
 
       {movers ? (
         <>
-          <div className="daily-movers-columns">
-            <section className="daily-mover-panel daily-mover-panel--positive">
-              <div className="daily-mover-panel-header">
-                <div className="daily-mover-panel-copy">
+          <div className="daily-movers-columns" data-scroll-stagger>
+            <section
+              className="daily-mover-panel daily-mover-panel--positive"
+              data-scroll-item
+              data-scroll-reveal="rise"
+              data-scroll-tone="positive"
+            >
+              <div className="daily-mover-panel-header" data-scroll-stagger>
+                <div className="daily-mover-panel-copy" data-scroll-item>
                   <p className="section-label">Top 3 gainers</p>
                   <p className="daily-mover-card-description">{gainersDescription}</p>
                 </div>
 
-                {categoryTag ? <span className="panel-tag daily-mover-card-tag">{categoryTag}</span> : null}
+                {categoryTag ? (
+                  <span className="panel-tag daily-mover-card-tag" data-scroll-item>
+                    {categoryTag}
+                  </span>
+                ) : null}
               </div>
 
               <DailyMoverCard
@@ -160,19 +173,28 @@ export function DailyMoversSection({
             </section>
 
             {betweenPanels ? (
-              <div className="daily-movers-between">
+              <div className="daily-movers-between" data-scroll-item>
                 {betweenPanels}
               </div>
             ) : null}
 
-            <section className="daily-mover-panel daily-mover-panel--negative">
-              <div className="daily-mover-panel-header">
-                <div className="daily-mover-panel-copy">
+            <section
+              className="daily-mover-panel daily-mover-panel--negative"
+              data-scroll-item
+              data-scroll-reveal="rise"
+              data-scroll-tone="negative"
+            >
+              <div className="daily-mover-panel-header" data-scroll-stagger>
+                <div className="daily-mover-panel-copy" data-scroll-item>
                   <p className="section-label">Bottom 3 losers</p>
                   <p className="daily-mover-card-description">{losersDescription}</p>
                 </div>
 
-                {categoryTag ? <span className="panel-tag daily-mover-card-tag">{categoryTag}</span> : null}
+                {categoryTag ? (
+                  <span className="panel-tag daily-mover-card-tag" data-scroll-item>
+                    {categoryTag}
+                  </span>
+                ) : null}
               </div>
 
               <DailyMoverCard
@@ -190,7 +212,11 @@ export function DailyMoversSection({
             </section>
           </div>
           {variant === 'landing' ? (
-            <p className="movers-guest-cta">
+            <p
+              className="movers-guest-cta"
+              data-scroll-reveal="rise"
+              data-scroll-tone="neutral"
+            >
               <Link className="movers-guest-cta-link" to="/signup">Create a free account</Link>
               {' '}to track these symbols and get notified when they hit a price you set.
             </p>

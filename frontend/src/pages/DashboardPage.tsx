@@ -73,7 +73,11 @@ export function DashboardPage({
         riskProfile={riskProfile}
       />
 
-      <section className="dashboard-hero-followup page-section">
+      <section
+        className="dashboard-hero-followup page-section"
+        data-scroll-reveal="rise"
+        data-scroll-tone="neutral"
+      >
         <TrackedSymbolsPreview
           isLoading={isLoadingDashboard}
           trackedSymbols={watchlist}
@@ -84,7 +88,7 @@ export function DashboardPage({
 
       {dashboardError ? <p className="error-text">{dashboardError}</p> : null}
 
-      <section className="dashboard-main-stack page-section">
+      <section className="dashboard-main-stack page-section" data-scroll-stagger>
         <DailyMoversSection
           betweenPanels={(
             <>
@@ -98,7 +102,7 @@ export function DashboardPage({
           variant="dashboard"
         />
 
-        <div className="dashboard-insight-row">
+        <div className="dashboard-insight-row" data-scroll-reveal="rise" data-scroll-tone="dual">
           <InsightCard id="mae" />
           <InsightCard id="monte-carlo" />
         </div>
@@ -120,7 +124,7 @@ export function DashboardPage({
           token={token}
         />
 
-        <div className="dashboard-bottom-insight">
+        <div className="dashboard-bottom-insight" data-scroll-reveal="fade">
           <InsightCard id="not-financial-advice" />
         </div>
       </section>

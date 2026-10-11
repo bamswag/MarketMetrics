@@ -36,8 +36,7 @@
 .profile-summary-panel {
   background:
     radial-gradient(circle at top left, rgb(from var(--brand-green) r g b / 0.16), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 252, 0.96)),
-    var(--panel-bg);
+    var(--surface-card);
 }
 
 .profile-side-panel {
@@ -374,10 +373,8 @@
   padding: 20px;
   border-radius: 22px;
   border: 1px solid var(--panel-border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 248, 252, 0.94)),
-    rgba(255, 255, 255, 0.92);
-  box-shadow: 0 12px 24px rgba(13, 27, 45, 0.04);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
 }
 
 .settings-preference-card--wide {

@@ -385,7 +385,13 @@ export function InstrumentChartCard({
 
       {chartData.length > 0 ? (
         <div className="instrument-chart-frame">
-          <ResponsiveContainer height={380} width="100%">
+          <ResponsiveContainer
+            height={380}
+            initialDimension={{ width: 1, height: 380 }}
+            minHeight={0}
+            minWidth={0}
+            width="100%"
+          >
             <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="chartLine" x1="0" x2="1" y1="0" y2="0">

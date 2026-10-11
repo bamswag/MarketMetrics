@@ -131,17 +131,17 @@ const METRIC_STRIPS = [
 export function GuidesPage() {
   return (
     <main className="guides-page">
-      <section className="guides-hero page-section">
-        <div className="guides-hero-copy">
-          <p className="section-label">MarketMetrics Guide</p>
-          <h1>Learn the ideas behind every chart, forecast, and alert.</h1>
-          <p>
+      <section className="guides-hero page-section" data-scroll-reveal="rise" data-scroll-tone="dual">
+        <div className="guides-hero-copy" data-scroll-stagger>
+          <p className="section-label" data-scroll-item>MarketMetrics Guide</p>
+          <h1 data-scroll-item>Learn the ideas behind every chart, forecast, and alert.</h1>
+          <p data-scroll-item>
             Guides gives you plain-language explanations for investment concepts, performance
             metrics, and the MarketMetrics tools you use to read market behavior.
           </p>
         </div>
 
-        <aside className="guides-hero-panel" aria-label="Guide highlights">
+        <aside className="guides-hero-panel" aria-label="Guide highlights" data-scroll-reveal="scale" data-scroll-tone="positive">
           <div className="guides-hero-panel-head">
             <span>Beginner path</span>
             <strong>Read in order or jump around</strong>
@@ -161,9 +161,9 @@ export function GuidesPage() {
         </aside>
       </section>
 
-      <section className="guides-categories page-section" aria-label="Guide categories">
+      <section className="guides-categories page-section" aria-label="Guide categories" data-scroll-stagger>
         {CATEGORY_CARDS.map((category) => (
-          <a className="guides-category-card" href={category.href} key={category.href}>
+          <a className="guides-category-card" href={category.href} key={category.href} data-scroll-item>
             <span>{category.label}</span>
             <h2>{category.title}</h2>
             <p>{category.description}</p>
@@ -177,6 +177,8 @@ export function GuidesPage() {
             className={`guides-article${index % 2 === 1 ? ' guides-article--reverse' : ''}`}
             id={section.id}
             key={section.id}
+            data-scroll-reveal={index % 2 === 1 ? 'slide-left' : 'slide-right'}
+            data-scroll-tone="neutral"
           >
             <div className="guides-article-copy">
               <p className="section-label">{section.kicker}</p>
@@ -200,7 +202,7 @@ export function GuidesPage() {
         ))}
       </section>
 
-      <section className="guides-footer-cta page-section">
+      <section className="guides-footer-cta page-section" data-scroll-reveal="illuminate" data-scroll-tone="dual">
         <div>
           <p className="section-label">Keep exploring</p>
           <h2>Use guides beside the tools, not instead of them.</h2>

@@ -46,6 +46,8 @@ export function TrackedSymbolCard({
   return (
     <article
       className={`tracked-symbol-card tracked-symbol-card--${variant} instrument-surface instrument-surface--${tone}`}
+      data-scroll-item
+      data-scroll-tone={tone}
     >
       <Link
         className="tracked-symbol-card-link"

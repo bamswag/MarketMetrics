@@ -233,7 +233,7 @@ export function SearchResultsPage({
 
   function renderGrid(items: CompanySearchResult[]) {
     return (
-      <div className="search-results-grid">
+      <div className="search-results-grid" data-scroll-stagger>
         {items.map((result) => (
           <SearchResultCard
             isAddingWatchlist={addingSymbol === result.symbol}
@@ -259,13 +259,13 @@ export function SearchResultsPage({
     if (sections.length === 0) return null
 
     return (
-      <div className="search-results-sections">
+      <div className="search-results-sections" data-scroll-stagger>
         {sections.map((section) => {
           const preview = section.items.slice(0, PAGE_SIZE)
           const hasMoreInSection = section.items.length > PAGE_SIZE
           const catKey = section.key as CategoryFilter
           return (
-            <div className="search-results-section" key={section.key}>
+            <div className="search-results-section" data-scroll-item key={section.key}>
               <div className="search-results-section-header">
                 <h2 className="search-results-section-title">
                   {section.label}
@@ -293,7 +293,7 @@ export function SearchResultsPage({
     <div className="search-results-shell">
       {/* Sticky header — tabs only; search input lives in the AppHeader */}
       <div className="search-results-header">
-        <div className="search-results-header-inner page-section">
+        <div className="search-results-header-inner page-section" data-scroll-reveal="fade">
           {/* Category tabs */}
           <div className="search-results-tabs" role="tablist">
             {TABS.filter((t) => t.key === 'all' || counts[t.key] > 0).map((tab) => (
@@ -322,7 +322,7 @@ export function SearchResultsPage({
         )}
 
         {!isLoading && !error && allResults.length === 0 && (
-          <div className="search-results-empty">
+          <div className="search-results-empty" data-scroll-reveal="scale">
             <p className="search-results-empty-icon" aria-hidden="true">⌕</p>
             <p className="search-results-empty-title">No results for "{query}"</p>
             <p className="search-results-empty-sub">
@@ -359,9 +359,9 @@ export function SearchResultsPage({
                 </div>
               </div>
             </div>
-            <div className="search-results-grid">
+            <div className="search-results-grid" data-scroll-stagger>
               {Array.from({ length: 6 }).map((_, i) => (
-                <div className="search-result-card search-result-card--skeleton" key={i}>
+                <div className="search-result-card search-result-card--skeleton" data-scroll-item key={i}>
                   <div className="search-result-skeleton search-result-skeleton--logo" />
                   <div className="search-result-skeleton search-result-skeleton--title" />
                   <div className="search-result-skeleton search-result-skeleton--meta" />

@@ -68,7 +68,7 @@ export function AdminAuditLogsPage({ token }: AdminAuditLogsPageProps) {
 
   return (
     <section className="admin-page page-section">
-      <div className="admin-page-header">
+      <div className="admin-page-header" data-scroll-reveal="fade">
         <h1 className="admin-page-title">Audit Logs</h1>
         <span className="admin-badge">Admin</span>
       </div>
@@ -77,7 +77,7 @@ export function AdminAuditLogsPage({ token }: AdminAuditLogsPageProps) {
         <div className="admin-status-bar admin-status-bar--error">{pageError}</div>
       ) : null}
 
-      <div className="admin-toolbar">
+      <div className="admin-toolbar" data-scroll-reveal="fade">
         <input
           className="admin-search-input"
           onChange={(e) => setSearchInput(e.target.value)}
@@ -104,7 +104,7 @@ export function AdminAuditLogsPage({ token }: AdminAuditLogsPageProps) {
         ) : null}
       </div>
 
-      <div className="admin-table-card">
+      <div className="admin-table-card" data-scroll-reveal="rise" data-scroll-tone="neutral">
         {isLoading ? (
           <p className="admin-loading">Loading audit logs...</p>
         ) : logs.length === 0 ? (

@@ -180,7 +180,11 @@ export function TopResultCard({
   ].filter(Boolean)
 
   return (
-    <div className={`top-result-card instrument-surface instrument-surface--${tone}`}>
+    <div
+      className={`top-result-card instrument-surface instrument-surface--${tone}`}
+      data-scroll-reveal="illuminate"
+      data-scroll-tone={tone}
+    >
       <div className="top-result-eyebrow">
         <span className="top-result-badge">Top Result</span>
       </div>
@@ -247,9 +251,15 @@ export function TopResultCard({
           )}
 
           {!detailLoading && hasChart && (
-            <div className="top-result-chart-shell">
+            <div className="top-result-chart-shell" data-scroll-reveal="chart">
               <div className="top-result-chart">
-                <ResponsiveContainer height={132} width="100%">
+                <ResponsiveContainer
+                  height={132}
+                  initialDimension={{ width: 1, height: 132 }}
+                  minHeight={0}
+                  minWidth={0}
+                  width="100%"
+                >
                   <AreaChart
                     data={chartData}
                     margin={{ top: 10, right: 4, bottom: 0, left: 0 }}

@@ -173,7 +173,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
 
   return (
     <section className="admin-page page-section">
-      <div className="admin-page-header">
+      <div className="admin-page-header" data-scroll-reveal="fade">
         <div>
           <h1 className="admin-page-title">Users</h1>
           <span className="admin-badge">Admin</span>
@@ -193,7 +193,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
         <div className="admin-status-bar admin-status-bar--error">{pageError}</div>
       ) : null}
 
-      <div className="admin-toolbar">
+      <div className="admin-toolbar" data-scroll-reveal="fade">
         <input
           className="admin-search-input"
           onChange={(e) => setSearchInput(e.target.value)}
@@ -216,7 +216,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
         ) : null}
       </div>
 
-      <div className="admin-table-card">
+      <div className="admin-table-card" data-scroll-reveal="rise" data-scroll-tone="neutral">
         {isLoading ? (
           <p className="admin-loading">Loading users...</p>
         ) : users.length === 0 ? (
@@ -463,7 +463,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
       {/* Confirmation modal */}
       {confirmAction ? (
         <div className="admin-modal-overlay" role="dialog" aria-modal="true">
-          <div className="admin-modal">
+          <div className="admin-modal" data-scroll-reveal="scale" data-scroll-tone={confirmAction.variant === 'danger' ? 'negative' : 'neutral'}>
             <h2 className="admin-modal-title">{confirmAction.label}</h2>
             <p className="admin-modal-body">{confirmAction.description}</p>
             <div className="admin-modal-actions">
@@ -493,7 +493,7 @@ export function AdminUsersPage({ token }: AdminUsersPageProps) {
 
       {/* Detail / edit panel */}
       {selectedUser ? (
-        <div className="admin-detail-panel" role="complementary" aria-label="User details">
+        <div className="admin-detail-panel" role="complementary" aria-label="User details" data-scroll-reveal="slide-left" data-scroll-tone="neutral">
           <div className="admin-detail-header">
             <h2>User details</h2>
             <button

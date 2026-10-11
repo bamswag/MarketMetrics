@@ -124,9 +124,9 @@
 }
 
 .forecast-horizon-btn.is-active {
-  background: var(--text-main);
-  border-color: var(--text-main);
-  color: var(--text-inverse);
+  background: var(--brand-green);
+  border-color: var(--green-border-strong);
+  color: #fff;
 }
 
 /* ── Verdict (plain-language summary) card ── */
@@ -229,8 +229,8 @@
 }
 
 .forecast-confidence-meter--low .forecast-confidence-segment.is-active {
-  background: var(--red-surface-border);
-  color: var(--red-muted-text);
+  background: var(--state-negative-surface);
+  color: var(--negative-foreground);
 }
 
 .forecast-confidence-meter--medium .forecast-confidence-segment.is-active {
@@ -499,8 +499,12 @@
 }
 
 .forecast-metric-tile--low-confidence {
-  background: var(--red-surface-muted);
-  border-color: rgba(124, 95, 81, 0.16);
+  background: var(--state-negative-surface);
+  border-color: rgb(from var(--brand-red) r g b / 0.32);
+}
+
+.forecast-metric-tile--low-confidence :where(.forecast-metric-label, .forecast-metric-value) {
+  color: var(--negative-foreground);
 }
 
 .forecast-metric-label {

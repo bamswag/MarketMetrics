@@ -203,7 +203,11 @@ export function AlertsPanel({
   const showBulkSelector = Boolean(onBulkAction && alerts && alerts.totalCount > 0)
 
   return (
-    <article className="panel panel-wide alerts-panel">
+    <article
+      className="panel panel-wide alerts-panel"
+      data-scroll-reveal="rise"
+      data-scroll-tone="neutral"
+    >
       <div className="panel-header">
         <div className="panel-header-copy">
           <p className="section-label">Alerts and activity</p>
@@ -214,25 +218,25 @@ export function AlertsPanel({
         </span>
       </div>
 
-      <div className="alerts-summary-grid">
-        <div className="metric-card alerts-summary-card">
+      <div className="alerts-summary-grid" data-scroll-stagger>
+        <div className="metric-card alerts-summary-card" data-scroll-item data-scroll-tone="positive">
           <span className="metric-label">Active rules</span>
           <strong className="metric-value">{alerts?.activeCount ?? '--'}</strong>
           <p>Watching live thresholds.</p>
         </div>
-        <div className="metric-card alerts-summary-card">
+        <div className="metric-card alerts-summary-card" data-scroll-item>
           <span className="metric-label">Paused</span>
           <strong className="metric-value">{alerts?.pausedCount ?? '--'}</strong>
           <p>Temporarily silenced.</p>
         </div>
-        <div className="metric-card alerts-summary-card">
+        <div className="metric-card alerts-summary-card" data-scroll-item data-scroll-tone="positive">
           <span className="metric-label">Triggered events</span>
           <strong className="metric-value">{alerts?.triggeredCount ?? '--'}</strong>
           <p>Ready to reset or review.</p>
         </div>
       </div>
 
-      <div className="alerts-notification-banner">
+      <div className="alerts-notification-banner" data-scroll-reveal="fade">
         <div className="alerts-notification-copy">
           <p className="section-label">Notifications</p>
           <div className="alerts-notification-main">
@@ -288,8 +292,8 @@ export function AlertsPanel({
       {isLoading && !alerts ? (
         <p className="empty-state">Loading active and triggered alerts...</p>
       ) : (
-        <div className="alerts-columns">
-          <div className="alerts-column">
+        <div className="alerts-columns" data-scroll-stagger>
+          <div className="alerts-column" data-scroll-item>
             <div className="panel-header-copy alerts-group-header">
               <p className="section-label">Active</p>
               <h3 className="subsection-title">Armed rules</h3>
@@ -378,7 +382,7 @@ export function AlertsPanel({
 
           </div>
 
-          <div className="alerts-column">
+          <div className="alerts-column" data-scroll-item data-scroll-tone="positive">
             <div className="panel-header-copy alerts-group-header">
               <p className="section-label">Triggered</p>
               <h3 className="subsection-title">Recent signals</h3>
@@ -447,7 +451,7 @@ export function AlertsPanel({
             )}
           </div>
 
-          <div className="alerts-column">
+          <div className="alerts-column" data-scroll-item>
             <div className="panel-header-copy alerts-group-header alerts-paused-header">
               <p className="section-label">Paused</p>
               <h3 className="subsection-title">Silenced rules</h3>

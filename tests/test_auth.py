@@ -1,8 +1,9 @@
 import os
+import hashlib
 import tempfile
 import unittest
 from datetime import date, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from fastapi.testclient import TestClient
@@ -18,6 +19,8 @@ from app.core.database import Base
 from app.core.db_dependencies import get_db
 from app.main import app
 from app.orm_models.user import UserDB
+from app.orm_models.google_oauth_state import GoogleOAuthStateDB
+from app.services.auth import GoogleAuthError, consume_google_oauth_state
 from app.services import market_overview as market_overview_service
 from app.services import price_history as price_history_service
 from app.services import quotes as quotes_service
@@ -282,6 +285,7 @@ class AuthTests(BaseAPITestCase):
             "https://accounts.google.com/o/oauth2/v2/auth?client_id=test",
         )
         mock_build_google_url.assert_called_once_with(
+            ANY,
             "/",
             intent="login",
             accepted_terms=False,
@@ -290,12 +294,10 @@ class AuthTests(BaseAPITestCase):
         )
 
     @patch("app.services.auth.send_signup_verification_email", return_value=True)
-    @patch("app.services.auth._generate_one_time_token", return_value="google-signup-token")
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
-    def test_google_callback_creates_unverified_user_and_redirects_with_token(
+    def test_google_login_callback_creates_verified_user_and_redirects_with_token(
         self,
         mock_exchange_google_code,
-        _mock_token,
         mock_send_signup_verification_email,
     ):
         mock_exchange_google_code.return_value = (
@@ -304,7 +306,7 @@ class AuthTests(BaseAPITestCase):
                 "name": "Google User",
                 "sub": "google-sub-1",
             },
-            {"returnTo": "/", "intent": "signup", "acceptedTerms": True},
+            {"returnTo": "/", "intent": "login", "acceptedTerms": True},
         )
 
         response = self.client.get(
@@ -322,11 +324,12 @@ class AuthTests(BaseAPITestCase):
         self.assertTrue(fragment_params.get("token"))
         self.assertEqual(
             fragment_params.get("authSuccess"),
-            ["Account created and signed in. Check your email to verify your account."],
+            ["Account created and signed in with Google."],
         )
         mock_exchange_google_code.assert_awaited_once_with(
             "google-code",
             "signed-state",
+            ANY,
             request_origin="http://testserver",
         )
 
@@ -337,14 +340,12 @@ class AuthTests(BaseAPITestCase):
             self.assertEqual(user.primaryAuthProvider, "google")
             self.assertFalse(user.passwordAuthEnabled)
             self.assertEqual(user.googleSubject, "google-sub-1")
-            self.assertIsNone(user.emailVerifiedAt)
-            self.assertIsNotNone(user.signupVerificationTokenHash)
-            self.assertIsNotNone(user.signupVerificationTokenExpiresAt)
-        mock_send_signup_verification_email.assert_called_once_with(
-            "googleuser@example.com",
-            "Google User",
-            f"{settings.frontend_base_url.rstrip('/')}/verify-email/google-signup-token",
-        )
+            self.assertIsNotNone(user.emailVerifiedAt)
+            self.assertIsNone(user.signupVerificationTokenHash)
+            self.assertIsNone(user.signupVerificationTokenExpiresAt)
+            self.assertFalse(user.isAdmin)
+            self.assertTrue(user.isActive)
+        mock_send_signup_verification_email.assert_not_called()
 
     @patch("app.services.auth.send_signup_verification_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
@@ -368,13 +369,13 @@ class AuthTests(BaseAPITestCase):
             follow_redirects=False,
         )
         self.assertEqual(first_response.status_code, 307)
-        mock_send_signup_verification_email.assert_called_once()
+        mock_send_signup_verification_email.assert_not_called()
         mock_send_signup_verification_email.reset_mock()
 
         with self.TestingSessionLocal() as db:
             first_user = db.query(UserDB).filter_by(email="returning-google@example.com").first()
             self.assertIsNotNone(first_user)
-            self.assertIsNone(first_user.emailVerifiedAt)
+            self.assertIsNotNone(first_user.emailVerifiedAt)
 
         mock_exchange_google_code.return_value = (
             {
@@ -397,7 +398,7 @@ class AuthTests(BaseAPITestCase):
         with self.TestingSessionLocal() as db:
             returning_user = db.query(UserDB).filter_by(email="returning-google@example.com").first()
             self.assertIsNotNone(returning_user)
-            self.assertIsNone(returning_user.emailVerifiedAt)
+            self.assertIsNotNone(returning_user.emailVerifiedAt)
 
     @patch("app.services.auth.send_signup_verification_email", return_value=True)
     @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
@@ -447,6 +448,89 @@ class AuthTests(BaseAPITestCase):
             headers=self.auth_headers(token),
         )
         self.assertEqual(change_response.status_code, 200)
+
+    @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
+    def test_google_callback_rejects_inactive_google_account(self, mock_exchange_google_code):
+        with self.TestingSessionLocal() as db:
+            db.add(
+                UserDB(
+                    userID="inactive-google-user",
+                    email="inactive-google@example.com",
+                    passwordHash=hash_password(TEST_PASSWORD),
+                    displayName="Inactive Google",
+                    primaryAuthProvider="google",
+                    passwordAuthEnabled=False,
+                    googleSubject="inactive-google-subject",
+                    emailVerifiedAt=datetime.utcnow(),
+                    sessionVersion=1,
+                    isAdmin=False,
+                    isActive=False,
+                    createdAt=datetime.utcnow(),
+                ),
+            )
+            db.commit()
+
+        mock_exchange_google_code.return_value = (
+            {
+                "email": "inactive-google@example.com",
+                "name": "Inactive Google",
+                "sub": "inactive-google-subject",
+            },
+            {"returnTo": "/dashboard", "intent": "login", "acceptedTerms": True},
+        )
+
+        response = self.client.get(
+            "/auth/google/callback",
+            params={"code": "google-code", "state": "signed-state"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 307)
+        parsed_redirect = urlparse(response.headers["location"])
+        self.assertEqual(parsed_redirect.path, "/login")
+        self.assertIn("currently unavailable", parse_qs(parsed_redirect.fragment)["authError"][0])
+
+    @patch("app.api.routes.auth.exchange_google_code_for_userinfo", new_callable=AsyncMock)
+    def test_google_callback_requires_terms_before_automatic_creation(
+        self,
+        mock_exchange_google_code,
+    ):
+        mock_exchange_google_code.return_value = (
+            {
+                "email": "no-terms-google@example.com",
+                "name": "No Terms",
+                "sub": "no-terms-google-subject",
+            },
+            {"returnTo": "/dashboard", "intent": "login", "acceptedTerms": False},
+        )
+
+        response = self.client.get(
+            "/auth/google/callback",
+            params={"code": "google-code", "state": "signed-state"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 307)
+        parsed_redirect = urlparse(response.headers["location"])
+        self.assertEqual(parsed_redirect.path, "/login")
+        self.assertIn("Terms", parse_qs(parsed_redirect.fragment)["authError"][0])
+        with self.TestingSessionLocal() as db:
+            self.assertIsNone(db.query(UserDB).filter_by(email="no-terms-google@example.com").first())
+
+    def test_google_oauth_state_can_only_be_consumed_once(self):
+        nonce = "single-use-google-oauth-state"
+        with self.TestingSessionLocal() as db:
+            db.add(
+                GoogleOAuthStateDB(
+                    nonceHash=hashlib.sha256(nonce.encode("utf-8")).hexdigest(),
+                    expiresAt=datetime.utcnow() + timedelta(minutes=5),
+                    createdAt=datetime.utcnow(),
+                ),
+            )
+            db.commit()
+            consume_google_oauth_state(db, {"nonce": nonce})
+            with self.assertRaisesRegex(GoogleAuthError, "already used"):
+                consume_google_oauth_state(db, {"nonce": nonce})
 
     def test_protected_route_requires_valid_token(self):
         token = self.register_and_login()
@@ -815,3 +899,23 @@ class AuthTests(BaseAPITestCase):
 
         expired_token_response = self.client.get("/auth/me", headers=self.auth_headers(token))
         self.assertEqual(expired_token_response.status_code, 401)
+
+    def test_inactive_account_cannot_login_or_use_existing_token(self):
+        token = self.register_and_login(email="inactive-password@example.com")
+        with self.TestingSessionLocal() as db:
+            user = db.query(UserDB).filter_by(email="inactive-password@example.com").first()
+            self.assertIsNotNone(user)
+            user.isActive = False
+            db.commit()
+
+        login_response = self.client.post(
+            "/auth/login",
+            data={"username": "inactive-password@example.com", "password": TEST_PASSWORD},
+        )
+        self.assertEqual(login_response.status_code, 401)
+
+        authenticated_response = self.client.get(
+            "/auth/me",
+            headers=self.auth_headers(token),
+        )
+        self.assertEqual(authenticated_response.status_code, 403)

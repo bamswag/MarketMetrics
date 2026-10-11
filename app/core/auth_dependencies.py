@@ -26,6 +26,8 @@ def get_current_user(
         user = get_user_by_id(db, user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
+        if not user.isActive:
+            raise HTTPException(status_code=403, detail="Account is unavailable")
         if int(user.sessionVersion or 1) != int(session_version):
             raise HTTPException(status_code=401, detail="Session expired")
 
@@ -53,6 +55,8 @@ def get_optional_current_user(
             return None
         user = get_user_by_id(db, user_id)
         if user is None:
+            return None
+        if not user.isActive:
             return None
         if int(user.sessionVersion or 1) != int(session_version):
             return None

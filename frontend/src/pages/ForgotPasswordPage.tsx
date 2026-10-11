@@ -46,17 +46,17 @@ export function ForgotPasswordPage({ onRequestReset }: ForgotPasswordPageProps) 
   return (
     <section className="auth-page page-section">
       <div className="auth-layout login-layout login-layout--single">
-        <article className="auth-panel login-panel login-panel--full">
+        <article className="auth-panel login-panel login-panel--full" data-scroll-reveal="scale" data-scroll-tone="neutral">
           <div className="login-auth-card">
             <div className="login-auth-card-grid">
-              <div className="login-card-copy">
-                <p className="section-label">Account recovery</p>
-                <h1 className="login-card-title">Recover access without starting over.</h1>
-                <p className="login-card-intro">
+              <div className="login-card-copy" data-scroll-stagger>
+                <p className="section-label" data-scroll-item>Account recovery</p>
+                <h1 className="login-card-title" data-scroll-item>Recover access without starting over.</h1>
+                <p className="login-card-intro" data-scroll-item>
                   Enter the email tied to your MarketMetrics account and we&apos;ll send a reset
                   link if it exists.
                 </p>
-                <p className="auth-caption login-panel-caption">
+                <p className="auth-caption login-panel-caption" data-scroll-item>
                   Remembered it?{' '}
                   <Link className="auth-switch-link" to="/login">
                     Back to login

@@ -11,7 +11,12 @@ type AppHeaderProps = {
 export function AppHeader({ center, actions, bannerMessage, className }: AppHeaderProps) {
   return (
     <div className={className ? `top-shell ${className}` : 'top-shell'}>
-      <header className="top-bar">
+      <header
+        className="top-bar"
+        data-scroll-reveal="fade"
+        data-scroll-stagger
+        data-theme-glare={className === 'top-shell--landing' ? '' : undefined}
+      >
         <div className="top-brand">
           <Link aria-label="MarketMetrics home" className="top-brand-link" to="/">
             <img
@@ -32,7 +37,11 @@ export function AppHeader({ center, actions, bannerMessage, className }: AppHead
         <div className="top-bar-actions">{actions}</div>
       </header>
 
-      {bannerMessage ? <p className="success-text top-banner">{bannerMessage}</p> : null}
+      {bannerMessage ? (
+        <p className="success-text top-banner" data-scroll-reveal="fade" data-scroll-tone="positive">
+          {bannerMessage}
+        </p>
+      ) : null}
     </div>
   )
 }

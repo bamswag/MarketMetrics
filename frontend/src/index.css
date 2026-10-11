@@ -6,6 +6,22 @@
   --brand-green: #14532d;
   --brand-red: #800000;
 
+  /* Shared motion vocabulary for the scroll-driven interface. */
+  --motion-duration-fast: 180ms;
+  --motion-duration-medium: 520ms;
+  --motion-duration-slow: 780ms;
+  --motion-duration-cinematic: 1100ms;
+  --motion-delay-short: 70ms;
+  --motion-delay-medium: 140ms;
+  --motion-stagger-step: 76ms;
+  --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.28, 0.64, 1);
+  --scroll-reveal-distance: 28px;
+  --scroll-reveal-side-distance: 34px;
+  --scroll-reveal-scale: 0.975;
+
   /* Forest-green palette, mixed without channel clipping. */
   --green-nav-dark: color-mix(in srgb, var(--brand-green) 84%, black);
   --green-admin-dark: color-mix(in srgb, var(--brand-green) 88%, black);
@@ -89,6 +105,17 @@
   --surface-card: var(--surface-background);
   --surface-card-strong: var(--surface-background-strong);
   --surface-quiet: var(--soft-bg);
+  --surface-positive-tint:
+    linear-gradient(145deg, rgb(from var(--brand-green) r g b / 0.16), transparent 58%),
+    var(--surface-background);
+  --surface-negative-tint:
+    linear-gradient(145deg, rgb(from var(--brand-red) r g b / 0.18), transparent 58%),
+    var(--surface-background);
+  --state-positive-surface: rgb(from var(--brand-green) r g b / 0.18);
+  --state-negative-surface: rgb(from var(--brand-red) r g b / 0.2);
+  --chart-surface: rgba(255, 255, 255, 0.045);
+  --skeleton-base: rgba(255, 255, 255, 0.045);
+  --skeleton-highlight: rgba(255, 255, 255, 0.105);
   --shadow-card: var(--subtle-shadow);
   --shadow-elevated: var(--panel-shadow);
   --radius-control: 14px;
@@ -113,6 +140,16 @@
   --danger-soft: rgb(from var(--red-danger) r g b / 12%);
   --positive-foreground: color-mix(in srgb, var(--brand-green) 45%, white);
   --negative-foreground: color-mix(in srgb, var(--brand-red) 58%, white);
+  --scroll-green-glow: rgb(from var(--brand-green) r g b / 0.38);
+  --scroll-green-soft: rgb(from var(--brand-green) r g b / 0.2);
+  --scroll-green-transparent: rgb(from var(--brand-green) r g b / 0);
+  --scroll-red-glow: rgb(from var(--brand-red) r g b / 0.38);
+  --scroll-red-soft: rgb(from var(--brand-red) r g b / 0.2);
+  --scroll-red-transparent: rgb(from var(--brand-red) r g b / 0);
+  --scroll-neutral-glow: rgba(255, 255, 255, 0.24);
+  --scroll-grid-line: rgba(255, 255, 255, 0.022);
+  --scroll-ambient-opacity: 0.82;
+  --scroll-gradient-opacity: 0.72;
   --badge-bg: rgba(255, 255, 255, 0.09);
   --code-bg: rgba(255, 255, 255, 0.09);
   --page-background:
@@ -131,6 +168,8 @@
   --control-border-hover: rgba(255, 255, 255, 0.32);
   --control-disabled-bg: rgba(255, 255, 255, 0.045);
   --control-disabled-text: #8d949f;
+  --control-text: var(--text-main);
+  --control-hover-bg: rgba(255, 255, 255, 0.13);
   --dark-control-bg:
     linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
     #0a0a0c;
@@ -214,6 +253,14 @@
   --success: var(--brand-green);
   --positive-foreground: var(--brand-green);
   --negative-foreground: var(--brand-red);
+  --scroll-green-glow: rgb(from var(--brand-green) r g b / 0.16);
+  --scroll-green-soft: rgb(from var(--brand-green) r g b / 0.085);
+  --scroll-red-glow: rgb(from var(--brand-red) r g b / 0.14);
+  --scroll-red-soft: rgb(from var(--brand-red) r g b / 0.075);
+  --scroll-neutral-glow: rgba(0, 0, 0, 0.12);
+  --scroll-grid-line: rgba(0, 0, 0, 0.018);
+  --scroll-ambient-opacity: 0.5;
+  --scroll-gradient-opacity: 0.34;
   --badge-bg: rgba(0, 0, 0, 0.065);
   --code-bg: rgba(0, 0, 0, 0.065);
   --page-background:
@@ -226,12 +273,25 @@
   --surface-background-strong:
     linear-gradient(145deg, #ffffff, rgba(235, 237, 241, 0.96)),
     #ffffff;
+  --surface-positive-tint:
+    linear-gradient(145deg, rgb(from var(--brand-green) r g b / 0.09), transparent 62%),
+    var(--surface-background);
+  --surface-negative-tint:
+    linear-gradient(145deg, rgb(from var(--brand-red) r g b / 0.09), transparent 62%),
+    var(--surface-background);
+  --state-positive-surface: rgb(from var(--brand-green) r g b / 0.1);
+  --state-negative-surface: rgb(from var(--brand-red) r g b / 0.1);
+  --chart-surface: rgba(20, 32, 51, 0.035);
+  --skeleton-base: rgba(20, 24, 30, 0.07);
+  --skeleton-highlight: rgba(20, 24, 30, 0.14);
   --input-bg: rgba(0, 0, 0, 0.04);
   --input-bg-hover: rgba(0, 0, 0, 0.065);
   --control-bg: rgba(255, 255, 255, 0.9);
   --control-border-hover: rgba(0, 0, 0, 0.38);
   --control-disabled-bg: rgba(0, 0, 0, 0.055);
   --control-disabled-text: #737983;
+  --control-text: var(--text-main);
+  --control-hover-bg: rgba(0, 0, 0, 0.08);
   --focus-ring: rgba(0, 0, 0, 0.28);
   --surface-glare: rgba(0, 0, 0, 0.68);
   --surface-glare-opacity: 0.5;
@@ -256,12 +316,14 @@
 
 html {
   scroll-behavior: auto;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: clip;
   background: var(--page-background);
   color: var(--text-main);
   transition: background-color 220ms ease, color 220ms ease;
