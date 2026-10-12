@@ -23,6 +23,8 @@ from app.schemas.movers import (
     MoversResponse,
     MoverSparklinePoint,
 )
+from app.schemas.instruments import ChartReadinessMetadata
+from app.services.chart_readiness import classify_history_readiness
 from app.services.price_history import get_daily_close_series_cached
 from app.services.search import (
     get_dynamic_mover_universe_symbols_by_category,
@@ -33,7 +35,6 @@ from app.services.search import (
 
 MOVERS_CACHE_TTL_SECONDS = 45
 MOVERS_CACHE_MAX_SIZE = 4
-SPARKLINE_LOOKBACK_DAYS = 14
 SPARKLINE_POINTS = 5
 MOVER_CATEGORY_ORDER = ("stocks", "crypto", "etfs")
 FEATURED_MOVER_LOOKBACK_DAYS = {
@@ -273,26 +274,9 @@ async def _rank_period_candidates(
     return ranked
 
 
-async def _build_sparkline_series(symbol: str) -> List[MoverSparklinePoint]:
-    end_date = date.today()
-    start_date = end_date - timedelta(days=SPARKLINE_LOOKBACK_DAYS)
-
-    try:
-        history = await get_daily_close_series_cached(
-            symbol,
-            start=start_date,
-            end=end_date,
-        )
-    except Exception:
-        return []
-
-    return [
-        MoverSparklinePoint(date=point_date, close=close)
-        for point_date, close in history[-SPARKLINE_POINTS:]
-    ]
-
-
-async def _load_sparkline_map(items: List[Dict[str, Any]]) -> Dict[str, List[MoverSparklinePoint]]:
+async def _load_sparkline_map(
+    items: List[Dict[str, Any]],
+) -> tuple[Dict[str, List[MoverSparklinePoint]], Dict[str, ChartReadinessMetadata]]:
     seen: set[str] = set()
     symbols: List[str] = []
     for item in items:
@@ -301,17 +285,52 @@ async def _load_sparkline_map(items: List[Dict[str, Any]]) -> Dict[str, List[Mov
             seen.add(symbol)
             symbols.append(symbol)
 
-    # Batch sparkline fetches to keep peak coroutine count bounded.
-    _SPARKLINE_BATCH_SIZE = 15
-    all_results: List[List[MoverSparklinePoint]] = []
-    for i in range(0, len(symbols), _SPARKLINE_BATCH_SIZE):
-        batch = symbols[i : i + _SPARKLINE_BATCH_SIZE]
-        batch_results = await asyncio.gather(
-            *[_build_sparkline_series(symbol) for symbol in batch],
-            return_exceptions=False,
+    end_date = date.today()
+    asset_class_map = _build_asset_class_map(symbols)
+    try:
+        history_map = await fetch_daily_close_series_batch(
+            symbols,
+            start=end_date - timedelta(days=182),
+            end=end_date,
+            asset_class_map=asset_class_map,
         )
-        all_results.extend(batch_results)
-    return dict(zip(symbols, all_results))
+    except Exception:
+        history_map = {}
+
+    # A bounded fallback preserves service availability when the provider's batch
+    # endpoint is degraded without making one request per rendered card normally.
+    missing = [symbol for symbol in symbols if not history_map.get(symbol)]
+    if missing:
+        semaphore = asyncio.Semaphore(8)
+
+        async def load_one(symbol: str):
+            async with semaphore:
+                try:
+                    return symbol, await get_daily_close_series_cached(
+                        symbol,
+                        start=end_date - timedelta(days=182),
+                        end=end_date,
+                    )
+                except Exception:
+                    return symbol, []
+
+        for symbol, history in await asyncio.gather(*(load_one(symbol) for symbol in missing)):
+            history_map[symbol] = history
+
+    sparkline_map: Dict[str, List[MoverSparklinePoint]] = {}
+    readiness_map: Dict[str, ChartReadinessMetadata] = {}
+    for symbol in symbols:
+        history = history_map.get(symbol, [])
+        sparkline_map[symbol] = [
+            MoverSparklinePoint(date=point_date, close=close)
+            for point_date, close in history[-SPARKLINE_POINTS:]
+        ]
+        readiness_map[symbol] = classify_history_readiness(
+            symbol,
+            history,
+            end_date=end_date,
+        )
+    return sparkline_map, readiness_map
 
 
 def _build_metadata_map(items: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -340,12 +359,17 @@ def _parse_movers(
     items: List[Dict[str, Any]],
     sparkline_map: Dict[str, List[MoverSparklinePoint]],
     metadata_map: Dict[str, Dict[str, Any]],
+    readiness_map: Dict[str, ChartReadinessMetadata],
 ) -> List[Mover]:
     result: List[Mover] = []
     for item in items:
         symbol = item.get("symbol") or ""
         normalized_symbol = str(symbol).upper()
         metadata = metadata_map.get(normalized_symbol)
+        sparkline = sparkline_map.get(normalized_symbol, [])
+        readiness = readiness_map.get(normalized_symbol)
+        if not readiness or not readiness.chartReady:
+            continue
         result.append(
             Mover(
                 symbol=symbol,
@@ -354,7 +378,8 @@ def _parse_movers(
                 change_amount=_to_float(item.get("change_amount")),
                 change_percent=item.get("change_percent"),
                 volume=_to_int(item.get("volume")),
-                sparklineSeries=sparkline_map.get(normalized_symbol, []),
+                sparklineSeries=sparkline,
+                **readiness.model_dump(),
             )
         )
     return [mover for mover in result if mover.symbol]
@@ -397,23 +422,29 @@ def _build_category_buckets(
     result_key: str,
     sparkline_map: Dict[str, List[MoverSparklinePoint]],
     metadata_map: Dict[str, Dict[str, Any]],
+    readiness_map: Dict[str, ChartReadinessMetadata],
+    *,
+    limit: int,
 ) -> MoverCategoryBuckets:
     return MoverCategoryBuckets(
         stocks=_parse_movers(
             category_results.get("stocks", {}).get(result_key) or [],
             sparkline_map,
             metadata_map,
-        ),
+            readiness_map,
+        )[:limit],
         crypto=_parse_movers(
             category_results.get("crypto", {}).get(result_key) or [],
             sparkline_map,
             metadata_map,
-        ),
+            readiness_map,
+        )[:limit],
         etfs=_parse_movers(
             category_results.get("etfs", {}).get(result_key) or [],
             sparkline_map,
             metadata_map,
-        ),
+            readiness_map,
+        )[:limit],
     )
 
 
@@ -425,11 +456,12 @@ async def _build_market_movers(limit: int) -> MoversResponse:
         for symbol in mover_universe_by_category.get(category, [])
     ]
     asset_class_map = _build_asset_class_map(mover_universe)
+    candidate_limit = max(limit * 3, limit)
     category_results_list = await asyncio.gather(
         *[
             fetch_top_movers(
                 mover_universe_by_category.get(category, []),
-                top_n=limit,
+                top_n=candidate_limit,
                 asset_class_map=asset_class_map,
             )
             for category in MOVER_CATEGORY_ORDER
@@ -438,8 +470,8 @@ async def _build_market_movers(limit: int) -> MoversResponse:
     )
     category_results = dict(zip(MOVER_CATEGORY_ORDER, category_results_list))
 
-    overall_gainers = _merge_category_rankings(category_results, "top_gainers", limit=limit)
-    overall_losers = _merge_category_rankings(category_results, "top_losers", limit=limit)
+    overall_gainers = _merge_category_rankings(category_results, "top_gainers", limit=candidate_limit)
+    overall_losers = _merge_category_rankings(category_results, "top_losers", limit=candidate_limit)
     mover_items = [
         *overall_gainers,
         *overall_losers,
@@ -450,23 +482,27 @@ async def _build_market_movers(limit: int) -> MoversResponse:
             for item in category_results.get(category, {}).get(result_key) or []
         ],
     ]
-    sparkline_map = await _load_sparkline_map(mover_items)
+    sparkline_map, readiness_map = await _load_sparkline_map(mover_items)
     metadata_map = _build_metadata_map(mover_items)
 
     return MoversResponse(
-        gainers=_parse_movers(overall_gainers, sparkline_map, metadata_map),
-        losers=_parse_movers(overall_losers, sparkline_map, metadata_map),
+        gainers=_parse_movers(overall_gainers, sparkline_map, metadata_map, readiness_map)[:limit],
+        losers=_parse_movers(overall_losers, sparkline_map, metadata_map, readiness_map)[:limit],
         gainersByCategory=_build_category_buckets(
             category_results,
             "top_gainers",
             sparkline_map,
             metadata_map,
+            readiness_map,
+            limit=limit,
         ),
         losersByCategory=_build_category_buckets(
             category_results,
             "top_losers",
             sparkline_map,
             metadata_map,
+            readiness_map,
+            limit=limit,
         ),
         source="alpaca",
     )
@@ -543,13 +579,29 @@ async def _build_featured_mover_response(
             except Exception:
                 chart_points = []
 
+    valid_chart_points = [
+        point for point in chart_points
+        if _to_float(point[1]) is not None and (_to_float(point[1]) or 0) > 0
+    ]
+    closes = [round(float(point[1]), 12) for point in valid_chart_points]
+    if len(valid_chart_points) < 5 or len(set(closes)) < 2:
+        return FeaturedMoverResponse(
+            period=period,
+            direction=direction,
+            asset=asset,
+            title=title,
+            mover=None,
+            historicalSeries=[],
+            source="alpaca",
+        )
+
     return FeaturedMoverResponse(
         period=period,
         direction=direction,
         asset=asset,
         title=title,
         mover=_build_featured_mover(featured_item, metadata_map),
-        historicalSeries=_build_featured_series(chart_points),
+        historicalSeries=_build_featured_series(valid_chart_points),
         source="alpaca",
     )
 

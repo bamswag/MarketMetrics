@@ -13,6 +13,7 @@ import {
   type FeaturedMoverSelection,
 } from '../lib/api'
 import { formatCurrencyWithPreferences } from '../lib/marketDisplay'
+import { buildFiveTickScale, buildTimeTicks, formatAxisNumber, parseChartTimestamp, summarizeChartRange } from '../lib/chartUtils'
 import '../styles/components/FeaturedMoverCard.css'
 
 const DEFAULT_SELECTION: FeaturedMoverSelection = {
@@ -69,12 +70,10 @@ function formatChangePercent(raw: string | null | undefined): string {
 
 
 function formatTooltipLabel(label: unknown, period: FeaturedMoverPeriod): string {
-  const labelText = String(label ?? '')
-  if (!labelText) return ''
-
-  const parsed = new Date(labelText)
+  if (label == null || label === '') return ''
+  const parsed = new Date(typeof label === 'number' ? label : String(label))
   if (Number.isNaN(parsed.getTime())) {
-    return labelText
+    return String(label)
   }
 
   if (period === 'day') {
@@ -158,10 +157,13 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
   const [featured, setFeatured] = useState<FeaturedMoverResponse | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
 
-  function formatAxisPrice(value: number): string {
-    return formatCurrencyWithPreferences(value, preferences)
-  }
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   function formatTooltipValue(
     value: number | string | readonly (number | string)[] | undefined,
@@ -223,30 +225,15 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
 
   const mover = activeFeatured?.mover ?? null
   const chartData = useMemo(
-    () => (activeFeatured?.historicalSeries ?? []).map((point) => ({ date: point.date, v: point.close })),
+    () => (activeFeatured?.historicalSeries ?? []).map((point) => ({ date: point.date, timestamp: parseChartTimestamp(point.date), v: point.close })),
     [activeFeatured?.historicalSeries],
   )
-  const yValues = chartData.map((point) => point.v).filter((value) => Number.isFinite(value))
-  const yMin = yValues.length > 0 ? Math.min(...yValues) : 0
-  const yMax = yValues.length > 0 ? Math.max(...yValues) : 100
-  const yPad = (yMax - yMin) * 0.08 || 1
-  const yDomain: [number, number] = [yMin - yPad, yMax + yPad]
-
-  // Pick at most 5 evenly-spaced x-axis labels (first, ¼, ½, ¾, last) so the
-  // axis stays readable on both intraday (many points) and weekly/monthly data.
-  const xAxisTicks = useMemo(() => {
-    const n = chartData.length
-    if (n === 0) return []
-    if (n <= 4) return chartData.map((p) => p.date)
-    const indices = [
-      0,
-      Math.round(n / 4),
-      Math.round(n / 2),
-      Math.round((3 * n) / 4),
-      n - 1,
-    ]
-    return [...new Set(indices)].map((i) => chartData[i].date)
-  }, [chartData])
+  const yScale = useMemo(() => buildFiveTickScale(chartData.map((point) => point.v)), [chartData])
+  const chartSummary = useMemo(
+    () => summarizeChartRange(chartData.map((point) => ({ close: point.v }))),
+    [chartData],
+  )
+  const xAxisTicks = useMemo(() => buildTimeTicks(chartData, viewportWidth), [chartData, viewportWidth])
   const title = activeFeatured?.title ?? buildTitle(selection)
   const isLoser = selection.direction === 'loser'
   const accentColor = isLoser ? 'var(--brand-red)' : 'var(--brand-green)'
@@ -314,6 +301,11 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
 
           {chartData.length > 0 ? (
             <div className="hero-gainer-chart" data-scroll-reveal="chart">
+              {chartSummary ? (
+                <p className="sr-only">
+                  {mover.symbol} {selection.period} chart. First {formatCurrencyWithPreferences(chartSummary.first, preferences)}, latest {formatCurrencyWithPreferences(chartSummary.latest, preferences)}, high {formatCurrencyWithPreferences(chartSummary.high, preferences)}, low {formatCurrencyWithPreferences(chartSummary.low, preferences)}. The period {chartSummary.change >= 0 ? 'gained' : 'lost'} {Math.abs(chartSummary.changePercent).toFixed(2)} percent.
+                </p>
+              ) : null}
               <ResponsiveContainer
                 height={240}
                 initialDimension={{ width: 1, height: 240 }}
@@ -329,10 +321,12 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                   />
                   <XAxis
                     axisLine={false}
-                    dataKey="date"
+                    dataKey="timestamp"
+                    domain={['dataMin', 'dataMax']}
                     interval={0}
+                    scale="time"
                     tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
-                    tickFormatter={(value: string) => {
+                    tickFormatter={(value: number) => {
                       if (!value) return ''
                       const parsed = new Date(value)
                       if (selection.period === 'day') {
@@ -348,14 +342,16 @@ export function FeaturedMoverCard({ onDirectionChange }: FeaturedMoverCardProps)
                     }}
                     tickLine={false}
                     ticks={xAxisTicks}
+                    type="number"
                   />
                   <YAxis
                     axisLine={false}
-                    domain={yDomain}
+                    domain={yScale.domain}
                     orientation="right"
                     tick={{ fontSize: 11, fill: 'var(--chart-axis)' }}
-                    tickFormatter={formatAxisPrice}
+                    tickFormatter={(value: number) => formatAxisNumber(value, yScale.step, 'currency')}
                     tickLine={false}
+                    ticks={yScale.ticks}
                     width={64}
                   />
                   <Tooltip

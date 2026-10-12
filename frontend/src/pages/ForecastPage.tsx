@@ -23,6 +23,7 @@ import {
 } from '../lib/api'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
 import { readStoredMarketPreferences } from '../lib/marketPreferences'
+import { buildFiveTickScale, buildTimeTicks, formatAxisNumber, parseChartTimestamp, summarizeChartRange } from '../lib/chartUtils'
 import '../styles/components/ChartTooltip.css'
 import '../styles/pages/ForecastPage.css'
 
@@ -195,65 +196,10 @@ function getLastForecastReview(result: ForecastResponse): LastForecastReview | n
   }
 }
 
-/** Round rawStep up to the nearest "nice" number (1, 2, 2.5, 5, or 10 × a power of 10). */
-function niceNumber(rawStep: number): number {
-  if (rawStep <= 0) return 0.01
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)))
-  const n = rawStep / magnitude
-  if (n <= 1) return magnitude
-  if (n <= 2) return 2 * magnitude
-  if (n <= 2.5) return 2.5 * magnitude
-  if (n <= 5) return 5 * magnitude
-  return 10 * magnitude
-}
-
-/**
- * Format a Y-axis tick value with enough decimal places to be meaningful,
- * especially for cheap assets (< $1) where 2 decimals would show $0.00.
- */
-function formatPriceAxis(value: number): string {
+function formatPriceAxis(value: number, step: number): string {
   const currency = readStoredMarketPreferences().currency
   const sym = currency === 'GBP' ? '£' : '$'
-  if (value === 0) return `${sym}0`
-  const abs = Math.abs(value)
-  if (abs < 0.0001) return `${sym}${value.toFixed(6)}`
-  if (abs < 0.001) return `${sym}${value.toFixed(5)}`
-  if (abs < 0.01) return `${sym}${value.toFixed(4)}`
-  if (abs < 0.1) return `${sym}${value.toFixed(3)}`
-  if (abs < 1) return `${sym}${value.toFixed(2)}`
-  return formatCurrency(value)
-}
-
-function buildYAxisScale(prices: number[]): { domain: [number, number]; ticks: number[] } {
-  if (!prices.length) {
-    return { domain: [0, 1], ticks: [0, 0.5, 1] }
-  }
-
-  const yMin = Math.min(...prices)
-  const yMax = Math.max(...prices)
-  const range = yMax - yMin
-
-  // For flat / near-flat price series (cheap symbols), pad by 10 % of the price
-  // rather than falling back to a hardcoded dollar amount.
-  const yPad = range > 0 ? range * 0.15 : Math.max(yMax * 0.1, 0.0001)
-  const paddedMin = Math.max(0, yMin - yPad)
-  const paddedMax = yMax + yPad
-
-  const step = niceNumber((paddedMax - paddedMin) / 4)
-  const minTick = Math.max(0, Math.floor(paddedMin / step) * step)
-  const maxTick = Math.ceil(paddedMax / step) * step
-
-  const ticks: number[] = []
-  const epsilon = step * 0.001
-  for (
-    let tick = minTick;
-    tick <= maxTick + epsilon;
-    tick = parseFloat((tick + step).toPrecision(12))
-  ) {
-    ticks.push(parseFloat(tick.toPrecision(10)))
-  }
-
-  return { domain: [minTick, maxTick], ticks }
+  return formatAxisNumber(value, step, 'currency', sym)
 }
 
 function WarningIcon() {
@@ -331,7 +277,7 @@ function buildVerdict(
 function makeForecastTooltip(currentPrice: number) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function ForecastTooltip(props: any) {
-    const { active, payload, label } = props ?? {}
+    const { active, payload } = props ?? {}
     if (!active || !payload?.length) return null
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actual    = payload.find((p: any) => p.dataKey === 'close')
@@ -360,7 +306,7 @@ function makeForecastTooltip(currentPrice: number) {
         : row?.predictedCloseLow != null
           ? Number(row.predictedCloseLow)
           : null
-    const formattedDate = typeof label === 'string' ? formatLongDate(label) : ''
+    const formattedDate = typeof row?.date === 'string' ? formatLongDate(row.date) : ''
 
     return (
       <div className="instrument-tooltip forecast-tooltip">
@@ -485,8 +431,15 @@ export function ForecastPage({ token }: ForecastPageProps) {
   const [error, setError] = useState('')
   const [statusCode, setStatusCode] = useState<number | null>(null)
   const [instrument, setInstrument] = useState<InstrumentDetailResponse | null>(null)
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
 
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   // Fetch lightweight instrument context (name + logo)
   useEffect(() => {
@@ -541,8 +494,12 @@ export function ForecastPage({ token }: ForecastPageProps) {
   }, [symbol, token, horizon])
 
   // Chart data
-  const chartData = useMemo(() => (result ? buildChartData(result) : []), [result])
+  const chartData = useMemo(
+    () => (result ? buildChartData(result).map((point) => ({ ...point, timestamp: parseChartTimestamp(point.date) })) : []),
+    [result],
+  )
   const todayDate = result?.historicalSeries.at(-1)?.date ?? null
+  const todayTimestamp = todayDate ? parseChartTimestamp(todayDate) : null
   // Band is always shown — we synthesise expanding bounds if the API doesn't provide them
   const showBand = (result?.forecastSeries.length ?? 0) > 0
 
@@ -560,7 +517,14 @@ export function ForecastPage({ token }: ForecastPageProps) {
     if (p.predictedCloseHigh != null) vals.push(p.predictedCloseHigh)
     return vals
   })
-  const yScale = buildYAxisScale(allPrices)
+  const yScale = buildFiveTickScale(allPrices)
+  const xTicks = buildTimeTicks(chartData, viewportWidth)
+  const chartSummary = summarizeChartRange(
+    chartData
+      .map((point) => point.predictedClose ?? point.close)
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      .map((close) => ({ close })),
+  )
 
   // Feature importances
   const topFeatures = result
@@ -786,6 +750,11 @@ export function ForecastPage({ token }: ForecastPageProps) {
           </div>
 
           <div className="forecast-chart-wrap">
+            {chartSummary ? (
+              <p className="sr-only">
+                {symbol} recent-price and {horizon}-day forecast chart. First {formatCurrency(chartSummary.first)}, latest {formatCurrency(chartSummary.latest)}, high {formatCurrency(chartSummary.high)}, low {formatCurrency(chartSummary.low)}. The combined series {chartSummary.change >= 0 ? 'rises' : 'falls'} by {Math.abs(chartSummary.changePercent).toFixed(2)} percent.
+              </p>
+            ) : null}
             <ResponsiveContainer
               height="100%"
               initialDimension={{ width: 1, height: 340 }}
@@ -814,18 +783,21 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 />
                 <XAxis
                   axisLine={false}
-                  dataKey="date"
-                  minTickGap={48}
+                  dataKey="timestamp"
+                  domain={['dataMin', 'dataMax']}
+                  scale="time"
                   tick={AXIS_TICK}
-                  tickFormatter={formatShortDate}
+                  tickFormatter={(value: number) => formatShortDate(new Date(value).toISOString())}
                   tickLine={false}
+                  ticks={xTicks}
+                  type="number"
                 />
                 <YAxis
                   axisLine={false}
                   domain={yScale.domain}
                   orientation="left"
                   tick={AXIS_TICK}
-                  tickFormatter={(v: number) => formatPriceAxis(v)}
+                  tickFormatter={(v: number) => formatPriceAxis(v, yScale.step)}
                   tickLine={false}
                   ticks={yScale.ticks}
                   width={80}
@@ -847,12 +819,12 @@ export function ForecastPage({ token }: ForecastPageProps) {
                 )}
 
                 {/* ── Today boundary ── */}
-                {todayDate && (
+                {todayTimestamp && (
                   <ReferenceLine
                     stroke="var(--chart-axis)"
                     strokeDasharray="2 4"
                     strokeWidth={1}
-                    x={todayDate}
+                    x={todayTimestamp}
                     label={<TodayLabel />}
                   />
                 )}

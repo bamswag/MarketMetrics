@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Area,
   CartesianGrid,
@@ -13,6 +13,7 @@ import {
 
 import { ApiError, fetchForecast, type ForecastResponse } from '../lib/api'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
+import { buildFiveTickScale, buildTimeTicks, formatAxisNumber, parseChartTimestamp, summarizeChartRange } from '../lib/chartUtils'
 import '../styles/components/PricePredictionPanel.css'
 
 type PricePredictionPanelProps = {
@@ -34,16 +35,17 @@ const HISTORY_BARS = 60
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PredictionTooltip(props: any) {
-  const { active, payload, label } = props ?? {}
+  const { active, payload } = props ?? {}
   if (!active || !payload?.length) return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const actual = payload.find((p: any) => p.dataKey === 'close')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const forecast = payload.find((p: any) => p.dataKey === 'predictedClose')
+  const point = actual?.payload ?? forecast?.payload ?? payload[0]?.payload ?? {}
   return (
     <div className="prediction-tooltip">
       <span className="prediction-tooltip-date">
-        {typeof label === 'string' ? formatLongDate(label) : ''}
+        {typeof point.date === 'string' ? formatLongDate(point.date) : ''}
       </span>
       {actual?.value != null && (
         <span className="prediction-tooltip-price">
@@ -108,6 +110,13 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
   const [error, setError] = useState('')
   const [hasFetched, setHasFetched] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
+
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   async function runForecast() {
     if (abortRef.current) abortRef.current.abort()
@@ -152,8 +161,12 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
   const pillClass =
     tone === 'positive' ? 'positive-pill' : tone === 'negative' ? 'negative-pill' : 'neutral-pill'
 
-  const chartData = result ? buildChartData(result) : []
+  const chartData = useMemo(
+    () => (result ? buildChartData(result).map((point) => ({ ...point, timestamp: parseChartTimestamp(point.date) })) : []),
+    [result],
+  )
   const todayDate = result?.historicalSeries.at(-1)?.date ?? null
+  const todayTimestamp = todayDate ? parseChartTimestamp(todayDate) : null
   const showBand = result ? hasConfidenceBand(result) : false
 
   // Y-axis domain across both series
@@ -165,10 +178,14 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
     if (p.predictedCloseHigh != null) vals.push(p.predictedCloseHigh)
     return vals
   })
-  const yMin = allPrices.length ? Math.min(...allPrices) : 0
-  const yMax = allPrices.length ? Math.max(...allPrices) : 1
-  const yPad = (yMax - yMin) * 0.08 || 1
-  const yDomain: [number, number] = [Math.max(0, yMin - yPad), yMax + yPad]
+  const yScale = buildFiveTickScale(allPrices)
+  const xTicks = buildTimeTicks(chartData, viewportWidth)
+  const chartSummary = summarizeChartRange(
+    chartData
+      .map((point) => point.predictedClose ?? point.close)
+      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      .map((close) => ({ close })),
+  )
 
   // Top-5 feature importances normalised to max=100%
   const topFeatures = result
@@ -265,6 +282,11 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
           {/* Chart */}
           {chartData.length > 0 && (
             <div className="prediction-chart-wrap" data-scroll-reveal="chart">
+              {chartSummary ? (
+                <p className="sr-only">
+                  {symbol} recent-price and {horizon}-day forecast chart. First {formatCurrency(chartSummary.first)}, latest {formatCurrency(chartSummary.latest)}, high {formatCurrency(chartSummary.high)}, low {formatCurrency(chartSummary.low)}. The combined series {chartSummary.change >= 0 ? 'rises' : 'falls'} by {Math.abs(chartSummary.changePercent).toFixed(2)} percent.
+                </p>
+              ) : null}
               <ResponsiveContainer
                 height="100%"
                 initialDimension={{ width: 1, height: 220 }}
@@ -282,27 +304,31 @@ export function PricePredictionPanel({ symbol, token, currentPrice }: PricePredi
                   <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="4 4" vertical={false} />
                   <XAxis
                     axisLine={false}
-                    dataKey="date"
-                    minTickGap={48}
+                    dataKey="timestamp"
+                    domain={['dataMin', 'dataMax']}
+                    scale="time"
                     tick={AXIS_TICK}
-                    tickFormatter={formatShortDate}
+                    tickFormatter={(value: number) => formatShortDate(new Date(value).toISOString())}
                     tickLine={false}
+                    ticks={xTicks}
+                    type="number"
                   />
                   <YAxis
                     axisLine={false}
-                    domain={yDomain}
+                    domain={yScale.domain}
                     orientation="right"
                     tick={AXIS_TICK}
-                    tickFormatter={(v: number) => formatCurrency(v)}
+                    tickFormatter={(v: number) => formatAxisNumber(v, yScale.step)}
                     tickLine={false}
+                    ticks={yScale.ticks}
                     width={80}
                   />
                   <Tooltip content={PredictionTooltip} />
 
                   {/* Vertical "Today" reference line */}
-                  {todayDate && (
+                  {todayTimestamp && (
                     <ReferenceLine
-                      x={todayDate}
+                      x={todayTimestamp}
                       stroke="var(--chart-axis)"
                       strokeDasharray="4 3"
                       label={{

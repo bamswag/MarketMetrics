@@ -1,5 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
+from app.schemas.instruments import ChartReadinessMetadata, InstrumentRange
+
 try:
     from test_auth import BaseAPITestCase
 except ModuleNotFoundError:
@@ -7,8 +9,13 @@ except ModuleNotFoundError:
 
 
 class WatchlistTests(BaseAPITestCase):
+    @patch("app.services.watchlists.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.services.watchlists.fetch_snapshots", new_callable=AsyncMock)
-    def test_watchlist_crud_and_enriched_listing(self, mock_fetch_snapshots):
+    def test_watchlist_crud_and_enriched_listing(
+        self,
+        mock_fetch_snapshots,
+        mock_get_chart_readiness_batch,
+    ):
         token = self.register_and_login(email="watchlist@example.com")
         mock_fetch_snapshots.return_value = {
             "AAPL": {
@@ -19,6 +26,14 @@ class WatchlistTests(BaseAPITestCase):
                 "latestTradingDay": "2026-04-03",
                 "source": "alpaca",
             }
+        }
+        mock_get_chart_readiness_batch.return_value = {
+            "AAPL": ChartReadinessMetadata(
+                chartReady=True,
+                availableRanges=[InstrumentRange.six_months, InstrumentRange.max_range],
+                defaultRange=InstrumentRange.six_months,
+                historyPointCount=92,
+            )
         }
 
         create_response = self.client.post(
@@ -39,6 +54,7 @@ class WatchlistTests(BaseAPITestCase):
         self.assertEqual(payload[0]["assetCategory"], "stocks")
         self.assertEqual(payload[0]["latestQuote"]["price"], 187.25)
         self.assertEqual(payload[0]["alerts"]["totalAlerts"], 0)
+        self.assertTrue(payload[0]["chartReady"])
 
         delete_response = self.client.delete(
             "/watchlist/AAPL",
@@ -46,10 +62,12 @@ class WatchlistTests(BaseAPITestCase):
         )
         self.assertEqual(delete_response.status_code, 204)
 
+    @patch("app.services.watchlists.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.services.watchlists.fetch_snapshots", new_callable=AsyncMock)
     def test_watchlist_supports_crypto_symbols_with_slashes(
         self,
         mock_fetch_snapshots,
+        mock_get_chart_readiness_batch,
     ):
         token = self.register_and_login(email="watchlist-crypto@example.com")
         mock_fetch_snapshots.return_value = {
@@ -61,6 +79,14 @@ class WatchlistTests(BaseAPITestCase):
                 "latestTradingDay": "2026-04-03",
                 "source": "alpaca",
             }
+        }
+        mock_get_chart_readiness_batch.return_value = {
+            "BTC/USD": ChartReadinessMetadata(
+                chartReady=True,
+                availableRanges=[InstrumentRange.one_month, InstrumentRange.max_range],
+                defaultRange=InstrumentRange.one_month,
+                historyPointCount=31,
+            )
         }
 
         create_response = self.client.post(
@@ -86,3 +112,32 @@ class WatchlistTests(BaseAPITestCase):
             headers=self.auth_headers(token),
         )
         self.assertEqual(delete_response.status_code, 204)
+
+    @patch("app.services.watchlists.get_chart_readiness_batch", new_callable=AsyncMock)
+    @patch("app.services.watchlists.fetch_snapshots", new_callable=AsyncMock)
+    def test_unavailable_saved_watchlist_item_is_preserved_for_removal(
+        self,
+        mock_fetch_snapshots,
+        mock_get_chart_readiness_batch,
+    ):
+        token = self.register_and_login(email="watchlist-unavailable@example.com")
+        self.client.post(
+            "/watchlist/",
+            headers=self.auth_headers(token),
+            json={"symbol": "AAPL"},
+        )
+        mock_fetch_snapshots.return_value = {}
+        mock_get_chart_readiness_batch.return_value = {
+            "AAPL": ChartReadinessMetadata(
+                chartReady=False,
+                historyPointCount=1,
+                unavailableReason="Not enough historical prices are available yet.",
+            )
+        }
+
+        response = self.client.get("/watchlist/", headers=self.auth_headers(token))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 1)
+        self.assertFalse(response.json()[0]["chartReady"])
+        self.assertIn("Not enough historical prices", response.json()[0]["unavailableReason"])

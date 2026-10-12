@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from unittest.mock import AsyncMock, patch
 
 from app.integrations.alpaca.client import AlpacaMarketDataError
-from app.schemas.instruments import InstrumentRange
+from app.schemas.instruments import ChartReadinessMetadata, InstrumentRange
 from app.schemas.quotes import PublicQuoteOut
 from app.services.instruments import resolve_history_window
 
@@ -25,7 +25,49 @@ def _bar(point_date: date, close: float, *, volume: int = 1_000_000) -> dict:
     }
 
 
+def _history_series(
+    *,
+    start: date,
+    end: date,
+    spacing_days: int = 2,
+    start_close: float = 100.0,
+) -> list[dict]:
+    """Build stable, non-flat history without tying tests to calendar literals."""
+    rows: list[dict] = []
+    cursor = start
+    index = 0
+    while cursor <= end:
+        rows.append(_bar(cursor, start_close + index * 0.5))
+        cursor += timedelta(days=spacing_days)
+        index += 1
+    if not rows or rows[-1]["date"] != end:
+        rows.append(_bar(end, start_close + index * 0.5))
+    return rows
+
+
+def _ready_metadata(symbols: list[str]) -> dict[str, ChartReadinessMetadata]:
+    today = date.today()
+    return {
+        symbol: ChartReadinessMetadata(
+            chartReady=True,
+            availableRanges=[
+                InstrumentRange.one_week,
+                InstrumentRange.one_month,
+                InstrumentRange.three_months,
+                InstrumentRange.six_months,
+                InstrumentRange.max_range,
+            ],
+            defaultRange=InstrumentRange.six_months,
+            historyPointCount=92,
+            historyStart=(today - timedelta(days=182)).isoformat(),
+            historyEnd=today.isoformat(),
+        )
+        for symbol in symbols
+    }
+
+
 class InstrumentRouteTests(BaseAPITestCase):
+    @patch("app.services.chart_readiness.get_symbol_metadata")
     @patch("app.services.instruments.resolve_company_name")
     @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.get_daily_bar_series_cached", new_callable=AsyncMock)
@@ -38,6 +80,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_daily_bar_series_cached,
         mock_get_earliest_available_close_date_cached,
         mock_resolve_company_name,
+        mock_readiness_metadata,
     ):
         token = self.register_and_login(email="instrument@example.com")
         mock_get_symbol_metadata.return_value = {
@@ -46,8 +89,11 @@ class InstrumentRouteTests(BaseAPITestCase):
             "exchange": "NASDAQ",
             "tradable": True,
         }
+        mock_readiness_metadata.return_value = mock_get_symbol_metadata.return_value
         mock_resolve_company_name.return_value = "Apple Inc."
-        mock_get_earliest_available_close_date_cached.return_value = date(2025, 1, 10)
+        today = date.today()
+        earliest = today - timedelta(days=500)
+        mock_get_earliest_available_close_date_cached.return_value = earliest
         mock_get_quote_cached.return_value = {
             "symbol": "AAPL",
             "price": 210.25,
@@ -64,13 +110,12 @@ class InstrumentRouteTests(BaseAPITestCase):
             "latestTradingDay": "2026-04-06",
             "source": "alpaca",
         }
-        historical_series = [
-            _bar(date(2025, 1, 10), 189.4),
-            _bar(date(2025, 12, 10), 198.5),
-            _bar(date(2026, 2, 2), 201.0),
-            _bar(date(2026, 4, 2), 204.0),
-            _bar(date(2026, 4, 3), 206.5),
-        ]
+        historical_series = _history_series(
+            start=earliest,
+            end=today,
+            spacing_days=2,
+            start_close=189.4,
+        )
         mock_get_daily_bar_series_cached.side_effect = (
             lambda *args, **kwargs: [
                 row
@@ -91,21 +136,79 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["exchange"], "NASDAQ")
         self.assertEqual(payload["range"], "6M")
         self.assertEqual(payload["availableRanges"], ["1W", "1M", "3M", "6M", "1Y", "MAX"])
-        self.assertEqual(payload["earliestAvailableDate"], "2025-01-10")
+        self.assertEqual(payload["earliestAvailableDate"], earliest.isoformat())
         self.assertEqual(payload["latestQuote"]["price"], 210.25)
         self.assertEqual(payload["latestQuote"]["high"], 212.0)
         self.assertEqual(payload["latestQuote"]["low"], 207.5)
         self.assertEqual(payload["latestQuote"]["volume"], 55_200_000)
-        self.assertEqual(len(payload["historicalSeries"]), 4)
-        self.assertEqual(payload["historicalSeries"][0]["open"], 197.5)
-        self.assertEqual(payload["historicalSeries"][0]["high"], 200.5)
-        self.assertEqual(payload["historicalSeries"][0]["low"], 196.5)
+        self.assertGreaterEqual(len(payload["historicalSeries"]), 90)
+        self.assertEqual(payload["historicalSeries"][0]["open"], payload["historicalSeries"][0]["close"] - 1)
+        self.assertEqual(payload["historicalSeries"][0]["high"], payload["historicalSeries"][0]["close"] + 2)
+        self.assertEqual(payload["historicalSeries"][0]["low"], payload["historicalSeries"][0]["close"] - 2)
         self.assertEqual(payload["historicalSeries"][0]["volume"], 1_000_000)
         mock_get_daily_bar_series_cached.assert_awaited_once()
         self.assertEqual(
             mock_get_daily_bar_series_cached.await_args.kwargs["start"],
-            date.today() - timedelta(days=182),
+            earliest,
         )
+
+    @patch("app.services.chart_readiness.get_symbol_metadata")
+    @patch("app.services.instruments.resolve_company_name")
+    @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_daily_bar_series_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_quote_cached", new_callable=AsyncMock)
+    @patch("app.services.instruments.get_symbol_metadata")
+    def test_selected_range_summary_is_distinct_from_daily_quote_and_ohlc_high(
+        self,
+        mock_get_symbol_metadata,
+        mock_get_quote_cached,
+        mock_get_daily_bar_series_cached,
+        mock_get_earliest_available_close_date_cached,
+        mock_resolve_company_name,
+        mock_readiness_metadata,
+    ):
+        today = date.today()
+        earliest = today - timedelta(days=200)
+        rows = _history_series(start=earliest, end=today, spacing_days=3, start_close=40.0)
+        for index, row in enumerate(rows):
+            close = 41.0 + (index % 5) * 0.2
+            row.update(open=close - 0.1, high=close + 0.2, low=close - 0.2, close=close)
+        peak_index = len(rows) - 8
+        rows[peak_index] = {
+            **rows[peak_index],
+            "close": 50.65,
+            "open": 50.40,
+            "high": 50.87,
+            "low": 50.34,
+        }
+        mock_get_symbol_metadata.return_value = {
+            "symbol": "VZ",
+            "name": "Verizon Communications Inc.",
+            "exchange": "NYSE",
+            "tradable": True,
+        }
+        mock_readiness_metadata.return_value = mock_get_symbol_metadata.return_value
+        mock_resolve_company_name.return_value = "Verizon Communications Inc."
+        mock_get_earliest_available_close_date_cached.return_value = earliest
+        mock_get_daily_bar_series_cached.return_value = rows
+        mock_get_quote_cached.return_value = {
+            "symbol": "VZ",
+            "price": 41.65,
+            "high": 43.40,
+            "low": 40.82,
+            "volume": 5_175_298,
+            "vwap": 41.97,
+            "source": "alpaca",
+        }
+
+        response = self.client.get("/instruments/VZ?range=6M")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["rangeSummary"]["highClose"], 50.65)
+        self.assertEqual(payload["latestQuote"]["high"], 43.40)
+        peak = next(point for point in payload["historicalSeries"] if point["close"] == 50.65)
+        self.assertEqual(peak["high"], 50.87)
 
     @patch("app.services.instruments.resolve_company_name")
     @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
@@ -129,7 +232,9 @@ class InstrumentRouteTests(BaseAPITestCase):
             "asset_class": "crypto",
         }
         mock_resolve_company_name.return_value = "Ethereum"
-        mock_get_earliest_available_close_date_cached.return_value = date(2025, 8, 20)
+        today = date.today()
+        earliest = today - timedelta(days=300)
+        mock_get_earliest_available_close_date_cached.return_value = earliest
         mock_get_quote_cached.return_value = {
             "symbol": "ETH/USD",
             "price": 3210.5,
@@ -138,12 +243,12 @@ class InstrumentRouteTests(BaseAPITestCase):
             "latestTradingDay": "2026-04-17",
             "source": "alpaca",
         }
-        mock_get_daily_bar_series_cached.return_value = [
-            _bar(date(2025, 8, 20), 2810.0),
-            _bar(date(2025, 11, 20), 2925.0),
-            _bar(date(2026, 2, 20), 3055.0),
-            _bar(date(2026, 4, 17), 3210.5),
-        ]
+        mock_get_daily_bar_series_cached.return_value = _history_series(
+            start=earliest,
+            end=today,
+            spacing_days=2,
+            start_close=2810.0,
+        )
 
         response = self.client.get(
             "/instruments/ETH%2FUSD?range=5Y",
@@ -152,10 +257,10 @@ class InstrumentRouteTests(BaseAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["range"], "MAX")
+        self.assertEqual(payload["range"], "6M")
         self.assertEqual(payload["availableRanges"], ["1W", "1M", "3M", "6M", "MAX"])
-        self.assertEqual(payload["earliestAvailableDate"], "2025-08-20")
-        self.assertEqual(len(payload["historicalSeries"]), 4)
+        self.assertEqual(payload["earliestAvailableDate"], earliest.isoformat())
+        self.assertGreaterEqual(len(payload["historicalSeries"]), 90)
 
     @patch("app.services.instruments.resolve_company_name")
     @patch("app.services.instruments.get_earliest_available_close_date_cached", new_callable=AsyncMock)
@@ -178,7 +283,9 @@ class InstrumentRouteTests(BaseAPITestCase):
             "assetCategory": "etfs",
         }
         mock_resolve_company_name.return_value = "Invesco QQQ Trust, Series 1"
-        mock_get_earliest_available_close_date_cached.return_value = date(2021, 1, 4)
+        today = date.today()
+        earliest = today - timedelta(days=365 * 5 + 10)
+        mock_get_earliest_available_close_date_cached.return_value = earliest
         mock_get_quote_cached.return_value = {
             "symbol": "QQQ",
             "price": 507.72,
@@ -187,12 +294,12 @@ class InstrumentRouteTests(BaseAPITestCase):
             "latestTradingDay": "2026-04-16",
             "source": "alpaca",
         }
-        mock_get_daily_bar_series_cached.return_value = [
-            _bar(date(2021, 1, 4), 313.1),
-            _bar(date(2023, 1, 5), 268.4),
-            _bar(date(2025, 1, 6), 413.2),
-            _bar(date(2026, 4, 16), 507.72),
-        ]
+        mock_get_daily_bar_series_cached.return_value = _history_series(
+            start=earliest,
+            end=today,
+            spacing_days=5,
+            start_close=313.1,
+        )
 
         response = self.client.get("/instruments/QQQ?range=MAX")
 
@@ -200,7 +307,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         payload = response.json()
         self.assertEqual(payload["range"], "MAX")
         self.assertEqual(payload["availableRanges"], ["1W", "1M", "3M", "6M", "1Y", "5Y", "MAX"])
-        self.assertEqual(payload["earliestAvailableDate"], "2021-01-04")
+        self.assertEqual(payload["earliestAvailableDate"], earliest.isoformat())
 
     @patch("app.services.instruments.get_symbol_metadata")
     def test_instrument_detail_rejects_symbols_outside_supported_catalog(self, mock_get_symbol_metadata):
@@ -344,7 +451,9 @@ class InstrumentRouteTests(BaseAPITestCase):
             "asset_class": "crypto",
         }
         mock_resolve_company_name.return_value = "Bitcoin"
-        mock_get_earliest_available_close_date_cached.return_value = date(2025, 9, 1)
+        today = date.today()
+        earliest = today - timedelta(days=200)
+        mock_get_earliest_available_close_date_cached.return_value = earliest
         mock_get_quote_cached.return_value = {
             "symbol": "BTC/USD",
             "price": 84250.0,
@@ -353,12 +462,12 @@ class InstrumentRouteTests(BaseAPITestCase):
             "latestTradingDay": "2026-04-06",
             "source": "alpaca",
         }
-        mock_get_daily_bar_series_cached.return_value = [
-            _bar(date(2025, 9, 1), 77000.0),
-            _bar(date(2026, 1, 10), 81200.0),
-            _bar(date(2026, 3, 20), 82150.0),
-            _bar(date(2026, 4, 3), 83425.0),
-        ]
+        mock_get_daily_bar_series_cached.return_value = _history_series(
+            start=earliest,
+            end=today,
+            spacing_days=1,
+            start_close=77000.0,
+        )
 
         response = self.client.get("/instruments/BTC%2FUSD?range=1M")
 
@@ -369,6 +478,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["exchange"], "CRYPTO")
         self.assertEqual(payload["latestQuote"]["price"], 84250.0)
 
+    @patch("app.services.instruments.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.services.search.get_symbol_metadata")
     @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.load_symbol_catalog")
@@ -379,6 +489,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_load_symbol_catalog,
         mock_get_public_quotes_cached,
         mock_search_get_symbol_metadata,
+        mock_get_chart_readiness_batch,
     ):
         catalog = [
             {
@@ -414,6 +525,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_load_symbol_catalog.return_value = catalog
+        mock_get_chart_readiness_batch.side_effect = lambda symbols: _ready_metadata(list(symbols))
         mock_get_public_quotes_cached.return_value = [
             PublicQuoteOut(
                 symbol="NVDA",
@@ -444,6 +556,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertEqual(payload["results"][0]["latestQuote"]["price"], 950.25)
         mock_get_public_quotes_cached.assert_awaited_once()
 
+    @patch("app.services.instruments.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.services.search.get_symbol_metadata")
     @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.load_symbol_catalog")
@@ -454,6 +567,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_load_symbol_catalog,
         mock_get_public_quotes_cached,
         mock_search_get_symbol_metadata,
+        mock_get_chart_readiness_batch,
     ):
         catalog = [
             {
@@ -489,6 +603,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_load_symbol_catalog.return_value = catalog
+        mock_get_chart_readiness_batch.side_effect = lambda symbols: _ready_metadata(list(symbols))
         mock_get_public_quotes_cached.return_value = [
             PublicQuoteOut(symbol="ETH/USD", price=3200.0, changePercent="2.10%"),
             PublicQuoteOut(symbol="SOL/USDT", price=145.0, changePercent="-1.20%"),
@@ -505,6 +620,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         self.assertNotIn("AAPL", symbols)
         self.assertEqual(payload["results"][0]["similarityReason"], "Same crypto quote market")
 
+    @patch("app.services.instruments.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.services.search.get_symbol_metadata")
     @patch("app.services.instruments.get_public_quotes_cached", new_callable=AsyncMock)
     @patch("app.services.instruments.load_training_universe_manifest")
@@ -517,6 +633,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_load_training_universe_manifest,
         mock_get_public_quotes_cached,
         mock_search_get_symbol_metadata,
+        mock_get_chart_readiness_batch,
     ):
         catalog = [
             {
@@ -552,6 +669,7 @@ class InstrumentRouteTests(BaseAPITestCase):
         mock_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_search_get_symbol_metadata.side_effect = lambda symbol: metadata_by_symbol.get(symbol)
         mock_load_symbol_catalog.return_value = catalog
+        mock_get_chart_readiness_batch.side_effect = lambda symbols: _ready_metadata(list(symbols))
         mock_load_training_universe_manifest.return_value = [
             {"symbol": "WMT", "group": "consumer_staples"},
             {"symbol": "COST", "group": "consumer_staples"},

@@ -518,6 +518,21 @@ export function InstrumentPage({
   const isCrypto = assetCategory === 'crypto' || assetCategory === 'digital currency'
   const advisory = getRiskAdvisory(riskProfile ?? null, isCrypto, assetCategory)
 
+  if (instrumentError && !instrumentDetail && !isLoadingInstrument) {
+    return (
+      <section className="instrument-page page-section">
+        <div className="instrument-loading panel" role="alert">
+          <p className="section-label">Chart unavailable</p>
+          <h1>There is not enough usable history for {symbol} right now.</h1>
+          <p>{instrumentError}</p>
+          <Link className="primary-action" to="/search-results/market">
+            Browse chart-ready instruments
+          </Link>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="instrument-page page-section">
       <div className="instrument-hero" data-scroll-reveal="rise" data-scroll-tone={isPositive ? 'positive' : 'negative'}>
@@ -818,7 +833,7 @@ export function InstrumentPage({
         <InstrumentChartCard
           instrumentDetail={instrumentDetail}
           onSelectRange={setSelectedRange}
-          selectedRange={selectedRange}
+          selectedRange={instrumentDetail.range}
         />
       ) : null}
 

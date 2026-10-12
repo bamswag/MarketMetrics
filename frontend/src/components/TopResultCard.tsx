@@ -12,7 +12,7 @@ import {
 
 import type { CompanySearchResult, InstrumentDetailResponse } from '../lib/api'
 import { fetchInstrumentDetail } from '../lib/api'
-import { sampleChartSeries } from '../lib/chartUtils'
+import { buildFiveTickScale, buildTimeTicks, formatAxisNumber, parseChartTimestamp, sampleChartSeries } from '../lib/chartUtils'
 import { formatCurrency, formatLongDate, formatShortDate } from '../lib/formatters'
 import { assetCategoryLabel } from '../lib/marketPreferences'
 import '../styles/components/ChartTooltip.css'
@@ -70,15 +70,16 @@ function formatChangeValue(changePercent: number | null | undefined): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function TopResultTooltip(props: any) {
-  const { active, payload, label } = props ?? {}
+  const { active, payload } = props ?? {}
   if (!active || !payload?.length) return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceEntry = payload.find((p: any) => p.dataKey === 'close')
   const value = Number(priceEntry?.value ?? payload[0]?.value ?? 0)
+  const point = priceEntry?.payload ?? payload[0]?.payload ?? {}
   return (
     <div className="instrument-tooltip">
       <span className="instrument-tooltip-date">
-        {typeof label === 'string' ? formatLongDate(label) : ''}
+        {typeof point.date === 'string' ? formatLongDate(point.date) : ''}
       </span>
       <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
     </div>
@@ -94,6 +95,13 @@ export function TopResultCard({
 }: TopResultCardProps) {
   const [detail, setDetail] = useState<InstrumentDetailResponse | null>(null)
   const [detailLoading, setDetailLoading] = useState(true)
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
+
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -125,7 +133,7 @@ export function TopResultCard({
     [detail],
   )
   const chartData = useMemo(
-    () => sampleChartSeries(fullMonthHistory, MAX_TOP_RESULT_CHART_POINTS),
+    () => sampleChartSeries(fullMonthHistory, MAX_TOP_RESULT_CHART_POINTS).map((point) => ({ ...point, timestamp: parseChartTimestamp(point.date) })),
     [fullMonthHistory],
   )
   const hasChart = chartData.length >= 2
@@ -161,14 +169,8 @@ export function TopResultCard({
   const fillColor =
     tone === 'positive' ? 'var(--brand-green)' : tone === 'negative' ? 'var(--red-danger)' : 'var(--chart-neutral)'
 
-  const yDomain = useMemo((): [number, number] => {
-    if (chartData.length === 0) return [0, 1]
-    const prices = chartData.map((p) => p.close)
-    const min = Math.min(...prices)
-    const max = Math.max(...prices)
-    const pad = (max - min) * 0.08 || 1
-    return [Math.max(0, min - pad), max + pad]
-  }, [chartData])
+  const yScale = useMemo(() => buildFiveTickScale(chartData.map((point) => point.close)), [chartData])
+  const xTicks = useMemo(() => buildTimeTicks(chartData, viewportWidth), [chartData, viewportWidth])
 
   const gradientId = `tr-fill-${result.symbol.replace(/\W/g, '')}`
 
@@ -252,6 +254,11 @@ export function TopResultCard({
 
           {!detailLoading && hasChart && (
             <div className="top-result-chart-shell" data-scroll-reveal="chart">
+              {detail?.rangeSummary ? (
+                <p className="sr-only">
+                  {result.symbol} one-month chart. First {formatPrice(detail.rangeSummary.firstClose)}, latest {formatPrice(detail.rangeSummary.latestClose)}, high {formatPrice(detail.rangeSummary.highClose)}, low {formatPrice(detail.rangeSummary.lowClose)}. The period {detail.rangeSummary.change >= 0 ? 'gained' : 'lost'} {Math.abs(detail.rangeSummary.changePercent).toFixed(2)} percent.
+                </p>
+              ) : null}
               <div className="top-result-chart">
                 <ResponsiveContainer
                   height={132}
@@ -277,20 +284,23 @@ export function TopResultCard({
                     />
                     <XAxis
                       axisLine={false}
-                      dataKey="date"
-                      minTickGap={42}
+                      dataKey="timestamp"
+                      domain={['dataMin', 'dataMax']}
+                      scale="time"
                       tick={AXIS_TICK}
-                      tickFormatter={formatShortDate}
+                      tickFormatter={(value: number) => formatShortDate(new Date(value).toISOString())}
                       tickLine={false}
                       tickMargin={10}
+                      ticks={xTicks}
+                      type="number"
                     />
                     <YAxis
                       axisLine={false}
-                      domain={yDomain}
+                      domain={yScale.domain}
                       orientation="right"
-                      tickCount={4}
+                      ticks={yScale.ticks}
                       tick={AXIS_TICK}
-                      tickFormatter={(v: number) => formatCurrency(v)}
+                      tickFormatter={(v: number) => formatAxisNumber(v, yScale.step)}
                       tickLine={false}
                       width={64}
                     />

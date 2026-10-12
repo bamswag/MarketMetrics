@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import app.services.search as search_service
+from app.schemas.instruments import ChartReadinessMetadata, InstrumentRange
 from app.services.search import (
     DEFAULT_MOVER_UNIVERSE_BY_CATEGORY,
     get_dynamic_mover_universe_symbols_by_category,
@@ -21,8 +22,13 @@ except ModuleNotFoundError:
 
 
 class SearchRouteTests(BaseAPITestCase):
+    @patch("app.api.routes.search.get_chart_readiness_batch", new_callable=AsyncMock)
     @patch("app.api.routes.search.search_symbol_catalog")
-    def test_company_search_is_available_without_authentication(self, mock_search_symbol_catalog):
+    def test_company_search_is_available_without_authentication(
+        self,
+        mock_search_symbol_catalog,
+        mock_get_chart_readiness_batch,
+    ):
         mock_search_symbol_catalog.return_value = [
             {
                 "symbol": "AAPL",
@@ -33,6 +39,16 @@ class SearchRouteTests(BaseAPITestCase):
                 "tradable": True,
             }
         ]
+        mock_get_chart_readiness_batch.return_value = {
+            "AAPL": ChartReadinessMetadata(
+                chartReady=True,
+                availableRanges=[InstrumentRange.six_months, InstrumentRange.max_range],
+                defaultRange=InstrumentRange.six_months,
+                historyPointCount=92,
+                historyStart="2026-04-13",
+                historyEnd="2026-10-12",
+            )
+        }
 
         response = self.client.get("/search/companies?q=apple")
 
@@ -42,6 +58,35 @@ class SearchRouteTests(BaseAPITestCase):
         self.assertEqual(len(payload["results"]), 1)
         self.assertEqual(payload["results"][0]["symbol"], "AAPL")
         self.assertEqual(payload["results"][0]["assetCategory"], "stocks")
+
+    @patch("app.api.routes.search.get_chart_readiness_batch", new_callable=AsyncMock)
+    @patch("app.api.routes.search.search_symbol_catalog")
+    def test_company_search_excludes_instruments_without_usable_history(
+        self,
+        mock_search_symbol_catalog,
+        mock_get_chart_readiness_batch,
+    ):
+        mock_search_symbol_catalog.return_value = [
+            {"symbol": "READY", "name": "Ready Inc.", "tradable": True},
+            {"symbol": "EMPTY", "name": "Empty Inc.", "tradable": True},
+        ]
+        mock_get_chart_readiness_batch.return_value = {
+            "READY": ChartReadinessMetadata(
+                chartReady=True,
+                availableRanges=[InstrumentRange.one_month, InstrumentRange.max_range],
+                defaultRange=InstrumentRange.one_month,
+                historyPointCount=22,
+            ),
+            "EMPTY": ChartReadinessMetadata(
+                chartReady=False,
+                unavailableReason="Not enough historical prices are available yet.",
+            ),
+        }
+
+        response = self.client.get("/search/companies?q=inc")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["symbol"] for item in response.json()["results"]], ["READY"])
 
 
 class SearchServiceTests(unittest.TestCase):

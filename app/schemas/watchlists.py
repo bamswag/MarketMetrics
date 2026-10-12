@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.instruments import InstrumentRange
 
 
 class WatchlistCreate(BaseModel):
@@ -36,3 +37,10 @@ class WatchlistItemDetailedOut(WatchlistItemOut):
     assetCategory: Optional[str] = None
     latestQuote: Optional[WatchlistQuoteOut] = None
     alerts: WatchlistAlertSummaryOut
+    chartReady: bool = False
+    availableRanges: list[InstrumentRange] = Field(default_factory=list)
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
+    unavailableReason: Optional[str] = None

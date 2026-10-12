@@ -10,6 +10,7 @@ from app.schemas.instruments import (
     InstrumentPricePoint,
     InstrumentQuoteOut,
     InstrumentRange,
+    InstrumentRangeSummary,
     SimilarInstrumentOut,
     SimilarInstrumentsResponse,
 )
@@ -29,6 +30,7 @@ from app.services.search import (
     resolve_company_name,
 )
 from app.services.quotes import get_public_quotes_cached, get_quote_cached
+from app.services.chart_readiness import classify_history_readiness, get_chart_readiness_batch
 
 
 RANGE_WINDOWS_DAYS = {
@@ -368,13 +370,25 @@ async def get_similar_instruments(
         ),
         reverse=True,
     )
-    selected_items = scored_items[:safe_limit]
+    selected_items = scored_items[: min(len(scored_items), safe_limit * 3)]
     selected_symbols = [
         normalize_catalog_symbol(item.get("symbol", ""), item.get("asset_class", "us_equity"))
         for _, _, item in selected_items
     ]
-    quotes = await get_public_quotes_cached(selected_symbols) if selected_symbols else []
+    readiness_by_symbol, quotes = await asyncio.gather(
+        get_chart_readiness_batch(selected_symbols),
+        get_public_quotes_cached(selected_symbols) if selected_symbols else asyncio.sleep(0, result=[]),
+    )
     quotes_by_symbol = {quote.symbol.upper(): quote for quote in quotes}
+
+    ready_items: list[tuple[int, str, dict, object]] = []
+    for score, reason, item in selected_items:
+        item_symbol = normalize_catalog_symbol(item.get("symbol", ""), item.get("asset_class", "us_equity"))
+        readiness = readiness_by_symbol.get(item_symbol.upper())
+        if readiness and readiness.chartReady:
+            ready_items.append((score, reason, item, readiness))
+        if len(ready_items) >= safe_limit:
+            break
 
     return SimilarInstrumentsResponse(
         symbol=canonical_symbol,
@@ -382,6 +396,7 @@ async def get_similar_instruments(
         results=[
             SimilarInstrumentOut(
                 **build_search_result(item),
+                **readiness.model_dump(),
                 similarityReason=reason,
                 latestQuote=quotes_by_symbol.get(
                     normalize_catalog_symbol(
@@ -390,7 +405,7 @@ async def get_similar_instruments(
                     ).upper()
                 ),
             )
-            for _, reason, item in selected_items
+            for _, reason, item, readiness in ready_items
         ],
     )
 
@@ -404,22 +419,6 @@ def resolve_history_window(selected_range: InstrumentRange) -> tuple[date | None
     return start_date, end_date
 
 
-def determine_available_ranges(
-    earliest_available_date: date,
-    *,
-    end_date: date,
-) -> list[InstrumentRange]:
-    available_ranges: list[InstrumentRange] = []
-
-    for range_option in STANDARD_RANGE_ORDER:
-        range_start = end_date - timedelta(days=RANGE_WINDOWS_DAYS[range_option])
-        if earliest_available_date <= range_start:
-            available_ranges.append(range_option)
-
-    available_ranges.append(InstrumentRange.max_range)
-    return available_ranges
-
-
 def resolve_effective_range(
     requested_range: InstrumentRange,
     available_ranges: list[InstrumentRange],
@@ -427,11 +426,23 @@ def resolve_effective_range(
     if requested_range in available_ranges:
         return requested_range
 
-    if InstrumentRange.max_range in available_ranges:
-        return InstrumentRange.max_range
-
     if available_ranges:
-        return available_ranges[-1]
+        requested_index = (
+            STANDARD_RANGE_ORDER.index(requested_range)
+            if requested_range in STANDARD_RANGE_ORDER
+            else len(STANDARD_RANGE_ORDER)
+        )
+        shorter = [
+            item for item in available_ranges
+            if item in STANDARD_RANGE_ORDER and STANDARD_RANGE_ORDER.index(item) <= requested_index
+        ]
+        if shorter:
+            return shorter[-1]
+        non_max = [item for item in available_ranges if item != InstrumentRange.max_range]
+        if non_max:
+            return non_max[0]
+        if InstrumentRange.max_range in available_ranges:
+            return InstrumentRange.max_range
 
     return requested_range
 
@@ -471,19 +482,12 @@ async def get_instrument_detail(
     except AlpacaMarketDataError:
         raise
 
-    available_ranges = determine_available_ranges(
-        earliest_available_date,
-        end_date=end_date,
-    )
-    effective_range = resolve_effective_range(selected_range, available_ranges)
-    effective_start_date, effective_end_date = resolve_history_window(effective_range)
-
     try:
-        historical_series = await asyncio.wait_for(
+        complete_history = await asyncio.wait_for(
             get_daily_bar_series_cached(
                 canonical_symbol,
-                start=earliest_available_date if effective_start_date is None else effective_start_date,
-                end=effective_end_date,
+                start=earliest_available_date,
+                end=end_date,
             ),
             timeout=INSTRUMENT_DATA_TIMEOUT_SECONDS,
         )
@@ -494,8 +498,48 @@ async def get_instrument_detail(
     except AlpacaMarketDataError:
         raise
 
-    if not historical_series:
+    valid_history = [
+        row for row in complete_history
+        if row.get("date") is not None
+        and row.get("close") is not None
+        and float(row["close"]) > 0
+    ]
+    if not valid_history:
         raise ValueError("No historical price data is available for that instrument.")
+
+    readiness = classify_history_readiness(
+        canonical_symbol,
+        [(row["date"], float(row["close"])) for row in valid_history],
+        end_date=end_date,
+    )
+    if not readiness.chartReady:
+        raise ValueError(readiness.unavailableReason or "Not enough historical price data is available for that instrument.")
+
+    available_ranges = readiness.availableRanges
+    effective_range = resolve_effective_range(selected_range, available_ranges)
+    effective_start_date, effective_end_date = resolve_history_window(effective_range)
+    historical_series = [
+        row for row in valid_history
+        if (effective_start_date is None or row["date"] >= effective_start_date)
+        and row["date"] <= effective_end_date
+    ]
+    closes = [float(row["close"]) for row in historical_series]
+    if len(closes) < 2:
+        raise ValueError("Not enough historical price data is available for the selected range.")
+    first_close = closes[0]
+    latest_close = closes[-1]
+    change = latest_close - first_close
+    range_summary = InstrumentRangeSummary(
+        firstClose=first_close,
+        latestClose=latest_close,
+        highClose=max(closes),
+        lowClose=min(closes),
+        change=change,
+        changePercent=(change / first_close * 100) if first_close else 0.0,
+        pointCount=len(closes),
+        rangeStart=historical_series[0]["date"].isoformat(),
+        rangeEnd=historical_series[-1]["date"].isoformat(),
+    )
 
     return InstrumentDetailResponse(
         symbol=canonical_symbol,
@@ -504,10 +548,16 @@ async def get_instrument_detail(
         exchange=metadata.get("exchange"),
         range=effective_range,
         availableRanges=available_ranges,
+        chartReady=True,
+        defaultRange=readiness.defaultRange,
+        historyPointCount=readiness.historyPointCount,
+        historyStart=readiness.historyStart,
+        historyEnd=readiness.historyEnd,
         earliestAvailableDate=earliest_available_date,
         latestQuote=_quote_out(latest_quote),
         historicalSeries=[
             _price_point_from_bar(row)
             for row in historical_series
         ],
+        rangeSummary=range_summary,
     )

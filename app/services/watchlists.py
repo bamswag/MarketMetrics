@@ -17,6 +17,7 @@ from app.services.search import (
     get_symbol_metadata,
     normalize_catalog_symbol,
 )
+from app.services.chart_readiness import get_chart_readiness_batch
 
 
 def add_watchlist_item(db: Session, user_id: str, symbol: str) -> WatchlistItemDB:
@@ -76,11 +77,13 @@ async def get_watchlist_items_detailed(
         snapshots = {}
         batch_error = str(exc) or repr(exc)
 
+    readiness_by_symbol = await get_chart_readiness_batch(symbols)
     detailed_items: list[WatchlistItemDetailedOut] = []
     for item in items:
         normalized_symbol = item.symbol.strip().upper()
         snapshot = snapshots.get(normalized_symbol)
         latest_quote = _snapshot_to_watchlist_quote(snapshot, batch_error)
+        readiness = readiness_by_symbol.get(normalized_symbol)
 
         total_alerts, active_alerts, triggered_alerts = alert_counts.get(
             item.symbol, (0, 0, 0)
@@ -99,6 +102,7 @@ async def get_watchlist_items_detailed(
                     activeAlerts=active_alerts,
                     triggeredAlerts=triggered_alerts,
                 ),
+                **(readiness.model_dump() if readiness else {"unavailableReason": "Historical data could not be verified."}),
             )
         )
 

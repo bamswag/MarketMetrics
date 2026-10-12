@@ -152,6 +152,12 @@ export type CompanySearchResult = {
   status?: string | null
   tradable?: boolean | null
   matchScore?: number | null
+  chartReady?: boolean
+  availableRanges?: InstrumentRange[]
+  defaultRange?: InstrumentRange | null
+  historyPointCount?: number
+  historyStart?: string | null
+  historyEnd?: string | null
 }
 
 export type CompanySearchResponse = {
@@ -184,6 +190,12 @@ export type Mover = {
     date: string
     close: number
   }>
+  chartReady?: boolean
+  availableRanges?: InstrumentRange[]
+  defaultRange?: InstrumentRange | null
+  historyPointCount?: number
+  historyStart?: string | null
+  historyEnd?: string | null
 }
 
 export type MoversByCategory = {
@@ -228,6 +240,13 @@ export type WatchlistItemDetailedOut = {
   userID: string
   symbol: string
   assetCategory?: string | null
+  chartReady?: boolean
+  availableRanges?: InstrumentRange[]
+  defaultRange?: InstrumentRange | null
+  historyPointCount?: number
+  historyStart?: string | null
+  historyEnd?: string | null
+  unavailableReason?: string | null
   createdAt: string
   latestQuote?: {
     price?: number | null
@@ -260,6 +279,11 @@ export type InstrumentDetailResponse = {
   exchange?: string | null
   range: InstrumentRange
   availableRanges: InstrumentRange[]
+  chartReady: boolean
+  defaultRange?: InstrumentRange | null
+  historyPointCount: number
+  historyStart?: string | null
+  historyEnd?: string | null
   earliestAvailableDate?: string | null
   latestQuote: {
     price: number
@@ -286,6 +310,17 @@ export type InstrumentDetailResponse = {
     vwap?: number | null
     tradeCount?: number | null
   }>
+  rangeSummary: {
+    firstClose: number
+    latestClose: number
+    highClose: number
+    lowClose: number
+    change: number
+    changePercent: number
+    pointCount: number
+    rangeStart: string
+    rangeEnd: string
+  }
 }
 
 export type SimilarInstrument = {
@@ -297,6 +332,12 @@ export type SimilarInstrument = {
   currency?: string | null
   similarityReason?: string | null
   latestQuote?: PublicQuote | null
+  chartReady?: boolean
+  availableRanges?: InstrumentRange[]
+  defaultRange?: InstrumentRange | null
+  historyPointCount?: number
+  historyStart?: string | null
+  historyEnd?: string | null
 }
 
 export type SimilarInstrumentsResponse = {
@@ -334,6 +375,11 @@ function normalizeInstrumentDetailResponse(
       normalizedRanges.length > 0
         ? normalizedRanges
         : [...LEGACY_INSTRUMENT_RANGES],
+    chartReady: payload.chartReady !== false,
+    defaultRange: isInstrumentRangeValue(payload.defaultRange) ? payload.defaultRange : currentRange,
+    historyPointCount: Number.isFinite(payload.historyPointCount)
+      ? payload.historyPointCount
+      : payload.historicalSeries.length,
     earliestAvailableDate:
       typeof payload.earliestAvailableDate === 'string'
         ? payload.earliestAvailableDate

@@ -4,6 +4,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.instruments import InstrumentRange
+
 
 class MoverSparklinePoint(BaseModel):
     date: date
@@ -18,6 +20,12 @@ class Mover(BaseModel):
     change_percent: Optional[str] = None
     volume: Optional[int] = None
     sparklineSeries: List[MoverSparklinePoint] = Field(default_factory=list)
+    chartReady: bool = True
+    availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
 
 
 class MoverCategoryBuckets(BaseModel):

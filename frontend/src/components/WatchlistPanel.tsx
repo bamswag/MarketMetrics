@@ -115,6 +115,7 @@ export function WatchlistPanel({
               { change: item.latestQuote?.change, changePercent },
               preferences,
             )
+            const isChartReady = item.chartReady !== false
 
             return (
               <article
@@ -132,12 +133,16 @@ export function WatchlistPanel({
                   </div>
 
                   <div className="watchlist-card-actions">
-                    <Link
-                      className="inline-link"
-                      to={`/instrument/${encodeURIComponent(item.symbol)}`}
-                    >
-                      Open chart
-                    </Link>
+                    {isChartReady ? (
+                      <Link
+                        className="inline-link"
+                        to={`/instrument/${encodeURIComponent(item.symbol)}`}
+                      >
+                        Open chart
+                      </Link>
+                    ) : (
+                      <span className="watchlist-alert-chip">Chart unavailable</span>
+                    )}
                     <button
                       className="watchlist-remove"
                       disabled={removingSymbol === item.symbol}
@@ -157,7 +162,9 @@ export function WatchlistPanel({
                 </div>
 
                 <p className="watchlist-note">
-                  {item.latestQuote?.latestTradingDay
+                  {!isChartReady
+                    ? item.unavailableReason ?? 'This instrument does not have enough usable history yet.'
+                    : item.latestQuote?.latestTradingDay
                     ? `Latest trading day: ${item.latestQuote.latestTradingDay}`
                     : item.latestQuote?.unavailableReason ?? 'Waiting for quote data.'}
                 </p>

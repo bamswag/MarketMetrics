@@ -21,6 +21,7 @@ import {
   type InstrumentDetailResponse,
 } from '../lib/api'
 import { readStoredMarketPreferences } from '../lib/marketPreferences'
+import { buildFiveTickScale, buildTimeTicks, formatAxisNumber, parseChartTimestamp, sampleSeriesByValues, summarizeChartRange } from '../lib/chartUtils'
 import '../styles/components/ChartTooltip.css'
 import '../styles/pages/ForecastPage.css'
 import '../styles/pages/GrowthProjectionPage.css'
@@ -32,12 +33,6 @@ type GrowthProjectionPageProps = {
 type OutcomeTone = 'positive' | 'negative' | 'neutral'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function sampleData<T>(arr: T[], maxPoints: number): T[] {
-  if (arr.length <= maxPoints) return arr
-  const step = (arr.length - 1) / (maxPoints - 1)
-  return Array.from({ length: maxPoints }, (_, i) => arr[Math.round(i * step)])
-}
 
 function outcomeTone(value: number | null | undefined, reference: number | null | undefined): OutcomeTone {
   if (value == null || reference == null || !Number.isFinite(value) || !Number.isFinite(reference)) {
@@ -62,15 +57,6 @@ function useChartMotionAllowed(): boolean {
     return () => query.removeEventListener('change', handleChange)
   }, [])
   return motionAllowed
-}
-
-function formatYAxisValue(value: number): string {
-  const sym = getCurrencySymbol()
-  if (value >= 1_000_000_000_000) return `${sym}${(value / 1_000_000_000_000).toFixed(1)}T`
-  if (value >= 1_000_000_000) return `${sym}${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `${sym}${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${sym}${Math.round(value / 1_000)}K`
-  return `${sym}${Math.round(value)}`
 }
 
 function resolveLocale() {
@@ -301,11 +287,18 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [instrument, setInstrument] = useState<InstrumentDetailResponse | null>(null)
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
   const [simulationVersion, setSimulationVersion] = useState(0)
   const [hasAnimatedProjectionChart, setHasAnimatedProjectionChart] = useState(false)
   const chartMotionAllowed = useChartMotionAllowed()
 
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
   // Gate: auto-run only fires after the first simulation has returned results
   const initialRunDoneRef = useRef(false)
   // Debounce timer for param-change auto-run
@@ -421,35 +414,28 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
   const chartData = useMemo(() => {
     if (!result) return []
-    return sampleData(result.monthlyChartData, 240)
+    return sampleSeriesByValues(result.monthlyChartData, 240, (point) => [
+      point.monteCarloP10,
+      point.monteCarloP50,
+      point.monteCarloP90,
+      point.baselineValue,
+      point.investedCapital,
+    ]).map((point) => ({ ...point, timestamp: parseChartTimestamp(point.date) }))
   }, [result])
 
-  const yDomain = useMemo((): [number, number] => {
-    if (!chartData.length) return [0, 1]
-    let hi = 0
-    for (const pt of chartData) {
-      if (pt.monteCarloP90 != null && pt.monteCarloP90 > hi) hi = pt.monteCarloP90
-    }
-    return [0, hi * 1.08 || 1]
-  }, [chartData])
+  const yScale = useMemo(() => buildFiveTickScale(chartData.flatMap((point) => [
+    point.monteCarloP10,
+    point.monteCarloP50,
+    point.monteCarloP90,
+    point.baselineValue,
+    point.investedCapital,
+  ])), [chartData])
 
-  const xTicks = useMemo(() => {
-    if (!chartData.length) return undefined
-    const seen = new Set<number>()
-    const ticks: string[] = []
-    for (const pt of chartData) {
-      const yr = new Date(pt.date).getFullYear()
-      if (!seen.has(yr)) {
-        seen.add(yr)
-        ticks.push(pt.date)
-      }
-    }
-    if (ticks.length > 12) {
-      const step = Math.ceil(ticks.length / 10)
-      return ticks.filter((_, i) => i % step === 0 || i === ticks.length - 1)
-    }
-    return ticks
-  }, [chartData])
+  const xTicks = useMemo(() => buildTimeTicks(chartData, viewportWidth), [chartData, viewportWidth])
+  const chartSummary = useMemo(
+    () => summarizeChartRange(chartData.map((point) => ({ close: point.monteCarloP50 }))),
+    [chartData],
+  )
 
   const companyName = instrument?.companyName ?? symbol
   const scenarios = result?.deterministicScenarios ?? null
@@ -762,6 +748,11 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
           </div>
 
           <div className="projection-chart-wrap">
+            {chartSummary ? (
+              <p className="sr-only">
+                {symbol} {years}-year most-likely portfolio projection. First {formatCompact(chartSummary.first)}, latest {formatCompact(chartSummary.latest)}, high {formatCompact(chartSummary.high)}, low {formatCompact(chartSummary.low)}. The most-likely path {chartSummary.change >= 0 ? 'rises' : 'falls'} by {Math.abs(chartSummary.changePercent).toFixed(2)} percent.
+              </p>
+            ) : null}
             <ResponsiveContainer
               height="100%"
               initialDimension={{ width: 1, height: 380 }}
@@ -791,20 +782,24 @@ export function GrowthProjectionPage({ token }: GrowthProjectionPageProps) {
 
                 <XAxis
                   axisLine={false}
-                  dataKey="date"
+                  dataKey="timestamp"
+                  domain={['dataMin', 'dataMax']}
+                  scale="time"
                   tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
-                  tickFormatter={(d: string) => String(new Date(d).getFullYear())}
+                  tickFormatter={(value: number) => String(new Date(value).getFullYear())}
                   tickLine={false}
                   ticks={xTicks}
+                  type="number"
                 />
 
                 <YAxis
                   axisLine={false}
-                  domain={yDomain}
+                  domain={yScale.domain}
                   orientation="left"
                   tick={{ fill: 'var(--chart-axis)', fontSize: 11 }}
-                  tickFormatter={formatYAxisValue}
+                  tickFormatter={(value: number) => formatAxisNumber(value, yScale.step, 'currency', getCurrencySymbol())}
                   tickLine={false}
+                  ticks={yScale.ticks}
                   width={72}
                 />
 

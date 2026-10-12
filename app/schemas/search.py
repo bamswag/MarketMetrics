@@ -1,6 +1,8 @@
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
+from app.schemas.instruments import InstrumentRange
+
+from pydantic import BaseModel, Field
 
 
 class CompanySearchResult(BaseModel):
@@ -17,6 +19,12 @@ class CompanySearchResult(BaseModel):
     status: Optional[str] = None
     tradable: Optional[bool] = None
     matchScore: Optional[float] = None
+    chartReady: bool = True
+    availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
 
 
 class CompanySearchResponse(BaseModel):

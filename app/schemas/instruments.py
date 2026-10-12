@@ -46,6 +46,28 @@ class InstrumentPricePoint(BaseModel):
     tradeCount: Optional[int] = None
 
 
+class InstrumentRangeSummary(BaseModel):
+    firstClose: float
+    latestClose: float
+    highClose: float
+    lowClose: float
+    change: float
+    changePercent: float
+    pointCount: int
+    rangeStart: str
+    rangeEnd: str
+
+
+class ChartReadinessMetadata(BaseModel):
+    chartReady: bool = False
+    availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
+    unavailableReason: Optional[str] = None
+
+
 class InstrumentDetailResponse(BaseModel):
     symbol: str
     companyName: str
@@ -53,9 +75,15 @@ class InstrumentDetailResponse(BaseModel):
     exchange: Optional[str] = None
     range: InstrumentRange = Field(default=InstrumentRange.six_months)
     availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    chartReady: bool = True
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
     earliestAvailableDate: Optional[date] = None
     latestQuote: InstrumentQuoteOut
     historicalSeries: List[InstrumentPricePoint]
+    rangeSummary: InstrumentRangeSummary
 
 
 class SimilarInstrumentOut(BaseModel):
@@ -67,6 +95,12 @@ class SimilarInstrumentOut(BaseModel):
     currency: Optional[str] = None
     similarityReason: Optional[str] = None
     latestQuote: Optional[PublicQuoteOut] = None
+    chartReady: bool = True
+    availableRanges: List[InstrumentRange] = Field(default_factory=list)
+    defaultRange: Optional[InstrumentRange] = None
+    historyPointCount: int = 0
+    historyStart: Optional[str] = None
+    historyEnd: Optional[str] = None
 
 
 class SimilarInstrumentsResponse(BaseModel):

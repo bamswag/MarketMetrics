@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -12,7 +12,11 @@ import {
 import type { InstrumentDetailResponse, InstrumentRange } from '../lib/api'
 import {
   addSimpleMovingAverages,
+  buildFiveTickScale,
+  buildTimeTicks,
+  formatAxisNumber,
   getMaxChartPoints,
+  parseChartTimestamp,
   sampleChartSeries,
   type ChartPointWithMovingAverages,
 } from '../lib/chartUtils'
@@ -101,13 +105,9 @@ function formatPointLabel(value: string): string {
   return value.includes('T') ? formatShortTime(value) : formatLongDate(value)
 }
 
-function parseChartDate(value: string): Date {
-  return value.includes('T') ? new Date(value) : new Date(`${value}T00:00:00`)
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltipContent(props: any) {
-  const { active, payload, label } = props ?? {}
+  const { active, payload } = props ?? {}
   if (!active || !payload?.length) return null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const priceEntry = payload.find((p: any) => p.dataKey === 'close')
@@ -120,7 +120,7 @@ function ChartTooltipContent(props: any) {
   return (
     <div className="instrument-tooltip">
       <span className="instrument-tooltip-date">
-        {typeof label === 'string' ? formatPointLabel(label) : ''}
+        {typeof point.date === 'string' ? formatPointLabel(point.date) : ''}
       </span>
       <span className="instrument-tooltip-price">{formatCurrency(value)}</span>
       {point.open != null || point.high != null || point.low != null ? (
@@ -141,25 +141,9 @@ function ChartTooltipContent(props: any) {
   )
 }
 
-// Compact Y-axis labels: $1.2K, $4.5M, $463, $52.9 — no full-precision clutter
-function formatYAxisTick(value: number): string {
-  if (value >= 1_000_000) {
-    const m = value / 1_000_000
-    return `$${Number.isInteger(m) ? m : m.toFixed(1)}M`
-  }
-  if (value >= 1_000) {
-    const k = value / 1_000
-    return `$${Number.isInteger(k) ? k : k.toFixed(1)}K`
-  }
-  if (value >= 100) return `$${Math.round(value)}`
-  if (value >= 10) return `$${value.toFixed(1)}`
-  if (value >= 1) return `$${value.toFixed(2)}`
-  return `$${value.toFixed(4)}`
-}
-
 // Range-aware X-axis labels: year for MAX/5Y, "Apr '24" for 1Y/6M/3M, "Apr 17" for short ranges
-function formatXAxisTick(value: string, range: InstrumentRange): string {
-  const d = parseChartDate(value)
+function formatXAxisTick(value: number, range: InstrumentRange): string {
+  const d = new Date(value)
   if (range === 'MAX' || range === '5Y') {
     return String(d.getFullYear())
   }
@@ -171,50 +155,18 @@ function formatXAxisTick(value: string, range: InstrumentRange): string {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' })
 }
 
-// Compute explicit tick positions for clean, evenly-spaced X-axis labels.
-//
-// Short ranges (1W, 1M) use evenly-spaced data indices so weekend gaps or
-// partial weeks never bunch two labels together.
-//
-// Longer ranges use calendar-aligned first trading days (per month / per year)
-// which are inherently ~equal since months/years have similar trading-day counts.
-function computeXTicks(series: Array<{ date: string }>, range: InstrumentRange): string[] {
-  if (series.length === 0) return []
-  const n = series.length
-
-  if (range === '1W' || range === '1M') {
-    // Evenly spaced by array index: 5 ticks for both (≈ 1 per day for 1W, ≈ 1 per week for 1M)
-    const count = Math.min(5, n)
-    if (count >= n) return series.map((p) => p.date)
-    const ticks: string[] = []
-    for (let i = 0; i < count; i++) {
-      ticks.push(series[Math.round((i / (count - 1)) * (n - 1))].date)
-    }
-    return ticks
-  }
-
-  // Calendar-aligned: first trading day of each month (3M/6M/1Y) or year (5Y/MAX)
-  const ticks: string[] = []
-  const seen = new Set<string>()
-  for (const { date } of series) {
-    const d = parseChartDate(date)
-    const key = range === 'MAX' || range === '5Y'
-      ? String(d.getFullYear())
-      : `${d.getFullYear()}-${d.getMonth()}`
-    if (!seen.has(key)) {
-      seen.add(key)
-      ticks.push(date)
-    }
-  }
-  return ticks
-}
-
 export function InstrumentChartCard({
   instrumentDetail,
   selectedRange,
   onSelectRange,
 }: InstrumentChartCardProps) {
   const [chartType, setChartType] = useState<ChartType>('price')
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window === 'undefined' ? 1440 : window.innerWidth)
+  useEffect(() => {
+    const updateWidth = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', updateWidth, { passive: true })
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
   const hasAvailabilityMetadata = instrumentDetail.availableRanges.length > 0
   const availableRanges = useMemo(
     () => new Set(instrumentDetail.availableRanges),
@@ -239,55 +191,51 @@ export function InstrumentChartCard({
       && Number.isFinite(point.ma50)
     ))
   }, [chartType, finiteHistoricalSeries, selectedRange])
-  const chartSeries = chartData
-
-  const xTicks = useMemo(
-    () => computeXTicks(chartSeries, selectedRange),
-    [chartSeries, selectedRange],
+  const chartSeries = useMemo(
+    () => chartData.map((point) => ({ ...point, timestamp: parseChartTimestamp(point.date) })),
+    [chartData],
   )
 
-  const yDomain = useMemo((): [number, number] => {
-    if (chartSeries.length === 0) return [0, 1]
+  const xTicks = useMemo(
+    () => buildTimeTicks(chartSeries, viewportWidth),
+    [chartSeries, viewportWidth],
+  )
+
+  const yScale = useMemo(() => {
     const prices = chartSeries.flatMap((point) => {
       if (chartType !== 'ma-overlay') {
         return [point.close]
       }
 
-      const movingAveragePoint = point as ChartPointWithMovingAverages
+      const movingAveragePoint = point as unknown as ChartPointWithMovingAverages
       return [point.close, movingAveragePoint.ma30, movingAveragePoint.ma50]
     }).filter((v) => Number.isFinite(v))
-    if (prices.length === 0) return [0, 1]
-    const min = Math.min(...prices)
-    const max = Math.max(...prices)
-    const yPad = (max - min) * 0.07 || 1
-    return [Math.max(0, min - yPad), max + yPad]
+    return buildFiveTickScale(prices)
   }, [chartSeries, chartType])
 
-  const firstClose = chartSeries.length > 0 ? chartSeries[0].close : 0
-  const lastClose = chartSeries.length > 0 ? chartSeries[chartSeries.length - 1].close : 0
-  const rangeChange = lastClose - firstClose
-  const rangeChangePct = firstClose > 0 ? ((rangeChange / firstClose) * 100).toFixed(2) : '0.00'
-  const isRangePositive = rangeChange >= 0
+  const rangeSummary = instrumentDetail.rangeSummary
+  const rangeChangePct = rangeSummary.changePercent.toFixed(2)
+  const isRangePositive = rangeSummary.change >= 0
   const quote = instrumentDetail.latestQuote
   const livePrice = quote.price
   const marketStats: MarketStat[] = [
     {
-      label: 'High',
-      value: formatOptionalCurrency(quote.high),
-      description: 'The highest price reached during the latest trading day.',
+      label: 'Chart high',
+      value: formatOptionalCurrency(rangeSummary.highClose),
+      description: `The highest closing price in the selected ${RANGE_LABELS[selectedRange]} range.`,
     },
     {
-      label: 'Low',
-      value: formatOptionalCurrency(quote.low),
-      description: 'The lowest price reached during the latest trading day.',
+      label: 'Chart low',
+      value: formatOptionalCurrency(rangeSummary.lowClose),
+      description: `The lowest closing price in the selected ${RANGE_LABELS[selectedRange]} range.`,
     },
     {
-      label: 'Volume',
+      label: "Today's volume",
       value: formatVolumeStandard(quote.volume),
       description: 'The amount traded during the latest trading day.',
     },
     {
-      label: 'VWAP',
+      label: "Today's VWAP",
       value: formatOptionalCurrency(quote.vwap),
       description: 'The volume-weighted average price. Bigger trades have more influence on this average.',
     },
@@ -385,6 +333,9 @@ export function InstrumentChartCard({
 
       {chartData.length > 0 ? (
         <div className="instrument-chart-frame">
+          <p className="sr-only">
+            {instrumentDetail.symbol} price history over {RANGE_LABELS[selectedRange]}. Latest close {formatCurrency(rangeSummary.latestClose)}, chart high {formatCurrency(rangeSummary.highClose)}, chart low {formatCurrency(rangeSummary.lowClose)}, {isRangePositive ? 'gain' : 'loss'} {Math.abs(rangeSummary.changePercent).toFixed(2)} percent.
+          </p>
           <ResponsiveContainer
             height={380}
             initialDimension={{ width: 1, height: 380 }}
@@ -392,7 +343,7 @@ export function InstrumentChartCard({
             minWidth={0}
             width="100%"
           >
-            <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <AreaChart data={chartSeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="chartLine" x1="0" x2="1" y1="0" y2="0">
                   <stop offset="0%" stopColor={isRangePositive ? 'var(--brand-green)' : 'var(--red-danger)'} />
@@ -406,18 +357,21 @@ export function InstrumentChartCard({
               <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" vertical={false} />
               <XAxis
                 axisLine={false}
-                dataKey="date"
+                dataKey="timestamp"
+                domain={['dataMin', 'dataMax']}
+                scale="time"
+                type="number"
                 tick={AXIS_TICK}
-                tickFormatter={(v: string) => formatXAxisTick(v, selectedRange)}
+                tickFormatter={(v: number) => formatXAxisTick(v, selectedRange)}
                 tickLine={false}
                 ticks={xTicks}
               />
               <YAxis
                 axisLine={false}
-                domain={yDomain}
+                domain={yScale.domain}
                 tick={AXIS_TICK}
-                tickCount={5}
-                tickFormatter={formatYAxisTick}
+                ticks={yScale.ticks}
+                tickFormatter={(value: number) => formatAxisNumber(value, yScale.step)}
                 tickLine={false}
                 width={72}
               />
@@ -491,9 +445,9 @@ export function InstrumentChartCard({
               ? `${chartSeries.length} data points`
               : `${chartSeries.length} of ${instrumentDetail.historicalSeries.length} points sampled`}
           </span>
-          {instrumentDetail.earliestAvailableDate ? (
+          {rangeSummary.rangeStart && rangeSummary.rangeEnd ? (
             <span className="instrument-chart-footer-note">
-              History since {formatShortDate(instrumentDetail.earliestAvailableDate)}
+              Range {formatShortDate(rangeSummary.rangeStart)}–{formatShortDate(rangeSummary.rangeEnd)}
             </span>
           ) : null}
         </div>

@@ -217,12 +217,14 @@ class MoversRouteTests(BaseAPITestCase):
 
 
 class MoversServiceTests(BaseAPITestCase):
+    @patch("app.services.market_overview.fetch_daily_close_series_batch", new_callable=AsyncMock)
     @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
     def test_market_movers_include_top_and_bottom_three_with_sparklines(
         self,
         mock_fetch_top_movers,
         mock_get_daily_close_series_cached,
+        mock_fetch_daily_close_series_batch,
     ):
         mock_fetch_top_movers.side_effect = [
             {
@@ -274,6 +276,14 @@ class MoversServiceTests(BaseAPITestCase):
             ]
 
         mock_get_daily_close_series_cached.side_effect = history_side_effect
+        all_symbols = {
+            "NVDA", "META", "MSFT", "INTC", "BAC", "DIS",
+            "BTC/USD", "ETH/USD", "PAXG/USD", "DOGE/USD", "SOL/USD",
+            "QQQ", "SPY", "DIA", "IWM",
+        }
+        mock_fetch_daily_close_series_batch.return_value = {
+            symbol: asyncio.run(history_side_effect(symbol)) for symbol in all_symbols
+        }
 
         payload = asyncio.run(get_market_movers(limit=3))
 
@@ -287,9 +297,8 @@ class MoversServiceTests(BaseAPITestCase):
         )
         self.assertEqual(
             [item.symbol for item in payload.gainersByCategory.crypto],
-            ["BTC/USD", "ETH/USD", "PAXG/USD"],
+            ["BTC/USD", "ETH/USD"],
         )
-        self.assertEqual(payload.gainersByCategory.crypto[2].name, "PAX Gold / US Dollar")
         self.assertEqual(
             [item.symbol for item in payload.gainersByCategory.etfs],
             ["QQQ", "SPY", "DIA"],
@@ -299,16 +308,18 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertEqual(payload.source, "alpaca")
         self.assertEqual(mock_fetch_top_movers.await_count, 3)
         awaited_args = mock_fetch_top_movers.await_args_list[0]
-        self.assertEqual(awaited_args.kwargs["top_n"], 3)
+        self.assertEqual(awaited_args.kwargs["top_n"], 9)
         self.assertIn("asset_class_map", awaited_args.kwargs)
         self.assertEqual(awaited_args.kwargs["asset_class_map"].get("BTC/USD"), "crypto")
 
+    @patch("app.services.market_overview.fetch_daily_close_series_batch", new_callable=AsyncMock)
     @patch("app.services.market_overview.get_daily_close_series_cached", new_callable=AsyncMock)
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
     def test_missing_sparkline_history_does_not_fail_the_whole_movers_response(
         self,
         mock_fetch_top_movers,
         mock_get_daily_close_series_cached,
+        mock_fetch_daily_close_series_batch,
     ):
         mock_fetch_top_movers.side_effect = [
             {
@@ -345,13 +356,16 @@ class MoversServiceTests(BaseAPITestCase):
             ]
 
         mock_get_daily_close_series_cached.side_effect = history_side_effect
+        mock_fetch_daily_close_series_batch.return_value = {
+            symbol: asyncio.run(history_side_effect(symbol))
+            for symbol in ["NVDA", "META", "MSFT", "INTC", "DIS"]
+        }
 
         payload = asyncio.run(get_market_movers(limit=3))
 
-        self.assertEqual(len(payload.losers), 3)
+        self.assertEqual(len(payload.losers), 2)
         bac = next((item for item in payload.losers if item.symbol == "BAC"), None)
-        self.assertIsNotNone(bac)
-        self.assertEqual(bac.sparklineSeries, [])
+        self.assertIsNone(bac)
 
     @patch("app.services.market_overview.fetch_intraday_close_series", new_callable=AsyncMock)
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)
@@ -380,7 +394,10 @@ class MoversServiceTests(BaseAPITestCase):
             "top_losers": [],
         }
         mock_fetch_intraday_close_series.return_value = [
-            (date(2026, 4, 16), 491.11),
+            (date(2026, 4, 13), 491.11),
+            (date(2026, 4, 14), 493.22),
+            (date(2026, 4, 15), 497.05),
+            (date(2026, 4, 16), 499.43),
             (date(2026, 4, 17), 502.11),
         ]
 
@@ -395,7 +412,7 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertEqual(payload.title, "Top ETF gainer today")
         self.assertIsNotNone(payload.mover)
         self.assertEqual(payload.mover.symbol, "QQQ")
-        self.assertEqual(len(payload.historicalSeries), 2)
+        self.assertEqual(len(payload.historicalSeries), 5)
         mock_fetch_top_movers.assert_awaited_once()
         awaited_kwargs = mock_fetch_top_movers.await_args.kwargs
         self.assertEqual(awaited_kwargs["top_n"], 1)
@@ -423,9 +440,9 @@ class MoversServiceTests(BaseAPITestCase):
         }
 
         mock_fetch_daily_close_series_batch.return_value = {
-            "NFLX": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 92.0)],
-            "AAPL": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 97.0)],
-            "AMD": [(date(2026, 3, 19), 100.0), (date(2026, 4, 17), 99.0)],
+            "NFLX": [(date(2026, 3, 19), 100.0), (date(2026, 3, 26), 98.0), (date(2026, 4, 2), 96.0), (date(2026, 4, 9), 94.0), (date(2026, 4, 17), 92.0)],
+            "AAPL": [(date(2026, 3, 19), 100.0), (date(2026, 3, 26), 99.5), (date(2026, 4, 2), 99.0), (date(2026, 4, 9), 98.0), (date(2026, 4, 17), 97.0)],
+            "AMD": [(date(2026, 3, 19), 100.0), (date(2026, 3, 26), 99.8), (date(2026, 4, 2), 99.6), (date(2026, 4, 9), 99.3), (date(2026, 4, 17), 99.0)],
         }
 
         payload = asyncio.run(
@@ -440,7 +457,7 @@ class MoversServiceTests(BaseAPITestCase):
         self.assertIsNotNone(payload.mover)
         self.assertEqual(payload.mover.symbol, "NFLX")
         self.assertEqual(payload.mover.change_percent, "-8.00%")
-        self.assertEqual(len(payload.historicalSeries), 2)
+        self.assertEqual(len(payload.historicalSeries), 5)
         mock_fetch_daily_close_series_batch.assert_awaited_once()
 
     @patch("app.services.market_overview.fetch_top_movers", new_callable=AsyncMock)

@@ -38,6 +38,7 @@ export function TrackedSymbolCard({
     preferences,
   )
   const hasPrice = quotePrice !== null && quotePrice !== undefined
+  const isChartReady = item.chartReady !== false
   const trackedLabel = new Date(item.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -49,10 +50,11 @@ export function TrackedSymbolCard({
       data-scroll-item
       data-scroll-tone={tone}
     >
-      <Link
-        className="tracked-symbol-card-link"
-        to={`/instrument/${encodeURIComponent(item.symbol)}`}
-      >
+      {isChartReady ? (
+        <Link
+          className="tracked-symbol-card-link"
+          to={`/instrument/${encodeURIComponent(item.symbol)}`}
+        >
         <div className="tracked-symbol-card-head">
           <div className="tracked-symbol-card-brand">
             <MoverLogo symbol={item.symbol} />
@@ -72,7 +74,23 @@ export function TrackedSymbolCard({
             ? formatCurrencyWithPreferences(quotePrice, preferences)
             : item.latestQuote?.unavailableReason ?? 'Price unavailable'}
         </strong>
-      </Link>
+        </Link>
+      ) : (
+        <div className="tracked-symbol-card-link tracked-symbol-card-link--unavailable">
+          <div className="tracked-symbol-card-head">
+            <div className="tracked-symbol-card-brand">
+              <MoverLogo symbol={item.symbol} />
+              <div className="tracked-symbol-card-copy">
+                <strong className="tracked-symbol-card-symbol">{item.symbol}</strong>
+                <span className="tracked-symbol-card-meta">Chart unavailable</span>
+              </div>
+            </div>
+          </div>
+          <span className="tracked-symbol-card-meta">
+            {item.unavailableReason ?? 'This instrument does not have enough usable history yet.'}
+          </span>
+        </div>
+      )}
 
       {onAction && actionLabel ? (
         <div className="tracked-symbol-card-actions">
